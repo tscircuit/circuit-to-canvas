@@ -1,6 +1,7 @@
 {
   "name": "circuit-to-canvas",
-  "module": "index.ts",
+  "main": "dist/index.js",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "build": "tsup-node ./lib/index.ts --format esm --dts",
@@ -12,7 +13,8 @@
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
     "canvas": "^3.2.0",
-    "circuit-json": "^0.0.327"
+    "circuit-json": "^0.0.327",
+    "tsup": "^8.5.1"
   },
   "peerDependencies": {
     "typescript": "^5"
