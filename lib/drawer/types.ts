@@ -25,6 +25,7 @@ export interface CanvasContext {
     endAngle: number,
   ): void
   fill(): void
+  stroke(): void
   rect(x: number, y: number, w: number, h: number): void
   lineTo(x: number, y: number): void
   moveTo(x: number, y: number): void
@@ -32,8 +33,23 @@ export interface CanvasContext {
   restore(): void
   translate(x: number, y: number): void
   rotate(angle: number): void
+  scale(x: number, y: number): void
   fillStyle: string | CanvasGradient | CanvasPattern
+  strokeStyle: string | CanvasGradient | CanvasPattern
+  lineWidth: number
+  lineCap: "butt" | "round" | "square"
+  lineJoin: "bevel" | "round" | "miter"
   canvas: { width: number; height: number }
+  fillText(text: string, x: number, y: number): void
+  font: string
+  textAlign: "start" | "end" | "left" | "right" | "center"
+  textBaseline:
+    | "top"
+    | "hanging"
+    | "middle"
+    | "alphabetic"
+    | "ideographic"
+    | "bottom"
 }
 
 export type CopperLayerName =
