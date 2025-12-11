@@ -35,4 +35,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 circuit-to-svg
 bun.lock
 
+*.diff.png
+
 .vscode

@@ -5,12 +5,14 @@ import { scale } from "transformation-matrix"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
 test("draw copper text", async () => {
-  const canvas = createCanvas(100, 100)
+  const SCALE = 4
+  const canvas = createCanvas(100 * SCALE, 100 * SCALE)
   const ctx = canvas.getContext("2d")
+  ctx.scale(SCALE, SCALE)
   const drawer = new CircuitToCanvasDrawer(ctx)
 
   ctx.fillStyle = "#1a1a1a"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, canvas.width / SCALE, canvas.height / SCALE)
 
   const text: PcbCopperText = {
     type: "pcb_copper_text",
@@ -33,12 +35,14 @@ test("draw copper text", async () => {
 })
 
 test("draw copper text knockout mirrored with padding", async () => {
-  const canvas = createCanvas(100, 60)
+  const SCALE = 4
+  const canvas = createCanvas(100 * SCALE, 60 * SCALE)
   const ctx = canvas.getContext("2d")
+  ctx.scale(SCALE, SCALE)
   const drawer = new CircuitToCanvasDrawer(ctx)
 
   ctx.fillStyle = "#1a1a1a"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, canvas.width / SCALE, canvas.height / SCALE)
 
   drawer.realToCanvasMat = scale(2, 2)
 
