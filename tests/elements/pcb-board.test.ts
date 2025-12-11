@@ -17,11 +17,16 @@ test("draw rectangular board", async () => {
     center: { x: 50, y: 50 },
     width: 80,
     height: 60,
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
   }
 
   drawer.drawElements([board])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw board with custom outline", async () => {
@@ -39,6 +44,9 @@ test("draw board with custom outline", async () => {
     center: { x: 50, y: 50 },
     width: 80,
     height: 80,
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
     outline: [
       { x: 10, y: 10 },
       { x: 90, y: 10 },
@@ -97,10 +105,34 @@ test("draw board with elements", async () => {
       type: "pcb_trace" as const,
       pcb_trace_id: "trace1",
       route: [
-        { route_type: "wire" as const, x: 50, y: 50, width: 3, layer: "top" as const },
-        { route_type: "wire" as const, x: 100, y: 50, width: 3, layer: "top" as const },
-        { route_type: "wire" as const, x: 100, y: 100, width: 3, layer: "top" as const },
-        { route_type: "wire" as const, x: 150, y: 100, width: 3, layer: "top" as const },
+        {
+          route_type: "wire" as const,
+          x: 50,
+          y: 50,
+          width: 3,
+          layer: "top" as const,
+        },
+        {
+          route_type: "wire" as const,
+          x: 100,
+          y: 50,
+          width: 3,
+          layer: "top" as const,
+        },
+        {
+          route_type: "wire" as const,
+          x: 100,
+          y: 100,
+          width: 3,
+          layer: "top" as const,
+        },
+        {
+          route_type: "wire" as const,
+          x: 150,
+          y: 100,
+          width: 3,
+          layer: "top" as const,
+        },
       ],
     },
     {

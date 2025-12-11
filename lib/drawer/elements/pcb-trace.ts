@@ -44,11 +44,7 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
 
     // Get the trace width from either point
     const traceWidth =
-      "width" in start
-        ? start.width
-        : "width" in end
-          ? (end as any).width
-          : 0.1
+      "width" in start ? start.width : "width" in end ? (end as any).width : 0.1
 
     drawLine({
       ctx,

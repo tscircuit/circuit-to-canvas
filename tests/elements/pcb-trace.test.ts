@@ -22,7 +22,9 @@ test("draw simple trace", async () => {
 
   drawer.drawElements([trace])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw multi-segment trace", async () => {

@@ -22,7 +22,9 @@ test("draw rectangular cutout", async () => {
 
   drawer.drawElements([cutout])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw circular cutout", async () => {
@@ -61,7 +63,6 @@ test("draw polygon cutout", async () => {
     type: "pcb_cutout",
     pcb_cutout_id: "cutout1",
     shape: "polygon",
-    center: { x: 50, y: 50 },
     points: [
       { x: 30, y: 30 },
       { x: 70, y: 30 },

@@ -23,7 +23,9 @@ test("draw via", async () => {
 
   drawer.drawElements([via])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw multiple vias", async () => {

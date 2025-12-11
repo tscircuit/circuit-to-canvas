@@ -20,15 +20,20 @@ test("draw silkscreen text", async () => {
   const text: PcbSilkscreenText = {
     type: "pcb_silkscreen_text",
     pcb_silkscreen_text_id: "text1",
+    pcb_component_id: "component1",
     layer: "top",
     text: "U1",
     anchor_position: { x: 50, y: 50 },
+    anchor_alignment: "center",
+    font: "tscircuit2024",
     font_size: 8,
   }
 
   drawer.drawElements([text])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw silkscreen text bottom layer", async () => {
@@ -42,9 +47,12 @@ test("draw silkscreen text bottom layer", async () => {
   const text: PcbSilkscreenText = {
     type: "pcb_silkscreen_text",
     pcb_silkscreen_text_id: "text1",
+    pcb_component_id: "component1",
     layer: "bottom",
     text: "BOTTOM",
     anchor_position: { x: 50, y: 50 },
+    anchor_alignment: "center",
+    font: "tscircuit2024",
     font_size: 8,
   }
 
@@ -67,10 +75,12 @@ test("draw silkscreen rect", async () => {
   const rect: PcbSilkscreenRect = {
     type: "pcb_silkscreen_rect",
     pcb_silkscreen_rect_id: "rect1",
+    pcb_component_id: "component1",
     layer: "top",
     center: { x: 50, y: 50 },
     width: 40,
     height: 20,
+    stroke_width: 0.2,
   }
 
   drawer.drawElements([rect])
@@ -92,9 +102,11 @@ test("draw silkscreen circle", async () => {
   const circle: PcbSilkscreenCircle = {
     type: "pcb_silkscreen_circle",
     pcb_silkscreen_circle_id: "circle1",
+    pcb_component_id: "component1",
     layer: "top",
     center: { x: 50, y: 50 },
     radius: 20,
+    stroke_width: 0.2,
   }
 
   drawer.drawElements([circle])
@@ -116,6 +128,7 @@ test("draw silkscreen line", async () => {
   const line: PcbSilkscreenLine = {
     type: "pcb_silkscreen_line",
     pcb_silkscreen_line_id: "line1",
+    pcb_component_id: "component1",
     layer: "top",
     x1: 20,
     y1: 20,
@@ -143,6 +156,7 @@ test("draw silkscreen path", async () => {
   const path: PcbSilkscreenPath = {
     type: "pcb_silkscreen_path",
     pcb_silkscreen_path_id: "path1",
+    pcb_component_id: "component1",
     layer: "top",
     route: [
       { x: 10, y: 50 },

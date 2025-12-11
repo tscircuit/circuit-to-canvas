@@ -24,7 +24,9 @@ test("draw rectangular smt pad", async () => {
 
   drawer.drawElements([pad])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw rectangular smt pad with border radius", async () => {
@@ -149,8 +151,6 @@ test("draw polygon smt pad", async () => {
     type: "pcb_smtpad",
     pcb_smtpad_id: "pad1",
     shape: "polygon",
-    x: 50,
-    y: 50,
     layer: "top",
     points: [
       { x: 30, y: 30 },

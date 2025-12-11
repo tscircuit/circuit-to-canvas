@@ -50,7 +50,7 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
 
   if (pour.shape === "polygon") {
     if (pour.points && pour.points.length >= 3) {
-      const transformedPoints = pour.points.map((p) =>
+      const transformedPoints = pour.points.map((p: { x: number; y: number }) =>
         applyToPoint(transform, [p.x, p.y]),
       )
 

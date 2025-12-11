@@ -13,7 +13,15 @@ export interface DrawLineParams {
 }
 
 export function drawLine(params: DrawLineParams): void {
-  const { ctx, start, end, strokeWidth, stroke, transform, lineCap = "round" } = params
+  const {
+    ctx,
+    start,
+    end,
+    strokeWidth,
+    stroke,
+    transform,
+    lineCap = "round",
+  } = params
 
   const [x1, y1] = applyToPoint(transform, [start.x, start.y])
   const [x2, y2] = applyToPoint(transform, [end.x, end.y])

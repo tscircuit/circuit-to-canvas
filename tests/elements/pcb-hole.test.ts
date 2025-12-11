@@ -22,7 +22,9 @@ test("draw circular hole", async () => {
 
   drawer.drawElements([hole])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw square hole", async () => {

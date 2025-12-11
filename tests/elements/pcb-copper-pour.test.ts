@@ -19,11 +19,14 @@ test("draw rectangular copper pour", async () => {
     center: { x: 50, y: 50 },
     width: 60,
     height: 40,
+    covered_with_solder_mask: false,
   }
 
   drawer.drawElements([pour])
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(import.meta.path)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+  )
 })
 
 test("draw polygon copper pour", async () => {
@@ -45,6 +48,7 @@ test("draw polygon copper pour", async () => {
       { x: 90, y: 90 },
       { x: 10, y: 90 },
     ],
+    covered_with_solder_mask: false,
   }
 
   drawer.drawElements([pour])
@@ -80,8 +84,20 @@ test("draw copper pour with trace", async () => {
       type: "pcb_trace" as const,
       pcb_trace_id: "trace1",
       route: [
-        { route_type: "wire" as const, x: 20, y: 50, width: 5, layer: "top" as const },
-        { route_type: "wire" as const, x: 80, y: 50, width: 5, layer: "top" as const },
+        {
+          route_type: "wire" as const,
+          x: 20,
+          y: 50,
+          width: 5,
+          layer: "top" as const,
+        },
+        {
+          route_type: "wire" as const,
+          x: 80,
+          y: 50,
+          width: 5,
+          layer: "top" as const,
+        },
       ],
     },
     {
