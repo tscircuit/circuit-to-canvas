@@ -39,6 +39,7 @@ export interface CanvasContext {
   lineWidth: number
   lineCap: "butt" | "round" | "square"
   lineJoin: "bevel" | "round" | "miter"
+  setLineDash(segments: number[]): void
   canvas: { width: number; height: number }
   fillText(text: string, x: number, y: number): void
   font: string
@@ -70,6 +71,10 @@ export interface PcbColorMap {
   copper: CopperColorMap
   drill: string
   silkscreen: {
+    top: string
+    bottom: string
+  }
+  fabricationNote: {
     top: string
     bottom: string
   }
@@ -118,6 +123,10 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
   silkscreen: {
     top: "#f2eda1",
     bottom: "#5da9e9",
+  },
+  fabricationNote: {
+    top: "#FFD700",
+    bottom: "#00FFFF",
   },
   boardOutline: "rgba(255, 255, 255, 0.5)",
   courtyard: "#FF00FF",
