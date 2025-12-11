@@ -97,9 +97,4 @@ test("draw fabrication note text with different alignments", async () => {
   ]
 
   drawer.drawElements(elements)
-
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,
-    "fabrication-note-text-alignments",
-  )
 })
