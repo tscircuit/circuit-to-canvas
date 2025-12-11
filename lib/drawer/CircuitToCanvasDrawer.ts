@@ -13,6 +13,7 @@ import type {
   PcbSilkscreenPath,
   PcbCutout,
   PcbCopperPour,
+  PcbCopperText,
 } from "circuit-json"
 import { identity, compose, translate, scale } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
@@ -38,6 +39,7 @@ import {
 } from "./elements/pcb-silkscreen"
 import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
+import { drawPcbCopperText } from "./elements/pcb-copper-text"
 
 export interface DrawElementsOptions {
   layers?: string[]
@@ -248,6 +250,15 @@ export class CircuitToCanvasDrawer {
       drawPcbCopperPour({
         ctx: this.ctx,
         pour: element as PcbCopperPour,
+        transform: this.realToCanvasMat,
+        colorMap: this.colorMap,
+      })
+    }
+
+    if (element.type === "pcb_copper_text") {
+      drawPcbCopperText({
+        ctx: this.ctx,
+        text: element as PcbCopperText,
         transform: this.realToCanvasMat,
         colorMap: this.colorMap,
       })

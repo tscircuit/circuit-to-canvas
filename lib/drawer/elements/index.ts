@@ -32,3 +32,8 @@ export {
   drawPcbCopperPour,
   type DrawPcbCopperPourParams,
 } from "./pcb-copper-pour"
+
+export {
+  drawPcbCopperText,
+  type DrawPcbCopperTextParams,
+} from "./pcb-copper-text"

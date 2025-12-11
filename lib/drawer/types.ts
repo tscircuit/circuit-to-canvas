@@ -34,6 +34,7 @@ export interface CanvasContext {
   translate(x: number, y: number): void
   rotate(angle: number): void
   scale(x: number, y: number): void
+  globalCompositeOperation?: string
   fillStyle: string | CanvasGradient | CanvasPattern
   strokeStyle: string | CanvasGradient | CanvasPattern
   lineWidth: number
@@ -41,6 +42,12 @@ export interface CanvasContext {
   lineJoin: "bevel" | "round" | "miter"
   canvas: { width: number; height: number }
   fillText(text: string, x: number, y: number): void
+  fillRect(x: number, y: number, width: number, height: number): void
+  measureText?: (text: string) => {
+    width: number
+    actualBoundingBoxAscent?: number
+    actualBoundingBoxDescent?: number
+  }
   font: string
   textAlign: "start" | "end" | "left" | "right" | "center"
   textBaseline:
