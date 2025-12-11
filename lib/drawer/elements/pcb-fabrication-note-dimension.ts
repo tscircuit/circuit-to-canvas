@@ -3,6 +3,7 @@ import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawLine } from "../shapes/line"
+import { drawText } from "../shapes/text"
 
 export interface DrawPcbFabricationNoteDimensionParams {
   ctx: CanvasContext
@@ -12,8 +13,9 @@ export interface DrawPcbFabricationNoteDimensionParams {
 }
 
 function layerToColor(layer: string, colorMap: PcbColorMap): string {
-  // Fabrication notes typically use a default color, but can be customized
-  return "rgb(255, 255, 255)"
+  return layer === "bottom"
+    ? colorMap.fabricationNote.bottom
+    : colorMap.fabricationNote.top
 }
 
 function drawArrow(
@@ -74,24 +76,24 @@ export function drawPcbFabricationNoteDimension(
 
   // Draw text if provided
   if (dimension.text) {
-    const fontSize = dimension.font_size * Math.abs(transform.a)
     const rotation = dimension.text_ccw_rotation ?? 0
 
-    // Calculate text position (midpoint of the dimension line)
-    let textX = (fromX + toX) / 2
-    let textY = (fromY + toY) / 2
+    // Calculate text position in real-world coordinates (midpoint of the dimension line)
+    let textX = (dimension.from.x + dimension.to.x) / 2
+    let textY = (dimension.from.y + dimension.to.y) / 2
 
-    // Apply offset if provided
+    // Apply offset if provided (in real-world coordinates)
     if (
       dimension.offset !== undefined ||
       dimension.offset_distance !== undefined
     ) {
       const offsetDistance = dimension.offset_distance ?? dimension.offset ?? 0
-      const scaledOffset = offsetDistance * Math.abs(transform.a)
 
-      // Calculate perpendicular direction for offset
-      let offsetDirX = -dy
-      let offsetDirY = dx
+      // Calculate perpendicular direction for offset in real-world coordinates
+      const realDx = dimension.to.x - dimension.from.x
+      const realDy = dimension.to.y - dimension.from.y
+      let offsetDirX = -realDy
+      let offsetDirY = realDx
       const offsetLength = Math.sqrt(
         offsetDirX * offsetDirX + offsetDirY * offsetDirY,
       )
@@ -113,23 +115,22 @@ export function drawPcbFabricationNoteDimension(
         }
       }
 
-      textX += offsetDirX * scaledOffset
-      textY += offsetDirY * scaledOffset
+      textX += offsetDirX * offsetDistance
+      textY += offsetDirY * offsetDistance
     }
 
-    ctx.save()
-    ctx.translate(textX, textY)
-
-    // Apply rotation (CCW rotation in degrees)
-    if (rotation !== 0) {
-      ctx.rotate(-rotation * (Math.PI / 180))
-    }
-
-    ctx.font = `${fontSize}px sans-serif`
-    ctx.fillStyle = color
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-    ctx.fillText(dimension.text, 0, 0)
-    ctx.restore()
+    // Use @tscircuit/alphabet to draw text
+    // Pass real-world coordinates and let drawText apply the transform
+    drawText({
+      ctx,
+      text: dimension.text,
+      x: textX,
+      y: textY,
+      fontSize: dimension.font_size,
+      color,
+      transform,
+      anchorAlignment: "center",
+      rotation,
+    })
   }
 }

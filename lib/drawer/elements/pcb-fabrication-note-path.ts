@@ -11,8 +11,9 @@ export interface DrawPcbFabricationNotePathParams {
 }
 
 function layerToColor(layer: string, colorMap: PcbColorMap): string {
-  // Fabrication notes typically use a default color, but can be customized
-  return "rgb(255, 255, 255)"
+  return layer === "bottom"
+    ? colorMap.fabricationNote.bottom
+    : colorMap.fabricationNote.top
 }
 
 export function drawPcbFabricationNotePath(

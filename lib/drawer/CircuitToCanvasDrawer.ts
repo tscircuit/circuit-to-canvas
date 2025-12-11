@@ -104,6 +104,10 @@ export class CircuitToCanvasDrawer {
           ...this.colorMap.soldermaskOverCopper,
           ...config.colorOverrides.soldermaskOverCopper,
         },
+        fabricationNote: {
+          ...this.colorMap.fabricationNote,
+          ...config.colorOverrides.fabricationNote,
+        },
       }
     }
   }

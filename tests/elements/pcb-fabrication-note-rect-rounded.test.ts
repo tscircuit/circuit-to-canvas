@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "canvas"
-import type { PcbFabricationNotePath } from "circuit-json"
+import type { PcbFabricationNoteRect } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test("draw fabrication note path", async () => {
+test("draw fabrication note rect with corner radius", async () => {
   const canvas = createCanvas(400, 400)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -13,25 +13,21 @@ test("draw fabrication note path", async () => {
 
   drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
 
-  const path: PcbFabricationNotePath = {
-    type: "pcb_fabrication_note_path",
-    pcb_fabrication_note_path_id: "path1",
+  const rect: PcbFabricationNoteRect = {
+    type: "pcb_fabrication_note_rect",
+    pcb_fabrication_note_rect_id: "rect1",
     pcb_component_id: "component1",
     layer: "top",
-    route: [
-      { x: 20, y: 20 },
-      { x: 40, y: 30 },
-      { x: 60, y: 25 },
-      { x: 80, y: 40 },
-      { x: 80, y: 60 },
-      { x: 60, y: 75 },
-      { x: 40, y: 70 },
-      { x: 20, y: 80 },
-    ],
-    stroke_width: 1,
+    center: { x: 50, y: 50 },
+    width: 60,
+    height: 40,
+    stroke_width: 0.5,
+    corner_radius: 5,
+    is_filled: true,
+    has_stroke: true,
   }
 
-  drawer.drawElements([path])
+  drawer.drawElements([rect])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

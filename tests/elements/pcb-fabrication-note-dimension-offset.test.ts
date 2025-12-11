@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "canvas"
-import type { PcbFabricationNotePath } from "circuit-json"
+import type { PcbFabricationNoteDimension } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test("draw fabrication note path", async () => {
+test("draw fabrication note dimension with offset", async () => {
   const canvas = createCanvas(400, 400)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -13,25 +13,21 @@ test("draw fabrication note path", async () => {
 
   drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
 
-  const path: PcbFabricationNotePath = {
-    type: "pcb_fabrication_note_path",
-    pcb_fabrication_note_path_id: "path1",
+  const dimension: PcbFabricationNoteDimension = {
+    type: "pcb_fabrication_note_dimension",
+    pcb_fabrication_note_dimension_id: "dim1",
     pcb_component_id: "component1",
     layer: "top",
-    route: [
-      { x: 20, y: 20 },
-      { x: 40, y: 30 },
-      { x: 60, y: 25 },
-      { x: 80, y: 40 },
-      { x: 80, y: 60 },
-      { x: 60, y: 75 },
-      { x: 40, y: 70 },
-      { x: 20, y: 80 },
-    ],
-    stroke_width: 1,
+    from: { x: 20, y: 50 },
+    to: { x: 80, y: 50 },
+    text: "60mm",
+    font: "tscircuit2024",
+    font_size: 6,
+    arrow_size: 3,
+    offset_distance: 10,
   }
 
-  drawer.drawElements([path])
+  drawer.drawElements([dimension])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
