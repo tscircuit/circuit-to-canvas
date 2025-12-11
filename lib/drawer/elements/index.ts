@@ -32,3 +32,23 @@ export {
   drawPcbCopperPour,
   type DrawPcbCopperPourParams,
 } from "./pcb-copper-pour"
+
+export {
+  drawPcbFabricationNoteText,
+  type DrawPcbFabricationNoteTextParams,
+} from "./pcb-fabrication-note-text"
+
+export {
+  drawPcbFabricationNoteRect,
+  type DrawPcbFabricationNoteRectParams,
+} from "./pcb-fabrication-note-rect"
+
+export {
+  drawPcbFabricationNotePath,
+  type DrawPcbFabricationNotePathParams,
+} from "./pcb-fabrication-note-path"
+
+export {
+  drawPcbFabricationNoteDimension,
+  type DrawPcbFabricationNoteDimensionParams,
+} from "./pcb-fabrication-note-dimension"
