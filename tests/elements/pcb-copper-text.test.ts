@@ -37,6 +37,10 @@ test("draw copper text knockout mirrored with padding", async () => {
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
 
+  ctx.antialias = "none"
+  ctx.patternQuality = "nearest"
+  ctx.quality = "nearest"
+
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
