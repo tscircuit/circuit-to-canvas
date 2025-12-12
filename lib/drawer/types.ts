@@ -40,6 +40,7 @@ export interface CanvasContext {
   lineWidth: number
   lineCap: "butt" | "round" | "square"
   lineJoin: "bevel" | "round" | "miter"
+  setLineDash(segments: number[]): void
   canvas: { width: number; height: number }
   fillText(text: string, x: number, y: number): void
   fillRect(x: number, y: number, width: number, height: number): void
