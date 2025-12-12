@@ -3,6 +3,7 @@ import { su } from "@tscircuit/circuit-json-util"
 import type { ConnectivityMap } from "circuit-json-to-connectivity-map"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../drawer/types"
+import { drawLine } from "../../drawer/shapes/line"
 
 interface Position {
   x: number
@@ -76,21 +77,6 @@ export const drawPcbRatsNest = ({
 }) => {
   const netIds = Object.keys(connectivity.netMap)
 
-  ctx.save()
-
-  // Set line style for rats nest (dotted lines)
-  ctx.strokeStyle = colorMap.silkscreen.top
-  ctx.lineWidth = 0.1 // Thin lines
-  ctx.setLineDash([1, 1]) // Dotted pattern
-
-  // Apply transform to coordinates
-  const applyTransform = (x: number, y: number) => {
-    return {
-      x: transform.a * x + transform.c * y + transform.e,
-      y: transform.b * x + transform.d * y + transform.f,
-    }
-  }
-
   for (const netId of netIds) {
     const connectedIds = connectivity.netMap[netId]
     if (!connectedIds) continue
@@ -104,6 +90,9 @@ export const drawPcbRatsNest = ({
       }
     }
 
+    // Track drawn connections to avoid duplicates
+    const drawnConnections = new Set<string>()
+
     // Draw lines from each point to its nearest neighbor
     for (const sourcePos of positions) {
       const nearestPos = findNearestPointInNet(
@@ -113,15 +102,28 @@ export const drawPcbRatsNest = ({
         circuitJson,
       )
       if (nearestPos) {
-        const tSource = applyTransform(sourcePos.x, sourcePos.y)
-        const tNearest = applyTransform(nearestPos.x, nearestPos.y)
-        ctx.beginPath()
-        ctx.moveTo(tSource.x, tSource.y)
-        ctx.lineTo(tNearest.x, tNearest.y)
-        ctx.stroke()
+        // Create a unique key for the connection (sorted by coordinates)
+        const key = [
+          `${sourcePos.x},${sourcePos.y}`,
+          `${nearestPos.x},${nearestPos.y}`,
+        ]
+          .sort()
+          .join("-")
+
+        if (!drawnConnections.has(key)) {
+          drawnConnections.add(key)
+          drawLine({
+            ctx,
+            start: sourcePos,
+            end: nearestPos,
+            strokeWidth: 0.1, // Thin lines
+            stroke: colorMap.silkscreen.top,
+            transform,
+            lineCap: "round",
+            lineDash: [1, 1], // Dotted pattern
+          })
+        }
       }
     }
   }
-
-  ctx.restore()
 }
