@@ -15,6 +15,7 @@ import type {
   PcbCopperPour,
   PcbCopperText,
   PcbFabricationNoteRect,
+  PcbComponent,
 } from "circuit-json"
 import { identity, compose, translate, scale } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
@@ -42,6 +43,7 @@ import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
 import { drawPcbFabricationNoteRect } from "./elements/pcb-fabrication-note-rect"
+import { drawPcbComponent } from "./elements/pcb-component"
 
 export interface DrawElementsOptions {
   layers?: string[]
@@ -270,6 +272,15 @@ export class CircuitToCanvasDrawer {
       drawPcbFabricationNoteRect({
         ctx: this.ctx,
         rect: element as PcbFabricationNoteRect,
+        transform: this.realToCanvasMat,
+        colorMap: this.colorMap,
+      })
+    }
+
+    if (element.type === "pcb_component") {
+      drawPcbComponent({
+        ctx: this.ctx,
+        component: element as PcbComponent,
         transform: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
