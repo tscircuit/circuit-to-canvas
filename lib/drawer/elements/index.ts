@@ -37,3 +37,8 @@ export {
   drawPcbCopperText,
   type DrawPcbCopperTextParams,
 } from "./pcb-copper-text"
+
+export {
+  drawPcbFabricationNoteRect,
+  type DrawPcbFabricationNoteRectParams,
+} from "./pcb-fabrication-note-rect"

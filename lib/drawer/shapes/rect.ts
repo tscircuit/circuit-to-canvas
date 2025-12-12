@@ -7,10 +7,13 @@ export interface DrawRectParams {
   center: { x: number; y: number }
   width: number
   height: number
-  fill: string
+  fill?: string
   transform: Matrix
   borderRadius?: number
   rotation?: number
+  stroke?: string
+  strokeWidth?: number
+  isStrokeDashed?: boolean
 }
 
 export function drawRect(params: DrawRectParams): void {
@@ -23,18 +26,31 @@ export function drawRect(params: DrawRectParams): void {
     transform,
     borderRadius = 0,
     rotation = 0,
+    stroke,
+    strokeWidth,
+    isStrokeDashed = false,
   } = params
 
   const [cx, cy] = applyToPoint(transform, [center.x, center.y])
   const scaledWidth = width * Math.abs(transform.a)
   const scaledHeight = height * Math.abs(transform.a)
   const scaledRadius = borderRadius * Math.abs(transform.a)
+  const scaledStrokeWidth = strokeWidth
+    ? strokeWidth * Math.abs(transform.a)
+    : undefined
 
   ctx.save()
   ctx.translate(cx, cy)
 
   if (rotation !== 0) {
     ctx.rotate(-rotation * (Math.PI / 180))
+  }
+
+  // Set up dashed line if needed
+  if (isStrokeDashed && scaledStrokeWidth) {
+    ctx.setLineDash([scaledStrokeWidth * 2, scaledStrokeWidth * 2])
+  } else {
+    ctx.setLineDash([])
   }
 
   ctx.beginPath()
@@ -63,7 +79,16 @@ export function drawRect(params: DrawRectParams): void {
     ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
   }
 
-  ctx.fillStyle = fill
-  ctx.fill()
+  if (fill) {
+    ctx.fillStyle = fill
+    ctx.fill()
+  }
+
+  if (stroke && scaledStrokeWidth) {
+    ctx.strokeStyle = stroke
+    ctx.lineWidth = scaledStrokeWidth
+    ctx.stroke()
+  }
+
   ctx.restore()
 }
