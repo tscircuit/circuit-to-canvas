@@ -29,4 +29,3 @@ export function drawArrowHead(params: DrawArrowHeadParams): void {
 
   ctx.restore()
 }
-
