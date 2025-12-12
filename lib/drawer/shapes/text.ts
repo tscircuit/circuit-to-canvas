@@ -4,12 +4,12 @@ import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../types"
 
 const GLYPH_WIDTH_RATIO = 0.62
-const LETTER_SPACING_RATIO = 0.16
+const LETTER_SPACING_RATIO = 0.3 // Letter spacing between characters (25% of glyph width)
 const SPACE_WIDTH_RATIO = 1
 const STROKE_WIDTH_RATIO = 0.13
 const CURVED_GLYPHS = new Set(["O", "o", "0"])
 
-type AlphabetLayout = {
+export type AlphabetLayout = {
   width: number
   height: number
   glyphWidth: number
@@ -18,7 +18,10 @@ type AlphabetLayout = {
   strokeWidth: number
 }
 
-function getAlphabetLayout(text: string, fontSize: number): AlphabetLayout {
+export function getAlphabetLayout(
+  text: string,
+  fontSize: number,
+): AlphabetLayout {
   const glyphWidth = fontSize * GLYPH_WIDTH_RATIO
   const letterSpacing = glyphWidth * LETTER_SPACING_RATIO
   const spaceWidth = glyphWidth * SPACE_WIDTH_RATIO
@@ -46,7 +49,7 @@ function getAlphabetLayout(text: string, fontSize: number): AlphabetLayout {
 const getGlyphLines = (char: string) =>
   lineAlphabet[char] ?? lineAlphabet[char.toUpperCase()]
 
-type AnchorAlignment =
+export type AnchorAlignment =
   | "center"
   | "top_left"
   | "top_right"
@@ -57,7 +60,7 @@ type AnchorAlignment =
   | "top"
   | "bottom"
 
-function getTextStartPosition(
+export function getTextStartPosition(
   alignment: AnchorAlignment,
   layout: AlphabetLayout,
 ): { x: number; y: number } {
@@ -104,7 +107,7 @@ function getTextStartPosition(
   return { x, y }
 }
 
-function strokeAlphabetText(
+export function strokeAlphabetText(
   ctx: CanvasContext,
   text: string,
   layout: AlphabetLayout,
@@ -148,8 +151,13 @@ function strokeAlphabetText(
       ctx.stroke()
     }
 
+    // Move cursor by the character width
     cursor += advance
-    if (index < characters.length - 1) cursor += letterSpacing
+    // Add letter spacing after each character except the last one
+    // This spacing will be before the next character, creating visible gaps
+    if (index < characters.length - 1) {
+      cursor += letterSpacing
+    }
   })
 }
 
