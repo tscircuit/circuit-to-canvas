@@ -6,3 +6,12 @@ export { drawPolygon, type DrawPolygonParams } from "./polygon"
 export { drawLine, type DrawLineParams } from "./line"
 export { drawPath, type DrawPathParams } from "./path"
 export { drawArrowHead, type DrawArrowHeadParams } from "./arrow"
+export {
+  drawText,
+  type DrawTextParams,
+  getAlphabetLayout,
+  strokeAlphabetText,
+  getTextStartPosition,
+  type AlphabetLayout,
+  type AnchorAlignment,
+} from "./text"

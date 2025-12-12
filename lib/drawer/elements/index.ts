@@ -39,6 +39,11 @@ export {
 } from "./pcb-copper-text"
 
 export {
+  drawPcbFabricationNoteText,
+  type DrawPcbFabricationNoteTextParams,
+} from "./pcb-fabrication-note-text"
+
+export {
   drawPcbFabricationNoteRect,
   type DrawPcbFabricationNoteRectParams,
 } from "./pcb-fabrication-note-rect"
@@ -47,3 +52,13 @@ export {
   drawPcbFabricationNoteDimension,
   type DrawPcbFabricationNoteDimensionParams,
 } from "./pcb-fabrication-note-dimension"
+
+export {
+  drawPcbNoteRect,
+  type DrawPcbNoteRectParams,
+} from "./pcb-note-rect"
+
+export {
+  drawPcbFabricationNotePath,
+  type DrawPcbFabricationNotePathParams,
+} from "./pcb-fabrication-note-path"
