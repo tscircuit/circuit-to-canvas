@@ -22,7 +22,6 @@ test("draw pcb note rect with fill and no stroke", async () => {
     is_filled: true,
     has_stroke: false,
     is_stroke_dashed: false,
-    color: "#FF00FF", // Magenta color
   }
 
   drawer.drawElements([rect])
