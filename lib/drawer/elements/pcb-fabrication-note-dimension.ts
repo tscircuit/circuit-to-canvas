@@ -3,38 +3,13 @@ import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawLine } from "../shapes/line"
+import { drawArrowHead } from "../shapes/arrow"
 
 export interface DrawPcbFabricationNoteDimensionParams {
   ctx: CanvasContext
   dimension: PcbFabricationNoteDimension
   transform: Matrix
   colorMap: PcbColorMap
-}
-
-/**
- * Draw an arrow head at a point
- */
-function drawArrowHead(
-  ctx: CanvasContext,
-  x: number,
-  y: number,
-  angle: number,
-  size: number,
-  color: string,
-): void {
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(angle)
-
-  ctx.beginPath()
-  ctx.moveTo(0, 0)
-  ctx.lineTo(-size, -size / 2)
-  ctx.lineTo(-size, size / 2)
-  ctx.closePath()
-  ctx.fillStyle = color
-  ctx.fill()
-
-  ctx.restore()
 }
 
 export function drawPcbFabricationNoteDimension(
@@ -138,24 +113,24 @@ export function drawPcbFabricationNoteDimension(
 
   // Draw arrow heads at both ends
   // Arrow at start (pointing towards the line)
-  drawArrowHead(
+  drawArrowHead({
     ctx,
-    dimensionLineStartX,
-    dimensionLineStartY,
-    lineAngle + Math.PI,
-    arrowSize,
+    x: dimensionLineStartX,
+    y: dimensionLineStartY,
+    angle: lineAngle + Math.PI,
+    size: arrowSize,
     color,
-  )
+  })
 
   // Arrow at end (pointing towards the line)
-  drawArrowHead(
+  drawArrowHead({
     ctx,
-    dimensionLineEndX,
-    dimensionLineEndY,
-    lineAngle,
-    arrowSize,
+    x: dimensionLineEndX,
+    y: dimensionLineEndY,
+    angle: lineAngle,
+    size: arrowSize,
     color,
-  )
+  })
 
   // Draw text if provided
   if (dimension.text) {
