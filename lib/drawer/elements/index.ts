@@ -39,6 +39,11 @@ export {
 } from "./pcb-copper-text"
 
 export {
+  drawPcbFabricationNoteText,
+  type DrawPcbFabricationNoteTextParams,
+} from "./pcb-fabrication-note-text"
+
+export {
   drawPcbFabricationNoteRect,
   type DrawPcbFabricationNoteRectParams,
 } from "./pcb-fabrication-note-rect"
