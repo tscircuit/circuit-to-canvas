@@ -47,3 +47,6 @@ export {
   drawPcbComponent,
   type DrawPcbComponentParams,
 } from "./pcb-component"
+  drawPcbFabricationNotePath,
+  type DrawPcbFabricationNotePathParams,
+} from "./pcb-fabrication-note-path"
