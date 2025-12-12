@@ -292,6 +292,8 @@ export class CircuitToCanvasDrawer {
 
     if (element.type === "pcb_note_rect") {
       drawPcbNoteRect({
+        transform: this.realToCanvasMat,
+        colorMap: this.colorMap,
         ctx: this.ctx,
         rect: element as PcbNoteRect,
       })
