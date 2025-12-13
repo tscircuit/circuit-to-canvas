@@ -52,12 +52,15 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
   const textColor = layerToCopperColor(text.layer, colorMap)
   const layout = getAlphabetLayout(content, fontSize)
   const totalWidth = layout.width + layout.strokeWidth
-  const totalHeight = layout.height + layout.strokeWidth
   const alignment = mapAnchorAlignment(text.anchor_alignment)
   const startPos = getTextStartPosition(alignment, layout)
-  // Copper text always centers vertically (startY=0), uses startPos.x for horizontal alignment
+  // Copper text always centers vertically
+  // For center alignment with new baseline-based text.ts:
+  // - startPos.y = -height/2 + baselineOffset (positions baseline for centering)
+  // - But we want baseline at 0 for simplicity, so we adjust: startY = 0 means baseline at 0
+  // - To center: baseline should be at -height/2 + baselineOffset, so we use startPos.y
   const startX = startPos.x
-  const startY = 0 // Centers vertically at y=0 (shared function calculates yOffset = startY + height/2)
+  const startY = startPos.y // Use startPos.y to get proper baseline position for center alignment
 
   ctx.save()
   ctx.translate(x, y)
@@ -73,10 +76,21 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     const paddingRight = padding.right * scale
     const paddingTop = padding.top * scale
     const paddingBottom = padding.bottom * scale
+    // Calculate knockout rectangle to cover the text box
+    // With baseline-based positioning:
+    // - startY is the baseline position (from getTextStartPosition for center alignment)
+    // - Text box extends from (baseline - baselineOffset) to (baseline + descenderDepth)
+    // - Total text box height = baselineOffset + descenderDepth = height
+    // - We need to account for stroke width extending beyond the text box
+    const textBoxTop = startY - layout.baselineOffset - layout.strokeWidth / 2
+    const textBoxBottom =
+      startY + layout.descenderDepth + layout.strokeWidth / 2
+    const textBoxHeight = textBoxBottom - textBoxTop
+
     const xOffset = startX - paddingLeft
-    const yOffset = -(layout.height / 2) - layout.strokeWidth / 2 - paddingTop
+    const yOffset = textBoxTop - paddingTop
     const knockoutWidth = totalWidth + paddingLeft + paddingRight
-    const knockoutHeight = totalHeight + paddingTop + paddingBottom
+    const knockoutHeight = textBoxHeight + paddingTop + paddingBottom
 
     ctx.fillStyle = textColor
     ctx.fillRect(xOffset, yOffset, knockoutWidth, knockoutHeight)

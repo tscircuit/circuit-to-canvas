@@ -18,7 +18,7 @@ test("draw fabrication note text small size", async () => {
     pcb_fabrication_note_text_id: "fab-note-small",
     pcb_component_id: "component1",
     layer: "top",
-    text: "SMAL",
+    text: "Smapq876",
     anchor_position: { x: 50, y: 50 },
     anchor_alignment: "center",
     font: "tscircuit2024",
