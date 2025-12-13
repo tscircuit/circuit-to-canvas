@@ -65,7 +65,7 @@ This checklist tracks PCB drawing features from [circuit-to-svg](https://github.
 
 ### Debug/Development Features
 
-- [ ] `pcb_component` - Component bounding box visualization
+- [x] `pcb_component` - Component bounding box visualization
 - [ ] `pcb_group` - PCB group visualization with dashed outlines
 - [ ] `pcb_courtyard_rect` - Component courtyard rectangles
 
