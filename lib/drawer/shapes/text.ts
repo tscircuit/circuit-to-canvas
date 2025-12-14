@@ -7,7 +7,6 @@ const GLYPH_WIDTH_RATIO = 0.62
 const LETTER_SPACING_RATIO = 0.3 // Letter spacing between characters (25% of glyph width)
 const SPACE_WIDTH_RATIO = 1
 const STROKE_WIDTH_RATIO = 0.13
-const CURVED_GLYPHS = new Set(["O", "o", "0"])
 const BASELINE_Y = -0.241 // Baseline adjustment for lowercase letters to align with uppercase/numbers
 
 export type AlphabetLayout = {
@@ -133,27 +132,7 @@ export function strokeAlphabetText(
     const isLowercase = char >= "a" && char <= "z"
     const baselineAdjust = isLowercase ? BASELINE_Y : 0
 
-    if (CURVED_GLYPHS.has(char)) {
-      // For curved glyphs, align their bottom to the baseline
-      // Normalized coords: y=0 is bottom, y=1 is top, y=0.5 is center
-      // Canvas coords: y increases downward
-      // For baseline alignment: bottom (y=0) should be at baselineY
-      // Glyph center is at y=0.5, so position it at baselineY - 0.5*height, then shift by baselineAdjust
-      const radiusX = Math.max(glyphWidth / 2 - strokeWidth / 2, strokeWidth)
-      const radiusY = Math.max(height / 2 - strokeWidth / 2, strokeWidth)
-      const glyphCenterY = baselineY - (0.5 + baselineAdjust) * height
-      ctx.beginPath()
-      ctx.ellipse(
-        cursor + glyphWidth / 2,
-        glyphCenterY,
-        radiusX,
-        radiusY,
-        0,
-        0,
-        Math.PI * 2,
-      )
-      ctx.stroke()
-    } else if (lines?.length) {
+    if (lines?.length) {
       ctx.beginPath()
       for (const line of lines) {
         // Convert normalized y coordinates (0-1, where 0 is bottom, 1 is top) to canvas coordinates
