@@ -4,6 +4,7 @@ import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawLine } from "../shapes/line"
 import { drawArrowHead } from "../shapes/arrow"
+import { drawText, getAlphabetLayout } from "../shapes/text"
 
 export interface DrawPcbFabricationNoteDimensionParams {
   ctx: CanvasContext
@@ -134,29 +135,69 @@ export function drawPcbFabricationNoteDimension(
 
   // Draw text if provided
   if (dimension.text) {
-    const fontSize = (dimension.font_size ?? 1) * Math.abs(transform.a)
+    const fontSize = dimension.font_size ?? 1
     const rotation = dimension.text_ccw_rotation ?? 0
 
-    // Calculate text position (middle of dimension line)
-    const textX = (dimensionLineStartX + dimensionLineEndX) / 2
-    const textY = (dimensionLineStartY + dimensionLineEndY) / 2
+    // Calculate text position (middle of dimension line in real-world coordinates)
+    const midX = (dimension.from.x + dimension.to.x) / 2
+    const midY = (dimension.from.y + dimension.to.y) / 2
 
-    ctx.save()
-    ctx.translate(textX, textY)
+    // Calculate perpendicular direction for offset (to position text above the line)
+    // Perpendicular vector: (-dy, dx) normalized
+    const realDx = dimension.to.x - dimension.from.x
+    const realDy = dimension.to.y - dimension.from.y
+    const realLineLength = Math.sqrt(realDx * realDx + realDy * realDy)
 
-    // Apply rotation (CCW rotation in degrees)
-    if (rotation !== 0) {
-      ctx.rotate(-rotation * (Math.PI / 180))
+    // Get text layout to calculate height for offset
+    const layout = getAlphabetLayout(dimension.text, fontSize)
+    // Total text height includes descender depth
+    const textHeight =
+      layout.height + layout.descenderDepth + layout.strokeWidth
+
+    // Offset text above the line (perpendicular direction)
+    // Use a default offset of 1.5x the text height (from baseline)
+    const textOffset = textHeight * 1.5
+
+    let offsetX = 0
+    let offsetY = 0
+
+    if (realLineLength > 0) {
+      // Perpendicular vector pointing "up" (counter-clockwise 90 degrees)
+      const perpX = -realDy / realLineLength
+      const perpY = realDx / realLineLength
+      offsetX = perpX * textOffset
+      offsetY = perpY * textOffset
     } else {
-      // If no explicit rotation, rotate to align with dimension line
-      ctx.rotate(lineAngle)
+      // If line has no length, just offset upward
+      offsetY = -textOffset
     }
 
-    ctx.font = `${fontSize}px sans-serif`
-    ctx.fillStyle = color
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-    ctx.fillText(dimension.text, 0, 0)
-    ctx.restore()
+    // Calculate baseline position (where we want the text baseline to be)
+    const baselineX = midX + offsetX
+    const baselineY = midY + offsetY
+
+    // Determine rotation: use explicit rotation if provided, otherwise align with line
+    // Calculate real-world line angle for rotation
+    const realLineAngle =
+      realLineLength > 0 ? (Math.atan2(realDy, realDx) * 180) / Math.PI : 0
+    const textRotation = rotation !== 0 ? rotation : realLineAngle
+
+    // Draw text using @tscircuit/alphabet with baseline alignment
+    // Use "bottom" alignment: the bottom of text (including descenders) aligns with anchor
+    // We want the baseline to align, so adjust y position to account for descender depth
+    // Baseline is at: anchorY - descenderDepth from bottom
+    const textAnchorY = baselineY + layout.descenderDepth
+
+    drawText({
+      ctx,
+      text: dimension.text,
+      x: baselineX,
+      y: textAnchorY,
+      fontSize,
+      color,
+      transform,
+      anchorAlignment: "bottom",
+      rotation: textRotation,
+    })
   }
 }

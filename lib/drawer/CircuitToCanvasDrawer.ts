@@ -300,7 +300,7 @@ export class CircuitToCanvasDrawer {
         dimension: element as PcbFabricationNoteDimension,
       })
     }
-      
+
     if (element.type === "pcb_note_rect") {
       drawPcbNoteRect({
         transform: this.realToCanvasMat,
