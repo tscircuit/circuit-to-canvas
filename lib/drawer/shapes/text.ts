@@ -8,25 +8,7 @@ const LETTER_SPACING_RATIO = 0.3 // Letter spacing between characters (25% of gl
 const SPACE_WIDTH_RATIO = 1
 const STROKE_WIDTH_RATIO = 0.13
 const CURVED_GLYPHS = new Set(["O", "o", "0"])
-
-// Calculate baseline offset from reference lowercase letters (same as working implementation)
-const LOWERCASE_BASELINE_OFFSET = (() => {
-  const referenceLetters = ["a", "c", "e", "m", "n", "o", "r", "s", "u", "x"]
-  const offsets = referenceLetters
-    .map((letter) => lineAlphabet[letter])
-    .filter(
-      (lines): lines is NonNullable<typeof lines> =>
-        lines !== undefined && lines.length > 0,
-    )
-    .map((lines) =>
-      Math.min(...lines.map((line) => Math.min(line.y1, line.y2))),
-    )
-  return offsets.length > 0 ? Math.min(...offsets) : 0
-})()
-
-// Get baseline offset for a specific letter (only lowercase letters get offset)
-const getBaselineOffsetForLetter = (letter: string) =>
-  letter >= "a" && letter <= "z" ? LOWERCASE_BASELINE_OFFSET : 0
+const BASELINE_Y = -0.241 // Baseline adjustment for lowercase letters to align with uppercase/numbers
 
 export type AlphabetLayout = {
   width: number
@@ -35,8 +17,6 @@ export type AlphabetLayout = {
   letterSpacing: number
   spaceWidth: number
   strokeWidth: number
-  baselineOffset: number // Distance from top to baseline
-  descenderDepth: number // Distance from baseline to bottom (for descenders)
 }
 
 export function getAlphabetLayout(
@@ -56,15 +36,6 @@ export function getAlphabetLayout(
   })
 
   const strokeWidth = Math.max(fontSize * STROKE_WIDTH_RATIO, 0.35)
-  // Calculate baseline offset: distance from top of text box to baseline
-  // In normalized coords: y=0 is bottom, y=1 is top
-  // LOWERCASE_BASELINE_OFFSET is the minimum y (baseline position) in normalized coords
-  const hasLowercase = /[a-z]/.test(text)
-  const baselineOffset = hasLowercase
-    ? (1 - LOWERCASE_BASELINE_OFFSET) * fontSize
-    : fontSize
-  // Descender depth: distance from baseline to bottom (for descenders like g, j, p, q, y)
-  const descenderDepth = hasLowercase ? LOWERCASE_BASELINE_OFFSET * fontSize : 0
 
   return {
     width,
@@ -73,8 +44,6 @@ export function getAlphabetLayout(
     letterSpacing,
     spaceWidth,
     strokeWidth,
-    baselineOffset,
-    descenderDepth,
   }
 }
 
@@ -97,8 +66,7 @@ export function getTextStartPosition(
   layout: AlphabetLayout,
 ): { x: number; y: number } {
   const totalWidth = layout.width + layout.strokeWidth
-  // Total height includes descender depth for proper vertical alignment
-  const totalHeight = layout.height + layout.descenderDepth + layout.strokeWidth
+  const totalHeight = layout.height + layout.strokeWidth
 
   let x = 0
   let y = 0
@@ -120,24 +88,24 @@ export function getTextStartPosition(
     x = -totalWidth
   }
 
-  // Vertical alignment - positions relative to baseline
-  // Text extends from (baseline - baselineOffset) at top to (baseline + descenderDepth) at bottom
+  // Vertical alignment - using middle baseline like silkscreen text
+  // The anchor point is at the vertical center of the text (y=0 means center at anchor)
   if (alignment === "center") {
-    y = layout.baselineOffset - layout.height / 2
+    y = 0 // Center at anchor point
   } else if (
     alignment === "top_left" ||
     alignment === "top_right" ||
     alignment === "top"
   ) {
-    y = layout.baselineOffset
+    y = totalHeight / 2 // Move down so top aligns with anchor
   } else if (
     alignment === "bottom_left" ||
     alignment === "bottom_right" ||
     alignment === "bottom"
   ) {
-    y = -layout.descenderDepth
+    y = -totalHeight / 2 // Move up so bottom aligns with anchor
   } else {
-    y = 0
+    y = 0 // Default: center at anchor point
   }
 
   return { x, y }
@@ -150,35 +118,34 @@ export function strokeAlphabetText(
   startX: number,
   startY: number,
 ): void {
-  const {
-    glyphWidth,
-    letterSpacing,
-    spaceWidth,
-    height,
-    strokeWidth,
-    baselineOffset,
-  } = layout
-  const baselineY = startY
+  const { glyphWidth, letterSpacing, spaceWidth, height, strokeWidth } = layout
+  // startY is the vertical center (middle baseline), like silkscreen's textBaseline = "middle"
+  // The baseline (bottom of text) is at startY + height/2
+  // In canvas coordinates, y increases downward, so baseline is below center
+  const centerY = startY
+  const baselineY = startY + height / 2
   const characters = Array.from(text)
   let cursor = startX + strokeWidth / 2
 
   characters.forEach((char, index) => {
     const lines = getGlyphLines(char)
     const advance = char === " " ? spaceWidth : glyphWidth
-    // Get normalized baseline offset for this specific character (0-1 range)
-    const charBaselineOffset = getBaselineOffsetForLetter(char)
+    const isLowercase = char >= "a" && char <= "z"
+    const baselineAdjust = isLowercase ? BASELINE_Y : 0
 
     if (CURVED_GLYPHS.has(char)) {
-      // For curved glyphs, adjust coordinates by baseline offset
-      const normalizedCenterY = 0.5
-      const adjustedCenterY = normalizedCenterY - charBaselineOffset
-      const centerY = baselineY - adjustedCenterY * height
+      // For curved glyphs, align their bottom to the baseline
+      // Normalized coords: y=0 is bottom, y=1 is top, y=0.5 is center
+      // Canvas coords: y increases downward
+      // For baseline alignment: bottom (y=0) should be at baselineY
+      // Glyph center is at y=0.5, so position it at baselineY - 0.5*height, then shift by baselineAdjust
       const radiusX = Math.max(glyphWidth / 2 - strokeWidth / 2, strokeWidth)
       const radiusY = Math.max(height / 2 - strokeWidth / 2, strokeWidth)
+      const glyphCenterY = baselineY - (0.5 + baselineAdjust) * height
       ctx.beginPath()
       ctx.ellipse(
         cursor + glyphWidth / 2,
-        centerY,
+        glyphCenterY,
         radiusX,
         radiusY,
         0,
@@ -189,13 +156,16 @@ export function strokeAlphabetText(
     } else if (lines?.length) {
       ctx.beginPath()
       for (const line of lines) {
-        // Convert normalized y coordinates to canvas coordinates (inverted for canvas)
-        const adjusted_y1 = line.y1 - charBaselineOffset
-        const adjusted_y2 = line.y2 - charBaselineOffset
+        // Convert normalized y coordinates (0-1, where 0 is bottom, 1 is top) to canvas coordinates
+        // For baseline alignment: align bottom of all characters to the same baseline
+        // The baseline is at baselineY = startY + height/2 (bottom of text box)
+        // Formula: y = baselineY - line.y1 * height - baselineAdjust * height
+        // For uppercase/numbers (baselineAdjust=0): when line.y1=0 (bottom), y = baselineY ✓
+        // For lowercase (baselineAdjust=BASELINE_Y): shifts up to align bottom with baseline
         const x1 = cursor + line.x1 * glyphWidth
-        const y1 = baselineY - adjusted_y1 * height
+        const y1 = baselineY - line.y1 * height - baselineAdjust * height
         const x2 = cursor + line.x2 * glyphWidth
-        const y2 = baselineY - adjusted_y2 * height
+        const y2 = baselineY - line.y2 * height - baselineAdjust * height
         ctx.moveTo(x1, y1)
         ctx.lineTo(x2, y2)
       }
