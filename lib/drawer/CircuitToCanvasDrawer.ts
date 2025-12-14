@@ -17,6 +17,7 @@ import type {
   PcbFabricationNoteText,
   PcbFabricationNoteRect,
   PcbNoteRect,
+  PcbNoteLine,
   PcbFabricationNotePath,
 } from "circuit-json"
 import { identity, compose, translate, scale } from "transformation-matrix"
@@ -47,6 +48,7 @@ import { drawPcbCopperText } from "./elements/pcb-copper-text"
 import { drawPcbFabricationNoteText } from "./elements/pcb-fabrication-note-text"
 import { drawPcbFabricationNoteRect } from "./elements/pcb-fabrication-note-rect"
 import { drawPcbNoteRect } from "./elements/pcb-note-rect"
+import { drawPcbNoteLine } from "./elements/pcb-note-line"
 import { drawPcbFabricationNotePath } from "./elements/pcb-fabrication-note-path"
 
 export interface DrawElementsOptions {
@@ -296,6 +298,15 @@ export class CircuitToCanvasDrawer {
         colorMap: this.colorMap,
         ctx: this.ctx,
         rect: element as PcbNoteRect,
+      })
+    }
+
+    if (element.type === "pcb_note_line") {
+      drawPcbNoteLine({
+        ctx: this.ctx,
+        line: element as PcbNoteLine,
+        transform: this.realToCanvasMat,
+        colorMap: this.colorMap,
       })
     }
 
