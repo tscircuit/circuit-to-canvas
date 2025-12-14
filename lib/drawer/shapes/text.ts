@@ -118,9 +118,6 @@ export function strokeAlphabetText(
   startY: number,
 ): void {
   const { glyphWidth, letterSpacing, spaceWidth, height, strokeWidth } = layout
-  // startY is the vertical center (middle baseline), like silkscreen's textBaseline = "middle"
-  // The baseline (bottom of text) is at startY + height/2
-  // In canvas coordinates, y increases downward, so baseline is below center
   const centerY = startY
   const baselineY = startY + height / 2
   const characters = Array.from(text)
@@ -135,12 +132,6 @@ export function strokeAlphabetText(
     if (lines?.length) {
       ctx.beginPath()
       for (const line of lines) {
-        // Convert normalized y coordinates (0-1, where 0 is bottom, 1 is top) to canvas coordinates
-        // For baseline alignment: align bottom of all characters to the same baseline
-        // The baseline is at baselineY = startY + height/2 (bottom of text box)
-        // Formula: y = baselineY - line.y1 * height - baselineAdjust * height
-        // For uppercase/numbers (baselineAdjust=0): when line.y1=0 (bottom), y = baselineY ✓
-        // For lowercase (baselineAdjust=BASELINE_Y): shifts up to align bottom with baseline
         const x1 = cursor + line.x1 * glyphWidth
         const y1 = baselineY - line.y1 * height - baselineAdjust * height
         const x2 = cursor + line.x2 * glyphWidth
