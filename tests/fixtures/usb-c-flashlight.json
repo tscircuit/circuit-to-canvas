@@ -612,10 +612,7 @@
     "pcb_silkscreen_path_id": "pcb_silkscreen_path_5",
     "pcb_component_id": "pcb_component_2",
     "layer": "top",
-    "route": [
-      { "x": 3.25, "y": -2.25 },
-      { "x": -3.25, "y": -2.25 }
-    ],
+    "route": [{ "x": 3.25, "y": -2.25 }, { "x": -3.25, "y": -2.25 }],
     "stroke_width": 0.1,
     "subcircuit_id": "subcircuit_source_group_0"
   },
@@ -624,10 +621,7 @@
     "pcb_silkscreen_path_id": "pcb_silkscreen_path_6",
     "pcb_component_id": "pcb_component_2",
     "layer": "top",
-    "route": [
-      { "x": 3.25, "y": 2.25 },
-      { "x": -3.25, "y": 2.25 }
-    ],
+    "route": [{ "x": 3.25, "y": 2.25 }, { "x": -3.25, "y": 2.25 }],
     "stroke_width": 0.1,
     "subcircuit_id": "subcircuit_source_group_0"
   },
