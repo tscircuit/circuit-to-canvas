@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { createCanvas } from "canvas"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import { getBoundsFromPoints, type Bounds } from "@tscircuit/math-utils"
+import type { Bounds } from "@tscircuit/math-utils"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 import { stackPngsVertically, svgToPng } from "../fixtures/stackPngsVertically"
 import usbcFlashlightCircuit from "../fixtures/usb-c-flashlight.json"
@@ -19,44 +19,20 @@ function getPcbElements(elements: AnyCircuitElement[]): AnyCircuitElement[] {
 }
 
 function calculateBounds(elements: AnyCircuitElement[]): Bounds {
-  const points: { x: number; y: number }[] = []
+  const padding = 4
+  const board = elements.find((el) => el.type === "pcb_board") as
+    | { center: { x: number; y: number }; width: number; height: number }
+    | undefined
 
-  for (const el of elements) {
-    if (el.type === "pcb_board") {
-      const board = el as {
-        center: { x: number; y: number }
-        width: number
-        height: number
-      }
-      points.push(
-        {
-          x: board.center.x - board.width / 2,
-          y: board.center.y - board.height / 2,
-        },
-        {
-          x: board.center.x + board.width / 2,
-          y: board.center.y - board.height / 2,
-        },
-        {
-          x: board.center.x - board.width / 2,
-          y: board.center.y + board.height / 2,
-        },
-        {
-          x: board.center.x + board.width / 2,
-          y: board.center.y + board.height / 2,
-        },
-      )
-    }
+  if (!board) {
+    return { minX: -padding, maxX: padding, minY: -padding, maxY: padding }
   }
 
-  const bounds = getBoundsFromPoints(points)
-
-  const padding = 4
   return {
-    minX: (bounds?.minX ?? 0) - padding,
-    maxX: (bounds?.maxX ?? 0) + padding,
-    minY: (bounds?.minY ?? 0) - padding,
-    maxY: (bounds?.maxY ?? 0) + padding,
+    minX: board.center.x - board.width / 2 - padding,
+    maxX: board.center.x + board.width / 2 + padding,
+    minY: board.center.y - board.height / 2 - padding,
+    maxY: board.center.y + board.height / 2 + padding,
   }
 }
 
@@ -75,8 +51,8 @@ test("USB-C flashlight - comprehensive comparison (circuit-to-canvas vs circuit-
   drawer.setCameraBounds({
     minX: bounds.minX,
     maxX: bounds.maxX,
-    minY: -bounds.maxY,
-    maxY: -bounds.minY,
+    minY: bounds.minY,
+    maxY: bounds.maxY,
   })
   drawer.drawElements(pcbElements)
 

@@ -126,10 +126,11 @@ export class CircuitToCanvasDrawer {
     const offsetX = (canvasWidth - realWidth * uniformScale) / 2
     const offsetY = (canvasHeight - realHeight * uniformScale) / 2
 
+    // Flip Y axis: PCB uses Y-up, canvas uses Y-down
     this.realToCanvasMat = compose(
       translate(offsetX, offsetY),
-      scale(uniformScale, uniformScale),
-      translate(-bounds.minX, -bounds.minY),
+      scale(uniformScale, -uniformScale),
+      translate(-bounds.minX, -bounds.maxY),
     )
   }
 
