@@ -116,13 +116,7 @@ export function strokeAlphabetText(
   startX: number,
   startY: number,
 ): void {
-  const {
-    glyphWidth,
-    letterSpacing,
-    spaceWidth,
-    height,
-    strokeWidth,
-  } = layout
+  const { glyphWidth, letterSpacing, spaceWidth, height, strokeWidth } = layout
   const topY = startY
   const characters = Array.from(text)
   let cursor = startX + strokeWidth / 2
