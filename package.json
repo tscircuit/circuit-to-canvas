@@ -10,10 +10,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.8",
+    "@napi-rs/canvas": "^0.1.84",
     "@tscircuit/alphabet": "^0.0.9",
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
-    "canvas": "^3.2.0",
     "circuit-json": "^0.0.327",
     "tsup": "^8.5.1"
   },
