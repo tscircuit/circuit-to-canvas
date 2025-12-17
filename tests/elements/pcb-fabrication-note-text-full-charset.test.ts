@@ -76,6 +76,7 @@ test("draw full character set", async () => {
   }
   drawer.drawElements([symbolsText])
   y += lineHeight
+
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
     "fabrication-note-text-full-charset",
