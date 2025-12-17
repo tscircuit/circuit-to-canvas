@@ -7,7 +7,6 @@ const GLYPH_WIDTH_RATIO = 0.62
 const LETTER_SPACING_RATIO = 0.3 // Letter spacing between characters (25% of glyph width)
 const SPACE_WIDTH_RATIO = 1
 const STROKE_WIDTH_RATIO = 0.13
-const CURVED_GLYPHS = new Set(["O", "o", "0"])
 
 export type AlphabetLayout = {
   width: number
@@ -125,23 +124,7 @@ export function strokeAlphabetText(
     const lines = getGlyphLines(char)
     const advance = char === " " ? spaceWidth : glyphWidth
 
-    if (CURVED_GLYPHS.has(char)) {
-      const normalizedCenterY = 0.5
-      const centerY = topY + normalizedCenterY * height
-      const radiusX = Math.max(glyphWidth / 2 - strokeWidth / 2, strokeWidth)
-      const radiusY = Math.max(height / 2 - strokeWidth / 2, strokeWidth)
-      ctx.beginPath()
-      ctx.ellipse(
-        cursor + glyphWidth / 2,
-        centerY,
-        radiusX,
-        radiusY,
-        0,
-        0,
-        Math.PI * 2,
-      )
-      ctx.stroke()
-    } else if (lines?.length) {
+    if (lines?.length) {
       ctx.beginPath()
       for (const line of lines) {
         // Convert normalized y coordinates to canvas coordinates (inverted for canvas)
