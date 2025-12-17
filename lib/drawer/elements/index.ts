@@ -62,3 +62,8 @@ export {
   drawPcbNotePath,
   type DrawPcbNotePathParams,
 } from "./pcb-note-path"
+
+export {
+  drawPcbNoteText,
+  type DrawPcbNoteTextParams,
+} from "./pcb-note-text"
