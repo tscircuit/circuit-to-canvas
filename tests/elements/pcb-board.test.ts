@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createCanvas } from "canvas"
+import { createCanvas } from "@napi-rs/canvas"
 import type { PcbBoard } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
@@ -80,6 +80,9 @@ test("draw board with elements", async () => {
       center: { x: 100, y: 75 },
       width: 180,
       height: 130,
+      thickness: 1.6,
+      num_layers: 2,
+      material: "fr4" as const,
     },
     {
       type: "pcb_smtpad" as const,
@@ -142,7 +145,7 @@ test("draw board with elements", async () => {
       y: 75,
       outer_diameter: 10,
       hole_diameter: 5,
-      layers: ["top", "bottom"],
+      layers: ["top", "bottom"] as ("top" | "bottom")[],
     },
   ]
 
