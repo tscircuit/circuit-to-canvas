@@ -191,26 +191,33 @@ test("draw silkscreen on component", async () => {
     {
       type: "pcb_silkscreen_rect" as const,
       pcb_silkscreen_rect_id: "outline1",
+      pcb_component_id: "component1",
       layer: "top" as const,
       center: { x: 75, y: 50 },
       width: 60,
       height: 30,
+      stroke_width: 0.2,
     },
     // Pin 1 indicator
     {
       type: "pcb_silkscreen_circle" as const,
       pcb_silkscreen_circle_id: "pin1marker",
+      pcb_component_id: "component1",
       layer: "top" as const,
       center: { x: 55, y: 40 },
       radius: 3,
+      stroke_width: 0.2,
     },
     // Component label
     {
       type: "pcb_silkscreen_text" as const,
       pcb_silkscreen_text_id: "label1",
+      pcb_component_id: "component1",
       layer: "top" as const,
       text: "IC1",
       anchor_position: { x: 75, y: 50 },
+      anchor_alignment: "center" as const,
+      font: "tscircuit2024" as const,
       font_size: 8,
     },
     // SMT pads
