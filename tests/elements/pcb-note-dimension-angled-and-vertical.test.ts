@@ -23,7 +23,6 @@ test("draw pcb note dimension - angled", async () => {
     font: "tscircuit2024",
     // slight offset so extension lines are visible and text sits off the line
     offset_distance: 12,
-    offset_direction: { x: -0.5, y: -0.5 },
   }
 
   drawer.drawElements([angledDim])

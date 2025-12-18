@@ -17,8 +17,7 @@ const DEFAULT_NOTE_COLOR = "rgba(255,255,255,0.5)"
 export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
   const { ctx, dimension, transform, colorMap } = params
 
-  const defaultColor = DEFAULT_NOTE_COLOR
-  const color = dimension.color ?? defaultColor
+  const color = dimension.color ?? DEFAULT_NOTE_COLOR
   const arrowSize = dimension.arrow_size
 
   // Store original endpoints for extension lines
@@ -40,23 +39,27 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
 
   // Apply offset if provided
   if (dimension.offset_distance && dimension.offset_direction) {
-    hasOffset = true
-    offsetX = dimension.offset_distance * dimension.offset_direction.x
-    offsetY = dimension.offset_distance * dimension.offset_direction.y
-    fromX += offsetX
-    fromY += offsetY
-    toX += offsetX
-    toY += offsetY
+    const dirX = dimension.offset_direction.x
+    const dirY = dimension.offset_direction.y
+    const length = Math.hypot(dirX, dirY)
+    if (length > 0) {
+      const normX = dirX / length
+      const normY = dirY / length
+      hasOffset = true
+      offsetX = dimension.offset_distance * normX
+      offsetY = dimension.offset_distance * normY
+      fromX += offsetX
+      fromY += offsetY
+      toX += offsetX
+      toY += offsetY
+    }
   }
 
   // Calculate stroke width to match text stroke width
   // Text uses fontSize * STROKE_WIDTH_RATIO (0.13) with minimum 0.35
   const STROKE_WIDTH_RATIO = 0.13
-  const textStrokeWidth = Math.max(
-    dimension.font_size * STROKE_WIDTH_RATIO,
-    0.35,
-  )
-  const strokeWidth = textStrokeWidth
+
+  const strokeWidth = Math.max(dimension.font_size * STROKE_WIDTH_RATIO, 0.35)
 
   // Draw extension lines if offset is provided
   if (hasOffset) {
@@ -91,17 +94,16 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     transform,
   })
 
-  // Calculate angle for arrows
-  const dx = toX - fromX
-  const dy = toY - fromY
-  const lineAngle = Math.atan2(dy, dx)
-
   // Draw arrows at both ends
   const [transformedFromX, transformedFromY] = applyToPoint(transform, [
     fromX,
     fromY,
   ])
   const [transformedToX, transformedToY] = applyToPoint(transform, [toX, toY])
+  // Calculate angle for arrows in transformed (canvas) coordinates
+  const transformedDx = transformedToX - transformedFromX
+  const transformedDy = transformedToY - transformedFromY
+  const lineAngle = Math.atan2(transformedDy, transformedDx)
   const scale = Math.abs(transform.a)
   const scaledArrowSize = arrowSize * scale
   const scaledStrokeWidth = strokeWidth * scale
@@ -154,14 +156,23 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
       textY += normalizedPerpY * offsetDistance
     }
 
-    // Calculate rotation for text
-    let textRotation = 0
-    if (dimension.text_ccw_rotation !== undefined) {
-      textRotation = dimension.text_ccw_rotation
-    } else {
-      // Default: rotate text to align with dimension line
-      textRotation = (lineAngle * 180) / Math.PI
+    // Calculate rotation (displayed CCW degrees). If the caller provided
+    // `text_ccw_rotation` use that directly; otherwise align with the line
+    // angle and keep the text upright by folding into [-90, 90]. `drawText`
+    // expects a rotation value that it will negate internally, so we pass
+    // `-deg` below.
+    let deg = dimension.text_ccw_rotation ?? (lineAngle * 180) / Math.PI
+
+    if (dimension.text_ccw_rotation === undefined) {
+      // Normalize to [-180, 180]
+      deg = ((deg + 180) % 360) - 180
+
+      // Fold into [-90, 90] to keep text upright
+      if (deg > 90) deg -= 180
+      if (deg < -90) deg += 180
     }
+
+    const textRotation = -deg
 
     drawText({
       ctx,
