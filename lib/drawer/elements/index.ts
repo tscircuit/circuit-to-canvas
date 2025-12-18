@@ -57,3 +57,13 @@ export {
   drawPcbFabricationNotePath,
   type DrawPcbFabricationNotePathParams,
 } from "./pcb-fabrication-note-path"
+
+export {
+  drawPcbNotePath,
+  type DrawPcbNotePathParams,
+} from "./pcb-note-path"
+
+export {
+  drawPcbNoteText,
+  type DrawPcbNoteTextParams,
+} from "./pcb-note-text"

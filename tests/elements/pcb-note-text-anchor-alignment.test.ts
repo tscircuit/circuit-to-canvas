@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "canvas"
-import type { PcbFabricationNoteText } from "circuit-json"
+import type { PcbNoteText } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test("draw text baseline alignment with different anchor positions", async () => {
+test("draw pcb note text with different anchor alignments", async () => {
   const SCALE = 4
   const canvas = createCanvas(300 * SCALE, 200 * SCALE)
   const ctx = canvas.getContext("2d")
@@ -32,49 +32,42 @@ test("draw text baseline alignment with different anchor positions", async () =>
   ctx.lineTo(290, 150)
   ctx.stroke()
 
-  // Test with top alignment
-  const textTop: PcbFabricationNoteText = {
-    type: "pcb_fabrication_note_text",
-    pcb_fabrication_note_text_id: "fab-note-top",
-    pcb_component_id: "component1",
-    layer: "top",
-    text: "gap",
+  // Test with top_left alignment
+  const textTopLeft: PcbNoteText = {
+    type: "pcb_note_text",
+    pcb_note_text_id: "note-top-left",
+    text: "TOP",
     anchor_position: { x: 50, y: 50 },
     anchor_alignment: "top_left",
     font: "tscircuit2024",
     font_size: 16,
   }
 
-  // Test with center alignment (baseline at center)
-  const textCenter: PcbFabricationNoteText = {
-    type: "pcb_fabrication_note_text",
-    pcb_fabrication_note_text_id: "fab-note-center",
-    pcb_component_id: "component2",
-    layer: "top",
-    text: "gap",
+  // Test with center alignment
+  const textCenter: PcbNoteText = {
+    type: "pcb_note_text",
+    pcb_note_text_id: "note-center",
+    text: "CENTER",
     anchor_position: { x: 150, y: 100 },
     anchor_alignment: "center",
     font: "tscircuit2024",
     font_size: 16,
   }
 
-  // Test with bottom alignment
-  const textBottom: PcbFabricationNoteText = {
-    type: "pcb_fabrication_note_text",
-    pcb_fabrication_note_text_id: "fab-note-bottom",
-    pcb_component_id: "component3",
-    layer: "top",
-    text: "gap",
+  // Test with bottom_right alignment
+  const textBottomRight: PcbNoteText = {
+    type: "pcb_note_text",
+    pcb_note_text_id: "note-bottom-right",
+    text: "BOTTOM",
     anchor_position: { x: 250, y: 150 },
-    anchor_alignment: "bottom_left",
+    anchor_alignment: "bottom_right",
     font: "tscircuit2024",
     font_size: 16,
   }
 
-  drawer.drawElements([textTop, textCenter, textBottom])
+  drawer.drawElements([textTopLeft, textCenter, textBottomRight])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
-    "fabrication-note-text-baseline-anchors",
   )
 })
