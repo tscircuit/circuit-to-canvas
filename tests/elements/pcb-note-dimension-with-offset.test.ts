@@ -3,8 +3,8 @@ import { createCanvas } from "@napi-rs/canvas"
 import type { PcbNoteDimension } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test("draw pcb note dimension - basic", async () => {
-  const canvas = createCanvas(200, 100)
+test("draw pcb note dimension - with offset", async () => {
+  const canvas = createCanvas(200, 120)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
 
@@ -12,18 +12,21 @@ test("draw pcb note dimension - basic", async () => {
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const dim: PcbNoteDimension = {
+  const dimWithOffset: PcbNoteDimension = {
     type: "pcb_note_dimension",
-    pcb_note_dimension_id: "note_dimension_basic_1",
-    from: { x: 20, y: 50 },
-    to: { x: 180, y: 50 },
-    arrow_size: 4,
-    font_size: 6,
+    pcb_note_dimension_id: "note_dimension_offset_1",
+    from: { x: 40, y: 70 },
+    to: { x: 160, y: 70 },
+    arrow_size: 5,
+    font_size: 7,
+    text: "120",
     font: "tscircuit2024",
-    text: "160",
+    // Offset the dimension line along a custom direction, ensuring extension lines are drawn
+    offset_distance: 10,
+    offset_direction: { x: 0, y: -1 }, // offset upward by 10 units
   }
 
-  drawer.drawElements([dim])
+  drawer.drawElements([dimWithOffset])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
