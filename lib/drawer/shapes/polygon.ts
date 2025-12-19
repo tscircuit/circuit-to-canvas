@@ -6,18 +6,14 @@ export interface DrawPolygonParams {
   ctx: CanvasContext
   points: Array<{ x: number; y: number }>
   fill: string
-  transform: Matrix
+  realToCanvasMat: Matrix
 }
 
 export function drawPolygon(params: DrawPolygonParams): void {
-  const { ctx, points, fill, transform } = params
-
-  if (points.length < 3) return
-
-  ctx.beginPath()
+  const { ctx, points, fill, realToCanvasMat } = params
 
   const transformedPoints = points.map((p) =>
-    applyToPoint(transform, [p.x, p.y]),
+    applyToPoint(realToCanvasMat, [p.x, p.y]),
   )
 
   const firstPoint = transformedPoints[0]

@@ -6,14 +6,14 @@ import { drawText } from "../shapes/text"
 export interface DrawPcbNoteTextParams {
   ctx: CanvasContext
   text: PcbNoteText
-  transform: Matrix
+  realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
 
 const DEFAULT_NOTE_TEXT_COLOR = "rgb(89, 148, 220)" // Same color as note rect
 
 export function drawPcbNoteText(params: DrawPcbNoteTextParams): void {
-  const { ctx, text, transform, colorMap } = params
+  const { ctx, text, realToCanvasMat, colorMap } = params
 
   const defaultColor = DEFAULT_NOTE_TEXT_COLOR
   const color = text.color ?? defaultColor
@@ -28,7 +28,7 @@ export function drawPcbNoteText(params: DrawPcbNoteTextParams): void {
     y: text.anchor_position.y,
     fontSize,
     color,
-    transform,
+    realToCanvasMat,
     anchorAlignment: text.anchor_alignment ?? "center",
   })
 }

@@ -8,7 +8,7 @@ import { drawPolygon } from "../shapes/polygon"
 export interface DrawPcbCopperPourParams {
   ctx: CanvasContext
   pour: PcbCopperPour
-  transform: Matrix
+  realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
 
@@ -20,7 +20,7 @@ function layerToColor(layer: string, colorMap: PcbColorMap): string {
 }
 
 export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
-  const { ctx, pour, transform, colorMap } = params
+  const { ctx, pour, realToCanvasMat, colorMap } = params
 
   const color = layerToColor(pour.layer, colorMap)
 
@@ -29,9 +29,12 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
 
   if (pour.shape === "rect") {
     // Draw the copper pour rectangle with 50% opacity
-    const [cx, cy] = applyToPoint(transform, [pour.center.x, pour.center.y])
-    const scaledWidth = pour.width * Math.abs(transform.a)
-    const scaledHeight = pour.height * Math.abs(transform.a)
+    const [cx, cy] = applyToPoint(realToCanvasMat, [
+      pour.center.x,
+      pour.center.y,
+    ])
+    const scaledWidth = pour.width * Math.abs(realToCanvasMat.a)
+    const scaledHeight = pour.height * Math.abs(realToCanvasMat.a)
 
     ctx.translate(cx, cy)
 
@@ -51,7 +54,7 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   if (pour.shape === "polygon") {
     if (pour.points && pour.points.length >= 3) {
       const transformedPoints = pour.points.map((p: { x: number; y: number }) =>
-        applyToPoint(transform, [p.x, p.y]),
+        applyToPoint(realToCanvasMat, [p.x, p.y]),
       )
 
       const firstPoint = transformedPoints[0]
