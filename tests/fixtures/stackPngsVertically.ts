@@ -1,4 +1,4 @@
-import { createCanvas, loadImage } from "canvas"
+import { createCanvas, loadImage } from "@napi-rs/canvas"
 import { Resvg } from "@resvg/resvg-js"
 
 export const stackPngsVertically = async (

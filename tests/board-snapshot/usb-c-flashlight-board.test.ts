@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createCanvas } from "canvas"
+import { createCanvas } from "@napi-rs/canvas"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import type { Bounds } from "@tscircuit/math-utils"
