@@ -20,7 +20,7 @@ export function drawPcbNoteText(params: DrawPcbNoteTextParams): void {
   const fontSize = text.font_size ?? 1 // Default to 1mm if not provided
 
   // Use @tscircuit/alphabet to draw text
-  // Pass real-world coordinates and let drawText apply the transform
+  // Pass real-world coordinates and let drawText apply the realToCanvasMat
   drawText({
     ctx,
     text: text.text ?? "",

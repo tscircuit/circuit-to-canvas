@@ -180,7 +180,7 @@ export function drawText(params: DrawTextParams): void {
   const startPos = getTextStartPosition(anchorAlignment, layout)
 
   ctx.save()
-  ctx.translate(transformedX, transformedY)
+  ctx.translate(canvasX, canvasY)
 
   if (rotation !== 0) {
     ctx.rotate(-rotation * (Math.PI / 180))

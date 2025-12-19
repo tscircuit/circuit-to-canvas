@@ -28,7 +28,7 @@ export function drawPcbFabricationNoteText(
   const fontSize = text.font_size
 
   // Use @tscircuit/alphabet to draw text
-  // Pass real-world coordinates and let drawText apply the transform
+  // Pass real-world coordinates and let drawText apply the realToCanvasMat
   drawText({
     ctx,
     text: text.text,

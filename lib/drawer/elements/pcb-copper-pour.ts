@@ -57,7 +57,7 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
         applyToPoint(realToCanvasMat, [p.x, p.y]),
       )
 
-      const firstPoint = transformedPoints[0]
+      const firstPoint = canvasPoints[0]
       if (!firstPoint) {
         ctx.restore()
         return
@@ -67,8 +67,8 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
       const [firstX, firstY] = firstPoint
       ctx.moveTo(firstX, firstY)
 
-      for (let i = 1; i < transformedPoints.length; i++) {
-        const point = transformedPoints[i]
+      for (let i = 1; i < canvasPoints.length; i++) {
+        const point = canvasPoints[i]
         if (!point) continue
         const [x, y] = point
         ctx.lineTo(x, y)
