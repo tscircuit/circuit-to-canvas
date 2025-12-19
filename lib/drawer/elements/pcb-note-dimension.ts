@@ -4,6 +4,7 @@ import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawLine } from "../shapes/line"
 import { drawText } from "../shapes/text"
+import { drawArrow } from "../shapes/arrow"
 
 export interface DrawPcbNoteDimensionParams {
   ctx: CanvasContext
@@ -113,27 +114,27 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
 
   // Arrow at 'from' point (pointing outward, away from the line center)
   // This means pointing in the direction opposite to 'to'
-  drawArrow(
+  drawArrow({
     ctx,
-    canvasFromX,
-    canvasFromY,
-    lineAngle + Math.PI,
-    scaledArrowSize,
+    x: canvasFromX,
+    y: canvasFromY,
+    angle: lineAngle + Math.PI,
+    arrowSize: scaledArrowSize,
     color,
-    scaledStrokeWidth,
-  )
+    strokeWidth: scaledStrokeWidth,
+  })
 
   // Arrow at 'to' point (pointing outward, away from the line center)
   // This means pointing in the direction toward 'to' (away from 'from')
-  drawArrow(
+  drawArrow({
     ctx,
-    canvasToX,
-    canvasToY,
-    lineAngle,
-    scaledArrowSize,
+    x: canvasToX,
+    y: canvasToY,
+    angle: lineAngle,
+    arrowSize: scaledArrowSize,
     color,
-    scaledStrokeWidth,
-  )
+    strokeWidth: scaledStrokeWidth,
+  })
 
   // Draw text if provided
   if (pcbNoteDimension.text) {
@@ -197,35 +198,4 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
       rotation: textRotation,
     })
   }
-}
-
-/**
- * Draw an arrow at a point along a line
- */
-function drawArrow(
-  ctx: CanvasContext,
-  x: number,
-  y: number,
-  angle: number,
-  arrowSize: number,
-  color: string,
-  strokeWidth: number,
-): void {
-  ctx.save()
-  ctx.translate(x, y)
-  ctx.rotate(angle)
-
-  ctx.beginPath()
-  ctx.moveTo(0, 0)
-  ctx.lineTo(-arrowSize, -arrowSize / 2)
-  ctx.moveTo(0, 0)
-  ctx.lineTo(-arrowSize, arrowSize / 2)
-
-  ctx.lineWidth = strokeWidth
-  ctx.strokeStyle = color
-  ctx.lineCap = "round"
-  ctx.lineJoin = "round"
-  ctx.stroke()
-
-  ctx.restore()
 }
