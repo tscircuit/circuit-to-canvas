@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createCanvas } from "canvas"
+import { createCanvas } from "@napi-rs/canvas"
 import type { PcbCopperPour } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
@@ -79,6 +79,7 @@ test("draw copper pour with trace", async () => {
         { x: 90, y: 90 },
         { x: 10, y: 90 },
       ],
+      covered_with_solder_mask: false,
     },
     {
       type: "pcb_trace" as const,
@@ -107,7 +108,7 @@ test("draw copper pour with trace", async () => {
       y: 50,
       outer_diameter: 15,
       hole_diameter: 8,
-      layers: ["top", "bottom"],
+      layers: ["top", "bottom"] as ("top" | "bottom")[],
     },
   ]
 
