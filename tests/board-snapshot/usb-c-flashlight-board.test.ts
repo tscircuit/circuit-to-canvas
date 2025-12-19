@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import type { AnyCircuitElement } from "circuit-json"
 import { getStackedPngSvgComparison } from "../fixtures/getStackedPngSvgComparison"
-import usbcFlashlightCircuit from "../fixtures/usb-c-flashlight.json"
+import usbcFlashlightCircuit from "./usb-c-flashlight.json"
 
 const circuitElements = usbcFlashlightCircuit as AnyCircuitElement[]
 
