@@ -346,7 +346,7 @@ export class CircuitToCanvasDrawer {
     if (element.type === "pcb_note_dimension") {
       drawPcbNoteDimension({
         ctx: this.ctx,
-        dimension: element as PcbNoteDimension,
+        pcbNoteDimension: element as PcbNoteDimension,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })

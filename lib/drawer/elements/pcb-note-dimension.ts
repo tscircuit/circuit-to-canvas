@@ -7,7 +7,7 @@ import { drawText } from "../shapes/text"
 
 export interface DrawPcbNoteDimensionParams {
   ctx: CanvasContext
-  dimension: PcbNoteDimension
+  pcbNoteDimension: PcbNoteDimension
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
@@ -15,16 +15,16 @@ export interface DrawPcbNoteDimensionParams {
 const DEFAULT_NOTE_COLOR = "rgba(255,255,255,0.5)"
 
 export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
-  const { ctx, dimension, realToCanvasMat } = params
+  const { ctx, pcbNoteDimension, realToCanvasMat } = params
 
-  const color = dimension.color ?? DEFAULT_NOTE_COLOR
-  const arrowSize = dimension.arrow_size
+  const color = pcbNoteDimension.color ?? DEFAULT_NOTE_COLOR
+  const arrowSize = pcbNoteDimension.arrow_size
 
   // Store real (model) endpoints for extension lines
-  const realFromX = dimension.from.x
-  const realFromY = dimension.from.y
-  const realToX = dimension.to.x
-  const realToY = dimension.to.y
+  const realFromX = pcbNoteDimension.from.x
+  const realFromY = pcbNoteDimension.from.y
+  const realToX = pcbNoteDimension.to.x
+  const realToY = pcbNoteDimension.to.y
 
   // Calculate the dimension line endpoints (real/model coords)
   let fromX = realFromX
@@ -38,16 +38,16 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
   let offsetY = 0
 
   // Apply offset if provided
-  if (dimension.offset_distance && dimension.offset_direction) {
-    const dirX = dimension.offset_direction.x
-    const dirY = dimension.offset_direction.y
+  if (pcbNoteDimension.offset_distance && pcbNoteDimension.offset_direction) {
+    const dirX = pcbNoteDimension.offset_direction.x
+    const dirY = pcbNoteDimension.offset_direction.y
     const length = Math.hypot(dirX, dirY)
     if (length > 0) {
       const normX = dirX / length
       const normY = dirY / length
       hasOffset = true
-      offsetX = dimension.offset_distance * normX
-      offsetY = dimension.offset_distance * normY
+      offsetX = pcbNoteDimension.offset_distance * normX
+      offsetY = pcbNoteDimension.offset_distance * normY
       fromX += offsetX
       fromY += offsetY
       toX += offsetX
@@ -59,7 +59,10 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
   // Text uses fontSize * STROKE_WIDTH_RATIO (0.13) with minimum 0.35
   const STROKE_WIDTH_RATIO = 0.13
 
-  const strokeWidth = Math.max(dimension.font_size * STROKE_WIDTH_RATIO, 0.35)
+  const strokeWidth = Math.max(
+    pcbNoteDimension.font_size * STROKE_WIDTH_RATIO,
+    0.35,
+  )
 
   // Draw extension lines if offset is provided
   if (hasOffset) {
@@ -133,7 +136,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
   )
 
   // Draw text if provided
-  if (dimension.text) {
+  if (pcbNoteDimension.text) {
     // Calculate text position (midpoint of the dimension line)
     // The line endpoints are already offset if offset was provided
     let textX = (fromX + toX) / 2
@@ -149,7 +152,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
 
     // Normalize and offset by font size (plus a small gap)
     if (perpLength > 0) {
-      const offsetDistance = dimension.font_size * 1.5 // Offset by 1.5x font size
+      const offsetDistance = pcbNoteDimension.font_size * 1.5 // Offset by 1.5x font size
       const normalizedPerpX = perpX / perpLength
       const normalizedPerpY = perpY / perpLength
       textX += normalizedPerpX * offsetDistance
@@ -164,11 +167,11 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     // Compute the displayed CCW degrees: use explicit value if provided,
     // otherwise derive from the line angle and keep it upright.
     let displayDeg =
-      dimension.text_ccw_rotation !== undefined
-        ? dimension.text_ccw_rotation
+      pcbNoteDimension.text_ccw_rotation !== undefined
+        ? pcbNoteDimension.text_ccw_rotation
         : (lineAngle * 180) / Math.PI
 
-    if (dimension.text_ccw_rotation === undefined) {
+    if (pcbNoteDimension.text_ccw_rotation === undefined) {
       // Normalize to [-180, 180]
       displayDeg = ((displayDeg + 180) % 360) - 180
 
@@ -183,10 +186,10 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
 
     drawText({
       ctx,
-      text: dimension.text,
+      text: pcbNoteDimension.text,
       x: textX,
       y: textY,
-      fontSize: dimension.font_size,
+      fontSize: pcbNoteDimension.font_size,
       color,
       realToCanvasMat: realToCanvasMat,
       anchorAlignment: "center",
