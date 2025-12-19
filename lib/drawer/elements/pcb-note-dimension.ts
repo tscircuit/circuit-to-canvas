@@ -164,25 +164,26 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     // angle and keep the text upright by folding into [-90, 90]. `drawText`
     // expects a rotation value that it will negate internally, so we pass
     // `-deg` below.
-    // Compute the displayed CCW degrees: use explicit value if provided,
-    // otherwise derive from the line angle and keep it upright.
-    let displayDeg =
-      pcbNoteDimension.text_ccw_rotation !== undefined
-        ? pcbNoteDimension.text_ccw_rotation
-        : (lineAngle * 180) / Math.PI
-
-    if (pcbNoteDimension.text_ccw_rotation === undefined) {
-      // Normalize to [-180, 180]
-      displayDeg = ((displayDeg + 180) % 360) - 180
-
-      // Fold into [-90, 90] to keep text upright
-      if (displayDeg > 90) displayDeg -= 180
-      if (displayDeg < -90) displayDeg += 180
-    }
-
-    // `drawText` negates rotation when applying it to canvas, so pass the
+    // Compute the displayed CCW degrees. Use the explicit `text_ccw_rotation`
+    // when provided; otherwise derive from the line angle and fold into
+    // [-90, 90] so text stays upright. Finally, `drawText` negates the
+    // provided rotation when applying it to the canvas, so pass the
     // negative of the displayed CCW degrees.
-    const textRotation = -displayDeg
+    const textRotation = -(() => {
+      const raw =
+        pcbNoteDimension.text_ccw_rotation ?? ((lineAngle * 180) / Math.PI)
+
+      if (pcbNoteDimension.text_ccw_rotation !== undefined) return raw
+
+      // Normalize to [-180, 180]
+      let deg = ((raw + 180) % 360) - 180
+
+      // Fold into [-90, 90]
+      if (deg > 90) deg -= 180
+      if (deg < -90) deg += 180
+
+      return deg
+    })()
 
     drawText({
       ctx,

@@ -4,13 +4,17 @@ import type { PcbNoteDimension } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
 test("draw pcb note dimension - vertical with rotation", async () => {
-  const canvas = createCanvas(160, 240)
+  const width = 160
+  const height = 240
+  const dpr = 2
+  const canvas = createCanvas(width * dpr, height * dpr)
   const ctx = canvas.getContext("2d")
+  ctx.scale(dpr, dpr)
   const drawer = new CircuitToCanvasDrawer(ctx)
 
   // Background
   ctx.fillStyle = "#1a1a1a"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, width, height)
 
   const verticalDim: PcbNoteDimension = {
     type: "pcb_note_dimension",
