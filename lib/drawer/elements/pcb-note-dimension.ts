@@ -171,7 +171,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     // negative of the displayed CCW degrees.
     const textRotation = -(() => {
       const raw =
-        pcbNoteDimension.text_ccw_rotation ?? ((lineAngle * 180) / Math.PI)
+        pcbNoteDimension.text_ccw_rotation ?? (lineAngle * 180) / Math.PI
 
       if (pcbNoteDimension.text_ccw_rotation !== undefined) return raw
 
