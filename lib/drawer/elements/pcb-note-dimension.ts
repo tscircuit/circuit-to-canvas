@@ -8,29 +8,29 @@ import { drawText } from "../shapes/text"
 export interface DrawPcbNoteDimensionParams {
   ctx: CanvasContext
   dimension: PcbNoteDimension
-  transform: Matrix
+  realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
 
 const DEFAULT_NOTE_COLOR = "rgba(255,255,255,0.5)"
 
 export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
-  const { ctx, dimension, transform, colorMap } = params
+  const { ctx, dimension, realToCanvasMat } = params
 
   const color = dimension.color ?? DEFAULT_NOTE_COLOR
   const arrowSize = dimension.arrow_size
 
-  // Store original endpoints for extension lines
-  const originalFromX = dimension.from.x
-  const originalFromY = dimension.from.y
-  const originalToX = dimension.to.x
-  const originalToY = dimension.to.y
+  // Store real (model) endpoints for extension lines
+  const realFromX = dimension.from.x
+  const realFromY = dimension.from.y
+  const realToX = dimension.to.x
+  const realToY = dimension.to.y
 
-  // Calculate the dimension line endpoints
-  let fromX = originalFromX
-  let fromY = originalFromY
-  let toX = originalToX
-  let toY = originalToY
+  // Calculate the dimension line endpoints (real/model coords)
+  let fromX = realFromX
+  let fromY = realFromY
+  let toX = realToX
+  let toY = realToY
 
   // Track if we have an offset (for drawing extension lines)
   let hasOffset = false
@@ -66,21 +66,21 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     // Extension line from original 'from' point to offset 'from' point
     drawLine({
       ctx,
-      start: { x: originalFromX, y: originalFromY },
+      start: { x: realFromX, y: realFromY },
       end: { x: fromX, y: fromY },
       strokeWidth,
       stroke: color,
-      transform,
+      transform: realToCanvasMat,
     })
 
     // Extension line from original 'to' point to offset 'to' point
     drawLine({
       ctx,
-      start: { x: originalToX, y: originalToY },
+      start: { x: realToX, y: realToY },
       end: { x: toX, y: toY },
       strokeWidth,
       stroke: color,
-      transform,
+      transform: realToCanvasMat,
     })
   }
 
@@ -91,20 +91,20 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     end: { x: toX, y: toY },
     strokeWidth,
     stroke: color,
-    transform,
+    transform: realToCanvasMat,
   })
 
   // Draw arrows at both ends
-  const [transformedFromX, transformedFromY] = applyToPoint(transform, [
+  const [canvasFromX, canvasFromY] = applyToPoint(realToCanvasMat, [
     fromX,
     fromY,
   ])
-  const [transformedToX, transformedToY] = applyToPoint(transform, [toX, toY])
-  // Calculate angle for arrows in transformed (canvas) coordinates
-  const transformedDx = transformedToX - transformedFromX
-  const transformedDy = transformedToY - transformedFromY
-  const lineAngle = Math.atan2(transformedDy, transformedDx)
-  const scale = Math.abs(transform.a)
+  const [canvasToX, canvasToY] = applyToPoint(realToCanvasMat, [toX, toY])
+  // Calculate angle for arrows in canvas coordinates
+  const canvasDx = canvasToX - canvasFromX
+  const canvasDy = canvasToY - canvasFromY
+  const lineAngle = Math.atan2(canvasDy, canvasDx)
+  const scale = Math.abs(realToCanvasMat.a)
   const scaledArrowSize = arrowSize * scale
   const scaledStrokeWidth = strokeWidth * scale
 
@@ -112,8 +112,8 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
   // This means pointing in the direction opposite to 'to'
   drawArrow(
     ctx,
-    transformedFromX,
-    transformedFromY,
+    canvasFromX,
+    canvasFromY,
     lineAngle + Math.PI,
     scaledArrowSize,
     color,
@@ -124,8 +124,8 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
   // This means pointing in the direction toward 'to' (away from 'from')
   drawArrow(
     ctx,
-    transformedToX,
-    transformedToY,
+    canvasToX,
+    canvasToY,
     lineAngle,
     scaledArrowSize,
     color,
@@ -161,18 +161,25 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     // angle and keep the text upright by folding into [-90, 90]. `drawText`
     // expects a rotation value that it will negate internally, so we pass
     // `-deg` below.
-    let deg = dimension.text_ccw_rotation ?? (lineAngle * 180) / Math.PI
+    // Compute the displayed CCW degrees: use explicit value if provided,
+    // otherwise derive from the line angle and keep it upright.
+    let displayDeg =
+      dimension.text_ccw_rotation !== undefined
+        ? dimension.text_ccw_rotation
+        : (lineAngle * 180) / Math.PI
 
     if (dimension.text_ccw_rotation === undefined) {
       // Normalize to [-180, 180]
-      deg = ((deg + 180) % 360) - 180
+      displayDeg = ((displayDeg + 180) % 360) - 180
 
       // Fold into [-90, 90] to keep text upright
-      if (deg > 90) deg -= 180
-      if (deg < -90) deg += 180
+      if (displayDeg > 90) displayDeg -= 180
+      if (displayDeg < -90) displayDeg += 180
     }
 
-    const textRotation = -deg
+    // `drawText` negates rotation when applying it to canvas, so pass the
+    // negative of the displayed CCW degrees.
+    const textRotation = -displayDeg
 
     drawText({
       ctx,
@@ -181,7 +188,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
       y: textY,
       fontSize: dimension.font_size,
       color,
-      transform,
+      transform: realToCanvasMat,
       anchorAlignment: "center",
       rotation: textRotation,
     })

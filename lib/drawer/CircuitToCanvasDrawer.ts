@@ -336,7 +336,7 @@ export class CircuitToCanvasDrawer {
       drawPcbNoteDimension({
         ctx: this.ctx,
         dimension: element as PcbNoteDimension,
-        transform: this.realToCanvasMat,
+        realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
     }
