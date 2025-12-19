@@ -70,7 +70,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
       end: { x: fromX, y: fromY },
       strokeWidth,
       stroke: color,
-      transform: realToCanvasMat,
+      realToCanvasMat: realToCanvasMat,
     })
 
     // Extension line from original 'to' point to offset 'to' point
@@ -80,7 +80,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
       end: { x: toX, y: toY },
       strokeWidth,
       stroke: color,
-      transform: realToCanvasMat,
+      realToCanvasMat: realToCanvasMat,
     })
   }
 
@@ -91,7 +91,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     end: { x: toX, y: toY },
     strokeWidth,
     stroke: color,
-    transform: realToCanvasMat,
+    realToCanvasMat: realToCanvasMat,
   })
 
   // Draw arrows at both ends
@@ -188,7 +188,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
       y: textY,
       fontSize: dimension.font_size,
       color,
-      transform: realToCanvasMat,
+      realToCanvasMat: realToCanvasMat,
       anchorAlignment: "center",
       rotation: textRotation,
     })
