@@ -56,7 +56,7 @@ This checklist tracks PCB drawing features from [circuit-to-svg](https://github.
 
 ### Copper Text
 
-- [ ] `pcb_copper_text` - Text rendered on copper layers (supports knockout mode, mirroring)
+- [x] `pcb_copper_text` - Text rendered on copper layers (supports knockout mode, mirroring)
 
 ### Error Visualization
 
