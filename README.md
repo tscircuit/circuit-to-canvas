@@ -53,6 +53,7 @@ This checklist tracks PCB drawing features from [circuit-to-svg](https://github.
 - [x] `pcb_silkscreen_circle` - Circles on silkscreen
 - [x] `pcb_silkscreen_line` - Lines on silkscreen
 - [x] `pcb_silkscreen_path` - Paths/routes on silkscreen
+- [x] `pcb_silkscreen_pill` - Pill shapes (rounded rectangles) on silkscreen
 
 ### Copper Text
 

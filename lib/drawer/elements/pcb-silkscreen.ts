@@ -4,6 +4,7 @@ import type {
   PcbSilkscreenCircle,
   PcbSilkscreenLine,
   PcbSilkscreenPath,
+  PcbSilkscreenPill,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
@@ -12,6 +13,7 @@ import { drawRect } from "../shapes/rect"
 import { drawCircle } from "../shapes/circle"
 import { drawLine } from "../shapes/line"
 import { drawPath } from "../shapes/path"
+import { drawPill } from "../shapes/pill"
 
 export interface DrawPcbSilkscreenTextParams {
   ctx: CanvasContext
@@ -44,6 +46,13 @@ export interface DrawPcbSilkscreenLineParams {
 export interface DrawPcbSilkscreenPathParams {
   ctx: CanvasContext
   path: PcbSilkscreenPath
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+}
+
+export interface DrawPcbSilkscreenPillParams {
+  ctx: CanvasContext
+  pill: PcbSilkscreenPill
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
@@ -167,4 +176,24 @@ export function drawPcbSilkscreenPath(
       realToCanvasMat,
     })
   }
+}
+
+export function drawPcbSilkscreenPill(
+  params: DrawPcbSilkscreenPillParams,
+): void {
+  const { ctx, pill, realToCanvasMat, colorMap } = params
+
+  const color = layerToSilkscreenColor(pill.layer, colorMap)
+  const strokeWidth = (pill as { stroke_width?: number }).stroke_width ?? 0.2
+
+  // Draw as boundary/outline, not filled
+  drawPill({
+    ctx,
+    center: pill.center,
+    width: pill.width,
+    height: pill.height,
+    stroke: color,
+    strokeWidth,
+    realToCanvasMat,
+  })
 }

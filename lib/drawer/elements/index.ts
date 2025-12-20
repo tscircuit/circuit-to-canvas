@@ -19,11 +19,13 @@ export {
   drawPcbSilkscreenCircle,
   drawPcbSilkscreenLine,
   drawPcbSilkscreenPath,
+  drawPcbSilkscreenPill,
   type DrawPcbSilkscreenTextParams,
   type DrawPcbSilkscreenRectParams,
   type DrawPcbSilkscreenCircleParams,
   type DrawPcbSilkscreenLineParams,
   type DrawPcbSilkscreenPathParams,
+  type DrawPcbSilkscreenPillParams,
 } from "./pcb-silkscreen"
 
 export { drawPcbCutout, type DrawPcbCutoutParams } from "./pcb-cutout"
