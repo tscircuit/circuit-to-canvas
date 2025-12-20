@@ -359,7 +359,7 @@ export class CircuitToCanvasDrawer {
       drawPcbFabricationNoteDimension({
         ctx: this.ctx,
         dimension: element as PcbFabricationNoteDimension,
-        transform: this.realToCanvasMat,
+        realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
     }
