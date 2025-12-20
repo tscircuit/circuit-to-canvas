@@ -6,12 +6,18 @@ import type {
   PcbSilkscreenPath,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
+import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawRect } from "../shapes/rect"
 import { drawCircle } from "../shapes/circle"
 import { drawLine } from "../shapes/line"
 import { drawPath } from "../shapes/path"
-import { drawText } from "../shapes/text"
+import {
+  getAlphabetLayout,
+  strokeAlphabetText,
+  getTextStartPosition,
+  type AnchorAlignment,
+} from "../shapes/text"
 
 export interface DrawPcbSilkscreenTextParams {
   ctx: CanvasContext
@@ -54,27 +60,53 @@ function layerToSilkscreenColor(layer: string, colorMap: PcbColorMap): string {
     : colorMap.silkscreen.top
 }
 
+function mapAnchorAlignment(alignment?: string): AnchorAlignment {
+  if (!alignment) return "center"
+  return alignment as AnchorAlignment
+}
+
 export function drawPcbSilkscreenText(
   params: DrawPcbSilkscreenTextParams,
 ): void {
   const { ctx, text, realToCanvasMat, colorMap } = params
 
+  const content = text.text ?? ""
+  if (!content) return
+
   const color = layerToSilkscreenColor(text.layer, colorMap)
-  const fontSize = text.font_size ?? 1
+  const [x, y] = applyToPoint(realToCanvasMat, [
+    text.anchor_position.x,
+    text.anchor_position.y,
+  ])
+  const scale = Math.abs(realToCanvasMat.a)
+  const fontSize = (text.font_size ?? 1) * scale
   const rotation = text.ccw_rotation ?? 0
 
-  // Use @tscircuit/alphabet to draw text (font-independent, stroke-based rendering)
-  drawText({
-    ctx,
-    text: text.text,
-    x: text.anchor_position.x,
-    y: text.anchor_position.y,
-    fontSize,
-    color,
-    realToCanvasMat,
-    anchorAlignment: text.anchor_alignment ?? "center",
-    rotation,
-  })
+  const layout = getAlphabetLayout(content, fontSize)
+  const alignment = mapAnchorAlignment(text.anchor_alignment)
+  const startPos = getTextStartPosition(alignment, layout)
+
+  ctx.save()
+  ctx.translate(x, y)
+
+  // Mirror for bottom layer
+  if (text.layer === "bottom") {
+    ctx.scale(-1, 1)
+  }
+
+  // Apply rotation (CCW rotation in degrees)
+  if (rotation !== 0) {
+    ctx.rotate(-rotation * (Math.PI / 180))
+  }
+
+  ctx.lineWidth = layout.strokeWidth
+  ctx.lineCap = "round"
+  ctx.lineJoin = "round"
+  ctx.strokeStyle = color
+
+  strokeAlphabetText(ctx, content, layout, startPos.x, startPos.y)
+
+  ctx.restore()
 }
 
 export function drawPcbSilkscreenRect(
