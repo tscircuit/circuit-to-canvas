@@ -89,14 +89,13 @@ export function drawPcbSilkscreenText(
   ctx.save()
   ctx.translate(x, y)
 
-  // Mirror for bottom layer
-  if (text.layer === "bottom") {
-    ctx.scale(-1, 1)
-  }
-
   // Apply rotation (CCW rotation in degrees)
   if (rotation !== 0) {
     ctx.rotate(-rotation * (Math.PI / 180))
+  }
+
+  if (text.layer === "bottom") {
+    ctx.scale(-1, 1)
   }
 
   ctx.lineWidth = layout.strokeWidth
