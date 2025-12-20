@@ -7,7 +7,7 @@ import * as path from "node:path"
 const labelPngCache: Map<string, Buffer> = new Map()
 const assetsDir = path.join(__dirname, "assets")
 
-const getPreGeneratedLabelPng = (label: string): Buffer | null => {
+const getPreGeneratedLabelPng = (label: string): Buffer => {
   const cacheKey = label
   if (labelPngCache.has(cacheKey)) {
     return labelPngCache.get(cacheKey)!
@@ -70,7 +70,7 @@ export const stackPngsVertically = async (
 
     // Draw the label
     const labelPng = getPreGeneratedLabelPng(label)
-    const labelImg = await loadImage(labelPng)
+    const labelImg = await loadImage(labelPng!)
     ctx.drawImage(labelImg, 0, currentY)
 
     currentY += height

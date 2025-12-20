@@ -55,7 +55,7 @@ export interface DrawTextParams {
   fontSize: number
   color: string
   realToCanvasMat: Matrix
-  NinePointAnchor: NinePointAnchor
+  anchorAlignment: NinePointAnchor
   rotation?: number
 }
 
@@ -68,7 +68,7 @@ export function drawText(params: DrawTextParams): void {
     fontSize,
     color,
     realToCanvasMat,
-    NinePointAnchor,
+    anchorAlignment,
     rotation = 0,
   } = params
 
@@ -78,7 +78,7 @@ export function drawText(params: DrawTextParams): void {
   const scale = Math.abs(realToCanvasMat.a)
   const scaledFontSize = fontSize * scale
   const layout = getAlphabetLayout(text, scaledFontSize)
-  const startPos = getTextStartPosition(NinePointAnchor, layout)
+  const startPos = getTextStartPosition(anchorAlignment, layout)
 
   ctx.save()
   ctx.translate(canvasX, canvasY)

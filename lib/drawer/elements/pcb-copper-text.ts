@@ -27,8 +27,8 @@ function layerToCopperColor(layer: string, colorMap: PcbColorMap): string {
 
 function mapAnchorAlignment(alignment?: string): AnchorAlignment {
   if (!alignment) return "center"
-  if (alignment.includes("left")) return "left"
-  if (alignment.includes("right")) return "right"
+  if (alignment.includes("left")) return "center_left"
+  if (alignment.includes("right")) return "center_right"
   return "center"
 }
 
