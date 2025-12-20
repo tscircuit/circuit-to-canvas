@@ -4,40 +4,12 @@ import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import type { Bounds } from "@tscircuit/math-utils"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 import { stackPngsVertically, svgToPng } from "./stackPngsVertically"
+import { getBoundsOfPcbElements } from "@tscircuit/circuit-json-util"
 
 export interface StackedPngSvgComparisonOptions {
   width?: number
   height?: number
   padding?: number
-}
-
-function getPcbElements(elements: AnyCircuitElement[]): AnyCircuitElement[] {
-  return elements.filter(
-    (el) =>
-      el.type.startsWith("pcb_") &&
-      !el.type.includes("solder_paste") &&
-      !el.type.includes("port"),
-  )
-}
-
-function calculateBounds(
-  elements: AnyCircuitElement[],
-  padding: number,
-): Bounds {
-  const board = elements.find((el) => el.type === "pcb_board") as
-    | { center: { x: number; y: number }; width: number; height: number }
-    | undefined
-
-  if (!board) {
-    return { minX: -padding, maxX: padding, minY: -padding, maxY: padding }
-  }
-
-  return {
-    minX: board.center.x - board.width / 2 - padding,
-    maxX: board.center.x + board.width / 2 + padding,
-    minY: board.center.y - board.height / 2 - padding,
-    maxY: board.center.y + board.height / 2 + padding,
-  }
 }
 
 /**
@@ -53,15 +25,14 @@ export async function getStackedPngSvgComparison(
 ): Promise<Buffer> {
   const { width = 400, height = 800, padding = 4 } = options
 
-  const pcbElements = getPcbElements(circuitJson)
-  const bounds = calculateBounds(pcbElements, padding)
+  const bounds = getBoundsOfPcbElements(circuitJson)
 
   // Generate circuit-to-canvas PNG
   const canvas = createCanvas(width, height)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
 
-  ctx.fillStyle = "#1a1a1a"
+  ctx.fillStyle = "#000000"
   ctx.fillRect(0, 0, width, height)
 
   drawer.setCameraBounds({
@@ -70,7 +41,7 @@ export async function getStackedPngSvgComparison(
     minY: bounds.minY,
     maxY: bounds.maxY,
   })
-  drawer.drawElements(pcbElements)
+  drawer.drawElements(circuitJson)
 
   const canvasPng = canvas.toBuffer("image/png")
 
