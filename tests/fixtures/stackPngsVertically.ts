@@ -78,14 +78,13 @@ export const stackPngsVertically = async (
   return canvas.toBuffer("image/png")
 }
 
-export const svgToPng = (svg: string): Buffer => {
-  // Convert base64 font to buffer
+export const svgToPng = (svgString: string): Buffer => {
   const fontBuffer = Buffer.from(tscircuitFont, "base64")
+
   let tempFontPath: string | undefined
   let cleanupFn: (() => void) | undefined
 
   try {
-    // Write font to temporary file for Resvg
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "resvg-font-"))
     tempFontPath = path.join(tempDir, "tscircuit-font.ttf")
     fs.writeFileSync(tempFontPath, fontBuffer)
@@ -93,13 +92,11 @@ export const svgToPng = (svg: string): Buffer => {
     cleanupFn = () => {
       try {
         fs.unlinkSync(tempFontPath!)
-        fs.rmdirSync(path.dirname(tempFontPath!))
       } catch {
-        // Ignore cleanup errors
+        // Ignore errors during cleanup
       }
     }
 
-    // Configure Resvg with embedded font
     const opts: ResvgRenderOptions = {
       font: {
         fontFiles: [tempFontPath],
@@ -110,10 +107,13 @@ export const svgToPng = (svg: string): Buffer => {
       },
     }
 
-    const resvg = new Resvg(svg, opts)
+    const resvg = new Resvg(svgString, opts)
     const pngData = resvg.render()
-    return pngData.asPng()
+    const pngBuffer = pngData.asPng()
+
+    return Buffer.from(pngBuffer)
   } finally {
+    // Clean up temporary font file
     if (cleanupFn) {
       cleanupFn()
     }
