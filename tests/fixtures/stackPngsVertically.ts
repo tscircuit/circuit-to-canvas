@@ -1,9 +1,7 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas"
-import { Resvg, type ResvgRenderOptions } from "@resvg/resvg-js"
+import { Resvg } from "@resvg/resvg-js"
 import * as fs from "node:fs"
-import * as os from "node:os"
 import * as path from "node:path"
-import tscircuitFont from "@tscircuit/alphabet/base64font"
 
 // Pre-generated label PNGs for common labels
 const labelPngCache: Map<string, Buffer> = new Map()
@@ -78,44 +76,7 @@ export const stackPngsVertically = async (
   return canvas.toBuffer("image/png")
 }
 
-export const svgToPng = (svgString: string): Buffer => {
-  const fontBuffer = Buffer.from(tscircuitFont, "base64")
-
-  let tempFontPath: string | undefined
-  let cleanupFn: (() => void) | undefined
-
-  try {
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "resvg-font-"))
-    tempFontPath = path.join(tempDir, "tscircuit-font.ttf")
-    fs.writeFileSync(tempFontPath, fontBuffer)
-
-    cleanupFn = () => {
-      try {
-        fs.unlinkSync(tempFontPath!)
-      } catch {
-        // Ignore errors during cleanup
-      }
-    }
-
-    const opts: ResvgRenderOptions = {
-      font: {
-        fontFiles: [tempFontPath],
-        loadSystemFonts: false,
-        defaultFontFamily: "TscircuitAlphabet",
-        monospaceFamily: "TscircuitAlphabet",
-        sansSerifFamily: "TscircuitAlphabet",
-      },
-    }
-
-    const resvg = new Resvg(svgString, opts)
-    const pngData = resvg.render()
-    const pngBuffer = pngData.asPng()
-
-    return Buffer.from(pngBuffer)
-  } finally {
-    // Clean up temporary font file
-    if (cleanupFn) {
-      cleanupFn()
-    }
-  }
+export const svgToPng = (svg: string): Buffer => {
+  const resvg = new Resvg(svg)
+  return resvg.render().asPng()
 }

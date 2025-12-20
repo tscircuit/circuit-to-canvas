@@ -6,12 +6,12 @@ import type {
   PcbSilkscreenPath,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
+import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawRect } from "../shapes/rect"
 import { drawCircle } from "../shapes/circle"
 import { drawLine } from "../shapes/line"
 import { drawPath } from "../shapes/path"
-import { drawText } from "../shapes/text"
 
 export interface DrawPcbSilkscreenTextParams {
   ctx: CanvasContext
@@ -54,27 +54,42 @@ function layerToSilkscreenColor(layer: string, colorMap: PcbColorMap): string {
     : colorMap.silkscreen.top
 }
 
+function mapAnchorAlignment(
+  alignment?: string,
+): "start" | "end" | "left" | "right" | "center" {
+  if (!alignment) return "center"
+  if (alignment.includes("left")) return "left"
+  if (alignment.includes("right")) return "right"
+  return "center"
+}
+
 export function drawPcbSilkscreenText(
   params: DrawPcbSilkscreenTextParams,
 ): void {
   const { ctx, text, realToCanvasMat, colorMap } = params
 
   const color = layerToSilkscreenColor(text.layer, colorMap)
-  const fontSize = text.font_size ?? 1
+  const [x, y] = applyToPoint(realToCanvasMat, [
+    text.anchor_position.x,
+    text.anchor_position.y,
+  ])
+
+  const fontSize = (text.font_size ?? 1) * Math.abs(realToCanvasMat.a)
   const rotation = text.ccw_rotation ?? 0
 
-  // Use @tscircuit/alphabet to draw text (font-independent, stroke-based rendering)
-  drawText({
-    ctx,
-    text: text.text,
-    x: text.anchor_position.x,
-    y: text.anchor_position.y,
-    fontSize,
-    color,
-    realToCanvasMat,
-    anchorAlignment: text.anchor_alignment ?? "center",
-    rotation,
-  })
+  ctx.save()
+  ctx.translate(x, y)
+
+  // Apply rotation (CCW rotation in degrees)
+  if (rotation !== 0) {
+    ctx.rotate(-rotation * (Math.PI / 180))
+  }
+
+  ctx.font = `${fontSize}px sans-serif`
+  ctx.fillStyle = color
+  ctx.textAlign = mapAnchorAlignment(text.anchor_alignment)
+  ctx.fillText(text.text, 0, 0)
+  ctx.restore()
 }
 
 export function drawPcbSilkscreenRect(
