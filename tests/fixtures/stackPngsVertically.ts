@@ -34,9 +34,6 @@ export const stackPngsVertically = async (
     return pngs[0]!.png
   }
 
-  const labelFontSize = 24
-  const labelPadding = 8
-
   // Load all images to get dimensions
   const images = await Promise.all(
     pngs.map(async ({ png }) => await loadImage(png)),
