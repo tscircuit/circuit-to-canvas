@@ -1,7 +1,9 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas"
-import { Resvg } from "@resvg/resvg-js"
+import { Resvg, type ResvgRenderOptions } from "@resvg/resvg-js"
 import * as fs from "node:fs"
+import * as os from "node:os"
 import * as path from "node:path"
+import tscircuitFont from "@tscircuit/alphabet/base64font"
 
 // Pre-generated label PNGs for common labels
 const labelPngCache: Map<string, Buffer> = new Map()
@@ -77,6 +79,43 @@ export const stackPngsVertically = async (
 }
 
 export const svgToPng = (svg: string): Buffer => {
-  const resvg = new Resvg(svg)
-  return resvg.render().asPng()
+  // Convert base64 font to buffer
+  const fontBuffer = Buffer.from(tscircuitFont, "base64")
+  let tempFontPath: string | undefined
+  let cleanupFn: (() => void) | undefined
+
+  try {
+    // Write font to temporary file for Resvg
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "resvg-font-"))
+    tempFontPath = path.join(tempDir, "tscircuit-font.ttf")
+    fs.writeFileSync(tempFontPath, fontBuffer)
+
+    cleanupFn = () => {
+      try {
+        fs.unlinkSync(tempFontPath!)
+        fs.rmdirSync(path.dirname(tempFontPath!))
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+
+    // Configure Resvg with embedded font
+    const opts: ResvgRenderOptions = {
+      font: {
+        fontFiles: [tempFontPath],
+        loadSystemFonts: false,
+        defaultFontFamily: "TscircuitAlphabet",
+        monospaceFamily: "TscircuitAlphabet",
+        sansSerifFamily: "TscircuitAlphabet",
+      },
+    }
+
+    const resvg = new Resvg(svg, opts)
+    const pngData = resvg.render()
+    return pngData.asPng()
+  } finally {
+    if (cleanupFn) {
+      cleanupFn()
+    }
+  }
 }
