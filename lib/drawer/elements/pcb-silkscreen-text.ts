@@ -65,7 +65,13 @@ export function drawPcbSilkscreenText(
   ctx.lineJoin = "round"
   ctx.strokeStyle = color
 
-  strokeAlphabetText(ctx, content, layout, startPos.x, startPos.y)
+  strokeAlphabetText({
+    ctx,
+    text: content,
+    layout,
+    startX: startPos.x,
+    startY: startPos.y,
+  })
 
   ctx.restore()
 }
