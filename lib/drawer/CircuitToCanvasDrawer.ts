@@ -11,6 +11,7 @@ import type {
   PcbSilkscreenCircle,
   PcbSilkscreenLine,
   PcbSilkscreenPath,
+  PcbSilkscreenPill,
   PcbCutout,
   PcbCopperPour,
   PcbCopperText,
@@ -44,6 +45,7 @@ import {
   drawPcbSilkscreenCircle,
   drawPcbSilkscreenLine,
   drawPcbSilkscreenPath,
+  drawPcbSilkscreenPill,
 } from "./elements/pcb-silkscreen"
 import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
@@ -249,6 +251,15 @@ export class CircuitToCanvasDrawer {
       drawPcbSilkscreenPath({
         ctx: this.ctx,
         path: element as PcbSilkscreenPath,
+        realToCanvasMat: this.realToCanvasMat,
+        colorMap: this.colorMap,
+      })
+    }
+
+    if (element.type === "pcb_silkscreen_pill") {
+      drawPcbSilkscreenPill({
+        ctx: this.ctx,
+        pill: element as PcbSilkscreenPill,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
