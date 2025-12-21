@@ -68,7 +68,7 @@ export function drawPcbSilkscreenText(
   strokeAlphabetText({
     ctx,
     text: content,
-    layout,
+    fontSize,
     startX: startPos.x,
     startY: startPos.y,
   })

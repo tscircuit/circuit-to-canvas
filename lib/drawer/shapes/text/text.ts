@@ -12,13 +12,14 @@ const getGlyphLines = (char: string) =>
 export interface StrokeAlphabetTextParams {
   ctx: CanvasContext
   text: string
-  layout: AlphabetLayout
+  fontSize: number
   startX: number
   startY: number
 }
 
 export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
-  const { ctx, text, layout, startX, startY } = params
+  const { ctx, text, fontSize, startX, startY } = params
+  const layout = getAlphabetLayout(text, fontSize)
   const { glyphWidth, letterSpacing, spaceWidth, height, strokeWidth } = layout
   const topY = startY
   const characters = Array.from(text)
@@ -98,7 +99,7 @@ export function drawText(params: DrawTextParams): void {
   strokeAlphabetText({
     ctx,
     text,
-    layout,
+    fontSize: scaledFontSize,
     startX: startPos.x,
     startY: startPos.y,
   })
