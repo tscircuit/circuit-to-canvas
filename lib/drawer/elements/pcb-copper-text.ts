@@ -88,7 +88,7 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     ctx.globalCompositeOperation = "destination-out"
     ctx.fillStyle = "rgba(0,0,0,1)"
     ctx.strokeStyle = "rgba(0,0,0,1)"
-    strokeAlphabetText(ctx, content, layout, startX, startY)
+    strokeAlphabetText({ ctx, text: content, fontSize, startX, startY })
     if (previousCompositeOperation) {
       ctx.globalCompositeOperation = previousCompositeOperation
     } else {
@@ -96,7 +96,7 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     }
   } else {
     ctx.strokeStyle = textColor
-    strokeAlphabetText(ctx, content, layout, startX, startY)
+    strokeAlphabetText({ ctx, text: content, fontSize, startX, startY })
   }
   ctx.restore()
 }

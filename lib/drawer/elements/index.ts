@@ -15,16 +15,28 @@ export { drawPcbBoard, type DrawPcbBoardParams } from "./pcb-board"
 
 export {
   drawPcbSilkscreenText,
-  drawPcbSilkscreenRect,
-  drawPcbSilkscreenCircle,
-  drawPcbSilkscreenLine,
-  drawPcbSilkscreenPath,
   type DrawPcbSilkscreenTextParams,
+} from "./pcb-silkscreen-text"
+
+export {
+  drawPcbSilkscreenRect,
   type DrawPcbSilkscreenRectParams,
+} from "./pcb-silkscreen-rect"
+
+export {
+  drawPcbSilkscreenCircle,
   type DrawPcbSilkscreenCircleParams,
+} from "./pcb-silkscreen-circle"
+
+export {
+  drawPcbSilkscreenLine,
   type DrawPcbSilkscreenLineParams,
+} from "./pcb-silkscreen-line"
+
+export {
+  drawPcbSilkscreenPath,
   type DrawPcbSilkscreenPathParams,
-} from "./pcb-silkscreen"
+} from "./pcb-silkscreen-path"
 
 export { drawPcbCutout, type DrawPcbCutoutParams } from "./pcb-cutout"
 

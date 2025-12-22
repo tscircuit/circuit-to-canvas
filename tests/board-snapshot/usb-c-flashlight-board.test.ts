@@ -5,7 +5,7 @@ import usbcFlashlightCircuit from "./usb-c-flashlight.json"
 
 const circuitElements = usbcFlashlightCircuit as AnyCircuitElement[]
 
-test.skip("USB-C flashlight - comprehensive comparison (circuit-to-canvas vs circuit-to-svg)", async () => {
+test("USB-C flashlight - comprehensive comparison (circuit-to-canvas vs circuit-to-svg)", async () => {
   const stackedPng = await getStackedPngSvgComparison(circuitElements, {
     width: 400,
     height: 800,

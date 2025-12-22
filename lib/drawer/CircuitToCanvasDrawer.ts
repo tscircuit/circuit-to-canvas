@@ -39,13 +39,11 @@ import { drawPcbHole } from "./elements/pcb-hole"
 import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbTrace } from "./elements/pcb-trace"
 import { drawPcbBoard } from "./elements/pcb-board"
-import {
-  drawPcbSilkscreenText,
-  drawPcbSilkscreenRect,
-  drawPcbSilkscreenCircle,
-  drawPcbSilkscreenLine,
-  drawPcbSilkscreenPath,
-} from "./elements/pcb-silkscreen"
+import { drawPcbSilkscreenText } from "./elements/pcb-silkscreen-text"
+import { drawPcbSilkscreenRect } from "./elements/pcb-silkscreen-rect"
+import { drawPcbSilkscreenCircle } from "./elements/pcb-silkscreen-circle"
+import { drawPcbSilkscreenLine } from "./elements/pcb-silkscreen-line"
+import { drawPcbSilkscreenPath } from "./elements/pcb-silkscreen-path"
 import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
