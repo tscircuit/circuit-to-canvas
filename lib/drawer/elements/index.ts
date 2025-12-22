@@ -38,6 +38,11 @@ export {
   type DrawPcbSilkscreenPathParams,
 } from "./pcb-silkscreen-path"
 
+export {
+  drawPcbSilkscreenPill,
+  type DrawPcbSilkscreenPillParams,
+} from "./pcb-silkscreen-pill"
+
 export { drawPcbCutout, type DrawPcbCutoutParams } from "./pcb-cutout"
 
 export {
