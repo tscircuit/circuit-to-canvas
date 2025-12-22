@@ -5,6 +5,7 @@ import { drawCircle } from "../shapes/circle"
 import { drawRect } from "../shapes/rect"
 import { drawOval } from "../shapes/oval"
 import { drawPill } from "../shapes/pill"
+import { drawPolygon } from "../shapes/polygon"
 
 export interface DrawPcbPlatedHoleParams {
   ctx: CanvasContext
@@ -163,6 +164,69 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       realToCanvasMat,
       rotation: hole.hole_ccw_rotation,
     })
+    return
+  }
+
+  if (hole.shape === "hole_with_polygon_pad") {
+    // Draw polygon pad
+    const padOutline = (hole as any).pad_outline
+    if (padOutline && padOutline.length >= 3) {
+      // Transform pad_outline points to be relative to hole.x, hole.y
+      const padPoints = padOutline.map((point: { x: number; y: number }) => ({
+        x: hole.x + point.x,
+        y: hole.y + point.y,
+      }))
+      drawPolygon({
+        ctx,
+        points: padPoints,
+        fill: colorMap.copper.top,
+        realToCanvasMat,
+      })
+    }
+
+    // Draw drill hole (with offset)
+    const holeX = hole.x + ((hole as any).hole_offset_x ?? 0)
+    const holeY = hole.y + ((hole as any).hole_offset_y ?? 0)
+    const holeShape = (hole as any).hole_shape
+
+    if (holeShape === "circle") {
+      drawCircle({
+        ctx,
+        center: { x: holeX, y: holeY },
+        radius: ((hole as any).hole_diameter ?? 0) / 2,
+        fill: colorMap.drill,
+        realToCanvasMat,
+      })
+    } else if (holeShape === "oval") {
+      drawOval({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: (hole as any).hole_width ?? 0,
+        height: (hole as any).hole_height ?? 0,
+        fill: colorMap.drill,
+        realToCanvasMat,
+        rotation: (hole as any).hole_ccw_rotation ?? 0,
+      })
+    } else if (holeShape === "pill") {
+      drawPill({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: (hole as any).hole_width ?? 0,
+        height: (hole as any).hole_height ?? 0,
+        fill: colorMap.drill,
+        realToCanvasMat,
+      })
+    } else if (holeShape === "rotated_pill") {
+      drawPill({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: (hole as any).hole_width ?? 0,
+        height: (hole as any).hole_height ?? 0,
+        fill: colorMap.drill,
+        realToCanvasMat,
+        rotation: (hole as any).hole_ccw_rotation ?? 0,
+      })
+    }
     return
   }
 }
