@@ -3,7 +3,7 @@ import { createCanvas } from "@napi-rs/canvas"
 import type { PcbPlatedHole } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test("draw circular plated hole", async () => {
+test("draw hole with polygon pad - circle hole", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -14,22 +14,30 @@ test("draw circular plated hole", async () => {
   const hole: PcbPlatedHole = {
     type: "pcb_plated_hole",
     pcb_plated_hole_id: "hole1",
-    shape: "circle",
+    shape: "hole_with_polygon_pad",
     x: 50,
     y: 50,
-    outer_diameter: 50,
-    hole_diameter: 25,
+    hole_shape: "circle",
+    hole_diameter: 15,
+    pad_outline: [
+      { x: -20, y: -20 },
+      { x: 20, y: -20 },
+      { x: 25, y: 0 },
+      { x: 20, y: 20 },
+      { x: -20, y: 20 },
+      { x: -25, y: 0 },
+    ],
     layers: ["top", "bottom"],
-  }
+  } as any
 
   drawer.drawElements([hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,
+    import.meta.path,"hole-with-polygon-pad-circle",
   )
 })
 
-test("draw oval plated hole", async () => {
+test("draw hole with polygon pad - pill hole with offset", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -40,26 +48,34 @@ test("draw oval plated hole", async () => {
   const hole: PcbPlatedHole = {
     type: "pcb_plated_hole",
     pcb_plated_hole_id: "hole1",
-    shape: "oval",
+    shape: "hole_with_polygon_pad",
     x: 50,
     y: 50,
-    outer_width: 60,
-    outer_height: 40,
-    hole_width: 40,
-    hole_height: 20,
+    hole_shape: "pill",
+    hole_width: 12,
+    hole_height: 8,
+    hole_offset_x: 5,
+    hole_offset_y: -3,
+    pad_outline: [
+      { x: -25, y: -15 },
+      { x: 25, y: -15 },
+      { x: 30, y: 0 },
+      { x: 25, y: 15 },
+      { x: -25, y: 15 },
+      { x: -30, y: 0 },
+    ],
     layers: ["top", "bottom"],
-    ccw_rotation: 0,
-  }
+  } as any
 
   drawer.drawElements([hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
-    "oval-plated-hole",
+    "hole-with-polygon-pad-pill-offset",
   )
 })
 
-test("draw pill plated hole", async () => {
+test("draw hole with polygon pad - rotated pill hole", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -70,21 +86,26 @@ test("draw pill plated hole", async () => {
   const hole: PcbPlatedHole = {
     type: "pcb_plated_hole",
     pcb_plated_hole_id: "hole1",
-    shape: "pill",
+    shape: "hole_with_polygon_pad",
     x: 50,
     y: 50,
-    outer_width: 70,
-    outer_height: 35,
-    hole_width: 50,
-    hole_height: 20,
+    hole_shape: "rotated_pill",
+    hole_width: 15,
+    hole_height: 10,
+    hole_ccw_rotation: 45,
+    pad_outline: [
+      { x: -20, y: -20 },
+      { x: 20, y: -20 },
+      { x: 20, y: 20 },
+      { x: -20, y: 20 },
+    ],
     layers: ["top", "bottom"],
-    ccw_rotation: 0,
-  }
+  } as any
 
   drawer.drawElements([hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
-    "pill-plated-hole",
+    "hole-with-polygon-pad-rotated-pill",
   )
 })
