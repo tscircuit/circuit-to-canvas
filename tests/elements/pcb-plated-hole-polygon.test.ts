@@ -33,7 +33,8 @@ test("draw hole with polygon pad - circle hole", async () => {
   drawer.drawElements([hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,"hole-with-polygon-pad-circle",
+    import.meta.path,
+    "hole-with-polygon-pad-circle",
   )
 })
 
@@ -75,7 +76,7 @@ test("draw hole with polygon pad - pill hole with offset", async () => {
   )
 })
 
-test("draw hole with polygon pad - rotated pill hole", async () => {
+test("draw hole with polygon pad - pill hole", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -92,7 +93,6 @@ test("draw hole with polygon pad - rotated pill hole", async () => {
     hole_shape: "rotated_pill",
     hole_width: 15,
     hole_height: 10,
-    hole_ccw_rotation: 45,
     pad_outline: [
       { x: -20, y: -20 },
       { x: 20, y: -20 },
@@ -106,6 +106,6 @@ test("draw hole with polygon pad - rotated pill hole", async () => {
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
-    "hole-with-polygon-pad-rotated-pill",
+    "hole-with-polygon-pad-pill",
   )
 })

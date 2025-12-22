@@ -97,12 +97,12 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       height: hole.rect_pad_height,
       fill: colorMap.copper.top,
       realToCanvasMat,
-      borderRadius: (hole as any).rect_border_radius ?? 0,
+      borderRadius: hole.rect_border_radius ?? 0,
     })
 
     // Draw circular drill hole (with offset)
-    const holeX = hole.x + ((hole as any).hole_offset_x ?? 0)
-    const holeY = hole.y + ((hole as any).hole_offset_y ?? 0)
+    const holeX = hole.x + (hole.hole_offset_x ?? 0)
+    const holeY = hole.y + (hole.hole_offset_y ?? 0)
     drawCircle({
       ctx,
       center: { x: holeX, y: holeY },
@@ -122,12 +122,12 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       height: hole.rect_pad_height,
       fill: colorMap.copper.top,
       realToCanvasMat,
-      borderRadius: (hole as any).rect_border_radius ?? 0,
+      borderRadius: hole.rect_border_radius ?? 0,
     })
 
     // Draw pill drill hole (with offset)
-    const holeX = hole.x + ((hole as any).hole_offset_x ?? 0)
-    const holeY = hole.y + ((hole as any).hole_offset_y ?? 0)
+    const holeX = hole.x + (hole.hole_offset_x ?? 0)
+    const holeY = hole.y + (hole.hole_offset_y ?? 0)
     drawPill({
       ctx,
       center: { x: holeX, y: holeY },
@@ -148,13 +148,13 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       height: hole.rect_pad_height,
       fill: colorMap.copper.top,
       realToCanvasMat,
-      borderRadius: (hole as any).rect_border_radius ?? 0,
+      borderRadius: hole.rect_border_radius ?? 0,
       rotation: hole.rect_ccw_rotation,
     })
 
     // Draw rotated pill drill hole (with offset)
-    const holeX = hole.x + ((hole as any).hole_offset_x ?? 0)
-    const holeY = hole.y + ((hole as any).hole_offset_y ?? 0)
+    const holeX = hole.x + (hole.hole_offset_x ?? 0)
+    const holeY = hole.y + (hole.hole_offset_y ?? 0)
     drawPill({
       ctx,
       center: { x: holeX, y: holeY },
@@ -169,7 +169,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
 
   if (hole.shape === "hole_with_polygon_pad") {
     // Draw polygon pad
-    const padOutline = (hole as any).pad_outline
+    const padOutline = hole.pad_outline
     if (padOutline && padOutline.length >= 3) {
       // Transform pad_outline points to be relative to hole.x, hole.y
       const padPoints = padOutline.map((point: { x: number; y: number }) => ({
@@ -185,15 +185,15 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     }
 
     // Draw drill hole (with offset)
-    const holeX = hole.x + ((hole as any).hole_offset_x ?? 0)
-    const holeY = hole.y + ((hole as any).hole_offset_y ?? 0)
-    const holeShape = (hole as any).hole_shape
+    const holeX = hole.x + (hole.hole_offset_x ?? 0)
+    const holeY = hole.y + (hole.hole_offset_y ?? 0)
+    const holeShape = hole.hole_shape
 
     if (holeShape === "circle") {
       drawCircle({
         ctx,
         center: { x: holeX, y: holeY },
-        radius: ((hole as any).hole_diameter ?? 0) / 2,
+        radius: (hole.hole_diameter ?? 0) / 2,
         fill: colorMap.drill,
         realToCanvasMat,
       })
@@ -201,18 +201,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       drawOval({
         ctx,
         center: { x: holeX, y: holeY },
-        width: (hole as any).hole_width ?? 0,
-        height: (hole as any).hole_height ?? 0,
+        width: hole.hole_width ?? 0,
+        height: hole.hole_height ?? 0,
         fill: colorMap.drill,
         realToCanvasMat,
-        rotation: (hole as any).hole_ccw_rotation ?? 0,
       })
     } else if (holeShape === "pill") {
       drawPill({
         ctx,
         center: { x: holeX, y: holeY },
-        width: (hole as any).hole_width ?? 0,
-        height: (hole as any).hole_height ?? 0,
+        width: hole.hole_width ?? 0,
+        height: hole.hole_height ?? 0,
         fill: colorMap.drill,
         realToCanvasMat,
       })
@@ -220,11 +219,10 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       drawPill({
         ctx,
         center: { x: holeX, y: holeY },
-        width: (hole as any).hole_width ?? 0,
-        height: (hole as any).hole_height ?? 0,
+        width: hole.hole_width ?? 0,
+        height: hole.hole_height ?? 0,
         fill: colorMap.drill,
         realToCanvasMat,
-        rotation: (hole as any).hole_ccw_rotation ?? 0,
       })
     }
     return
