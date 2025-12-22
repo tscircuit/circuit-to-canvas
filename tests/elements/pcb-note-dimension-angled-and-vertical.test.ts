@@ -32,6 +32,6 @@ test("draw pcb note dimension - angled", async () => {
   drawer.drawElements([angledDim])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,
+    import.meta.path + "1",
   )
 })
