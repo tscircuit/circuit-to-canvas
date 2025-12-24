@@ -86,6 +86,12 @@ export {
 } from "./pcb-note-text"
 
 export {
+  drawPcbFabricationNoteDimension,
+  type DrawPcbFabricationNoteDimensionParams,
+  type PcbFabricationNoteDimension,
+} from "./pcb-fabrication-note-dimension"
+
+export {
   drawPcbNoteDimension,
   type DrawPcbNoteDimensionParams,
 } from "./pcb-note-dimension"
