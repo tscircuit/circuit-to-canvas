@@ -1,8 +1,6 @@
 import type { AnyCircuitElement } from "circuit-json"
-import type {
-  PcbRenderLayer,
-  DrawElementsOptions,
-} from "./CircuitToCanvasDrawer"
+import type { DrawElementsOptions } from "./CircuitToCanvasDrawer"
+import type { PcbRenderLayer } from "circuit-json"
 
 /**
  * Gets the render layer for an element based on its type and layer property
