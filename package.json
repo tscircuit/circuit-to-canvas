@@ -13,7 +13,7 @@
     "@napi-rs/canvas": "^0.1.84",
     "@resvg/resvg-js": "^2.6.2",
     "@tscircuit/alphabet": "^0.0.17",
-    "@tscircuit/circuit-json-util": "^0.0.73",
+    "@tscircuit/circuit-json-util": "^0.0.75",
     "@tscircuit/math-utils": "^0.0.29",
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
