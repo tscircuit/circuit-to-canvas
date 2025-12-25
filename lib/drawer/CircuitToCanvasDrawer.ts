@@ -1,10 +1,10 @@
 import type {
   AnyCircuitElement,
   PcbPlatedHole,
-  PCBVia,
-  PCBHole,
+  PcbVia,
+  PcbHole,
   PcbSmtPad,
-  PCBTrace,
+  PcbTrace,
   PcbBoard,
   PcbSilkscreenText,
   PcbSilkscreenRect,
@@ -23,6 +23,7 @@ import type {
   PcbNoteDimension,
   PcbNoteLine,
 } from "circuit-json"
+import { shouldDrawElement } from "./pcb-render-layer-filter"
 import { identity, compose, translate, scale } from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
 import {
@@ -57,8 +58,24 @@ import { drawPcbNoteText } from "./elements/pcb-note-text"
 import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
 
+export type PcbRenderLayer =
+  | "top_silkscreen"
+  | "bottom_silkscreen"
+  | "top_copper"
+  | "bottom_copper"
+  | "top_soldermask"
+  | "bottom_soldermask"
+  | "top_fabrication_note"
+  | "bottom_fabrication_note"
+  | "inner1_copper"
+  | "inner2_copper"
+  | "inner3_copper"
+  | "inner4_copper"
+  | "inner5_copper"
+  | "inner6_copper"
+
 export interface DrawElementsOptions {
-  layers?: string[]
+  layers?: PcbRenderLayer[]
 }
 
 interface CanvasLike {
@@ -155,6 +172,11 @@ export class CircuitToCanvasDrawer {
     element: AnyCircuitElement,
     options: DrawElementsOptions,
   ): void {
+    // Check if element should be drawn based on layer options
+    if (!shouldDrawElement(element, options)) {
+      return
+    }
+
     if (element.type === "pcb_plated_hole") {
       drawPcbPlatedHole({
         ctx: this.ctx,
@@ -167,7 +189,7 @@ export class CircuitToCanvasDrawer {
     if (element.type === "pcb_via") {
       drawPcbVia({
         ctx: this.ctx,
-        via: element as PCBVia,
+        via: element as PcbVia,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
@@ -176,7 +198,7 @@ export class CircuitToCanvasDrawer {
     if (element.type === "pcb_hole") {
       drawPcbHole({
         ctx: this.ctx,
-        hole: element as PCBHole,
+        hole: element as PcbHole,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
@@ -194,7 +216,7 @@ export class CircuitToCanvasDrawer {
     if (element.type === "pcb_trace") {
       drawPcbTrace({
         ctx: this.ctx,
-        trace: element as PCBTrace,
+        trace: element as PcbTrace,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
