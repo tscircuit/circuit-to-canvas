@@ -23,6 +23,7 @@ import type {
   PcbNoteText,
   PcbNoteDimension,
   PcbNoteLine,
+  PcbRenderLayer,
 } from "circuit-json"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
 import { identity, compose, translate, scale } from "transformation-matrix"
@@ -57,22 +58,6 @@ import { drawPcbNotePath } from "./elements/pcb-note-path"
 import { drawPcbNoteText } from "./elements/pcb-note-text"
 import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
-
-export type PcbRenderLayer =
-  | "top_silkscreen"
-  | "bottom_silkscreen"
-  | "top_copper"
-  | "bottom_copper"
-  | "top_soldermask"
-  | "bottom_soldermask"
-  | "top_fabrication_note"
-  | "bottom_fabrication_note"
-  | "inner1_copper"
-  | "inner2_copper"
-  | "inner3_copper"
-  | "inner4_copper"
-  | "inner5_copper"
-  | "inner6_copper"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
