@@ -9,13 +9,17 @@ import { getTextStartPosition } from "./getTextStartPosition"
 const getGlyphLines = (char: string) =>
   lineAlphabet[char] ?? lineAlphabet[char.toUpperCase()]
 
-export function strokeAlphabetText(
-  ctx: CanvasContext,
-  text: string,
-  layout: AlphabetLayout,
-  startX: number,
-  startY: number,
-): void {
+export interface StrokeAlphabetTextParams {
+  ctx: CanvasContext
+  text: string
+  fontSize: number
+  startX: number
+  startY: number
+}
+
+export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
+  const { ctx, text, fontSize, startX, startY } = params
+  const layout = getAlphabetLayout(text, fontSize)
   const { glyphWidth, letterSpacing, spaceWidth, height, strokeWidth } = layout
   const topY = startY
   const characters = Array.from(text)
@@ -92,7 +96,13 @@ export function drawText(params: DrawTextParams): void {
   ctx.lineJoin = "round"
   ctx.strokeStyle = color
 
-  strokeAlphabetText(ctx, text, layout, startPos.x, startPos.y)
+  strokeAlphabetText({
+    ctx,
+    text,
+    fontSize: scaledFontSize,
+    startX: startPos.x,
+    startY: startPos.y,
+  })
 
   ctx.restore()
 }

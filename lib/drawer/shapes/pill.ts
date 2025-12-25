@@ -7,9 +7,11 @@ export interface DrawPillParams {
   center: { x: number; y: number }
   width: number
   height: number
-  fill: string
+  fill?: string
   realToCanvasMat: Matrix
   rotation?: number
+  stroke?: string
+  strokeWidth?: number
 }
 
 export function drawPill(params: DrawPillParams): void {
@@ -21,11 +23,16 @@ export function drawPill(params: DrawPillParams): void {
     fill,
     realToCanvasMat,
     rotation = 0,
+    stroke,
+    strokeWidth,
   } = params
 
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
   const scaledWidth = width * Math.abs(realToCanvasMat.a)
   const scaledHeight = height * Math.abs(realToCanvasMat.a)
+  const scaledStrokeWidth = strokeWidth
+    ? strokeWidth * Math.abs(realToCanvasMat.a)
+    : undefined
 
   ctx.save()
   ctx.translate(cx, cy)
@@ -62,7 +69,17 @@ export function drawPill(params: DrawPillParams): void {
   }
 
   ctx.closePath()
-  ctx.fillStyle = fill
-  ctx.fill()
+
+  if (fill) {
+    ctx.fillStyle = fill
+    ctx.fill()
+  }
+
+  if (stroke && scaledStrokeWidth) {
+    ctx.strokeStyle = stroke
+    ctx.lineWidth = scaledStrokeWidth
+    ctx.stroke()
+  }
+
   ctx.restore()
 }
