@@ -43,6 +43,11 @@ export {
   type DrawPcbSilkscreenPillParams,
 } from "./pcb-silkscreen-pill"
 
+export {
+  drawSilkscreenElements,
+  type DrawSilkscreenElementsParams,
+} from "./draw-silkscreen-elements"
+
 export { drawPcbCutout, type DrawPcbCutoutParams } from "./pcb-cutout"
 
 export {
