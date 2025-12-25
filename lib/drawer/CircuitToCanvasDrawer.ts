@@ -11,7 +11,6 @@ import type {
   PcbSilkscreenCircle,
   PcbSilkscreenLine,
   PcbSilkscreenPath,
-  PcbSilkscreenPill,
   PcbCutout,
   PcbCopperPour,
   PcbCopperText,
@@ -24,7 +23,13 @@ import type {
   PcbNoteDimension,
   PcbNoteLine,
 } from "circuit-json"
-import { identity, compose, translate, scale } from "transformation-matrix"
+import {
+  identity,
+  compose,
+  translate,
+  scale,
+  applyToPoint,
+} from "transformation-matrix"
 import type { Matrix } from "transformation-matrix"
 import {
   type CanvasContext,
@@ -39,6 +44,8 @@ import { drawPcbHole } from "./elements/pcb-hole"
 import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbTrace } from "./elements/pcb-trace"
 import { drawPcbBoard } from "./elements/pcb-board"
+import { drawPath } from "./shapes/path"
+import { drawRect } from "./shapes/rect"
 import { drawPcbSilkscreenText } from "./elements/pcb-silkscreen-text"
 import { drawPcbSilkscreenRect } from "./elements/pcb-silkscreen-rect"
 import { drawPcbSilkscreenCircle } from "./elements/pcb-silkscreen-circle"
@@ -146,8 +153,103 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
+    // Check if any pad has is_covered_with_solder_mask: true
+    const hasSoldermaskPads = elements.some(
+      (el) =>
+        el.type === "pcb_smtpad" &&
+        (el as PcbSmtPad).is_covered_with_solder_mask === true,
+    )
+
     for (const element of elements) {
-      this.drawElement(element, options)
+      if (element.type === "pcb_board" && hasSoldermaskPads) {
+        // Draw board with soldermask fill when pads have soldermask
+        this.drawBoardWithSoldermask(element as PcbBoard)
+      } else {
+        this.drawElement(element, options)
+      }
+    }
+  }
+
+  private drawBoardWithSoldermask(board: PcbBoard): void {
+    const { width, height, center, outline } = board
+    const layer = "top" // Default to top layer for soldermask color
+
+    // If the board has a custom outline, draw it as a path with soldermask fill
+    if (outline && Array.isArray(outline) && outline.length >= 3) {
+      const soldermaskColor =
+        this.colorMap.soldermask[
+          layer as keyof typeof this.colorMap.soldermask
+        ] ?? this.colorMap.soldermask.top
+
+      // Draw filled path
+      const canvasPoints = outline.map((p) => {
+        const [x, y] = applyToPoint(this.realToCanvasMat, [p.x, p.y])
+        return { x, y }
+      })
+
+      this.ctx.beginPath()
+      const firstPoint = canvasPoints[0]
+      if (firstPoint) {
+        this.ctx.moveTo(firstPoint.x, firstPoint.y)
+        for (let i = 1; i < canvasPoints.length; i++) {
+          const point = canvasPoints[i]
+          if (point) {
+            this.ctx.lineTo(point.x, point.y)
+          }
+        }
+        this.ctx.closePath()
+      }
+
+      this.ctx.fillStyle = soldermaskColor
+      this.ctx.fill()
+
+      // Draw outline stroke
+      drawPath({
+        ctx: this.ctx,
+        points: outline.map((p) => ({ x: p.x, y: p.y })),
+        stroke: this.colorMap.boardOutline,
+        strokeWidth: 0.1,
+        realToCanvasMat: this.realToCanvasMat,
+        closePath: true,
+      })
+      return
+    }
+
+    // Otherwise draw a rectangle with soldermask fill
+    if (width !== undefined && height !== undefined && center) {
+      const soldermaskColor =
+        this.colorMap.soldermask[
+          layer as keyof typeof this.colorMap.soldermask
+        ] ?? this.colorMap.soldermask.top
+
+      // Draw filled rectangle
+      drawRect({
+        ctx: this.ctx,
+        center,
+        width,
+        height,
+        fill: soldermaskColor,
+        realToCanvasMat: this.realToCanvasMat,
+      })
+
+      // Draw the outline stroke separately using path
+      const halfWidth = width / 2
+      const halfHeight = height / 2
+      const corners = [
+        { x: center.x - halfWidth, y: center.y - halfHeight },
+        { x: center.x + halfWidth, y: center.y - halfHeight },
+        { x: center.x + halfWidth, y: center.y + halfHeight },
+        { x: center.x - halfWidth, y: center.y + halfHeight },
+      ]
+
+      drawPath({
+        ctx: this.ctx,
+        points: corners,
+        stroke: this.colorMap.boardOutline,
+        strokeWidth: 0.1,
+        realToCanvasMat: this.realToCanvasMat,
+        closePath: true,
+      })
     }
   }
 
@@ -254,10 +356,10 @@ export class CircuitToCanvasDrawer {
       })
     }
 
-    if (element.type === "pcb_silkscreen_pill") {
+    if ((element as any).type === "pcb_silkscreen_pill") {
       drawPcbSilkscreenPill({
         ctx: this.ctx,
-        pill: element as PcbSilkscreenPill,
+        pill: element as any,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })

@@ -5,6 +5,11 @@ import { drawCircle } from "../shapes/circle"
 import { drawRect } from "../shapes/rect"
 import { drawPill } from "../shapes/pill"
 import { drawPolygon } from "../shapes/polygon"
+import {
+  drawSoldermaskRingForRect,
+  drawSoldermaskRingForCircle,
+  drawSoldermaskRingForPill,
+} from "./soldermask-margin"
 
 export interface DrawPcbSmtPadParams {
   ctx: CanvasContext
@@ -20,12 +25,45 @@ function layerToColor(layer: string, colorMap: PcbColorMap): string {
   )
 }
 
+function getSoldermaskColor(layer: string, colorMap: PcbColorMap): string {
+  return (
+    colorMap.soldermaskOverCopper[
+      layer as keyof typeof colorMap.soldermaskOverCopper
+    ] ?? colorMap.soldermaskOverCopper.top
+  )
+}
+
 export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
   const { ctx, pad, realToCanvasMat, colorMap } = params
 
   const color = layerToColor(pad.layer, colorMap)
+  const hasSoldermask =
+    pad.is_covered_with_solder_mask === true &&
+    pad.soldermask_margin !== undefined &&
+    pad.soldermask_margin !== 0
+  const margin = hasSoldermask ? pad.soldermask_margin! : 0
+  const soldermaskRingColor = getSoldermaskColor(pad.layer, colorMap)
+  const positiveMarginColor = colorMap.substrate
 
+  // Draw the copper pad
   if (pad.shape === "rect") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawRect({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width + margin * 2,
+        height: pad.height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        borderRadius:
+          ((pad as { corner_radius?: number }).corner_radius ??
+            pad.rect_border_radius ??
+            0) + margin,
+      })
+    }
+
+    // Draw the pad on top
     drawRect({
       ctx,
       center: { x: pad.x, y: pad.y },
@@ -38,10 +76,46 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         pad.rect_border_radius ??
         0,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForRect(
+        ctx,
+        { x: pad.x, y: pad.y },
+        pad.width,
+        pad.height,
+        margin,
+        (pad as { corner_radius?: number }).corner_radius ??
+          pad.rect_border_radius ??
+          0,
+        0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        color,
+      )
+    }
     return
   }
 
   if (pad.shape === "rotated_rect") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawRect({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width + margin * 2,
+        height: pad.height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        borderRadius:
+          ((pad as { corner_radius?: number }).corner_radius ??
+            pad.rect_border_radius ??
+            0) + margin,
+        rotation: pad.ccw_rotation ?? 0,
+      })
+    }
+
+    // Draw the pad on top
     drawRect({
       ctx,
       center: { x: pad.x, y: pad.y },
@@ -55,10 +129,40 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         0,
       rotation: pad.ccw_rotation ?? 0,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForRect(
+        ctx,
+        { x: pad.x, y: pad.y },
+        pad.width,
+        pad.height,
+        margin,
+        (pad as { corner_radius?: number }).corner_radius ??
+          pad.rect_border_radius ??
+          0,
+        pad.ccw_rotation ?? 0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        color,
+      )
+    }
     return
   }
 
   if (pad.shape === "circle") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawCircle({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        radius: pad.radius + margin,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+      })
+    }
+
+    // Draw the pad on top
     drawCircle({
       ctx,
       center: { x: pad.x, y: pad.y },
@@ -66,10 +170,36 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
       fill: color,
       realToCanvasMat,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForCircle(
+        ctx,
+        { x: pad.x, y: pad.y },
+        pad.radius,
+        margin,
+        realToCanvasMat,
+        soldermaskRingColor,
+        color,
+      )
+    }
     return
   }
 
   if (pad.shape === "pill") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawPill({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width + margin * 2,
+        height: pad.height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+      })
+    }
+
+    // Draw the pad on top
     drawPill({
       ctx,
       center: { x: pad.x, y: pad.y },
@@ -78,10 +208,39 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
       fill: color,
       realToCanvasMat,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForPill(
+        ctx,
+        { x: pad.x, y: pad.y },
+        pad.width,
+        pad.height,
+        margin,
+        0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        color,
+      )
+    }
     return
   }
 
   if (pad.shape === "rotated_pill") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawPill({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width + margin * 2,
+        height: pad.height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        rotation: pad.ccw_rotation ?? 0,
+      })
+    }
+
+    // Draw the pad on top
     drawPill({
       ctx,
       center: { x: pad.x, y: pad.y },
@@ -91,6 +250,21 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
       realToCanvasMat,
       rotation: pad.ccw_rotation ?? 0,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForPill(
+        ctx,
+        { x: pad.x, y: pad.y },
+        pad.width,
+        pad.height,
+        margin,
+        pad.ccw_rotation ?? 0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        color,
+      )
+    }
     return
   }
 
