@@ -1,29 +1,37 @@
 import { expect, test } from "bun:test"
-import { createCanvas } from "@napi-rs/canvas"
-import type { PcbSilkscreenOval } from "circuit-json"
-import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import type { AnyCircuitElement, PcbSilkscreenOval } from "circuit-json"
+import { getStackedPngSvgComparison } from "../fixtures/getStackedPngSvgComparison"
 
 test("draw silkscreen oval", async () => {
-  const canvas = createCanvas(400, 400)
-  const ctx = canvas.getContext("2d")
-  const drawer = new CircuitToCanvasDrawer(ctx)
-
-  ctx.fillStyle = "#1a1a1a"
-  ctx.fillRect(0, 0, 400, 400)
-
   const oval: PcbSilkscreenOval = {
     type: "pcb_silkscreen_oval",
-    pcb_silkscreen_oval_id: "oval1",
-    pcb_component_id: "component1",
-    layer: "top",
-    center: { x: 200, y: 200 },
-    radius_x: 50,
-    radius_y: 25,
+    layer: "top" as const,
+    pcb_component_id: "pcb_component_1",
+    pcb_silkscreen_oval_id: "oval_1",
+    center: { x: 0, y: 0 },
+    radius_x: 2,
+    radius_y: 1,
+    ccw_rotation: 45,
   }
 
-  drawer.drawElements([oval])
+  const circuitJson: AnyCircuitElement[] = [
+    {
+      type: "pcb_board",
+      pcb_board_id: "board1",
+      center: { x: 0, y: 0 },
+      width: 10,
+      height: 10,
+      thickness: 1.6,
+      num_layers: 2,
+      material: "fr4",
+    },
+    oval,
+  ]
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,
-  )
+  const stackedPng = await getStackedPngSvgComparison(circuitJson, {
+    width: 400,
+    height: 800,
+  })
+
+  await expect(stackedPng).toMatchPngSnapshot(import.meta.path)
 })
