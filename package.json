@@ -1,7 +1,7 @@
 {
   "name": "circuit-to-canvas",
   "main": "dist/index.js",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "type": "module",
   "scripts": {
     "build": "tsup-node ./lib/index.ts --format esm --dts",
@@ -13,11 +13,11 @@
     "@napi-rs/canvas": "^0.1.84",
     "@resvg/resvg-js": "^2.6.2",
     "@tscircuit/alphabet": "^0.0.17",
-    "@tscircuit/circuit-json-util": "^0.0.73",
+    "@tscircuit/circuit-json-util": "^0.0.75",
     "@tscircuit/math-utils": "^0.0.29",
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
-    "circuit-json": "^0.0.342",
+    "circuit-json": "^0.0.346",
     "circuit-json-to-connectivity-map": "^0.0.23",
     "circuit-to-svg": "^0.0.297",
     "looks-same": "^10.0.1",
