@@ -7,7 +7,9 @@ export interface DrawOvalParams {
   center: { x: number; y: number }
   radius_x: number
   radius_y: number
-  fill: string
+  fill?: string
+  stroke?: string
+  strokeWidth?: number
   realToCanvasMat: Matrix
   rotation?: number
 }
@@ -19,6 +21,8 @@ export function drawOval(params: DrawOvalParams): void {
     radius_x,
     radius_y,
     fill,
+    stroke,
+    strokeWidth = 0.1,
     realToCanvasMat,
     rotation = 0,
   } = params
@@ -26,6 +30,7 @@ export function drawOval(params: DrawOvalParams): void {
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
   const scaledRadiusX = radius_x * Math.abs(realToCanvasMat.a)
   const scaledRadiusY = radius_y * Math.abs(realToCanvasMat.a)
+  const scaledStrokeWidth = strokeWidth * Math.abs(realToCanvasMat.a)
 
   ctx.save()
   ctx.translate(cx, cy)
@@ -36,7 +41,17 @@ export function drawOval(params: DrawOvalParams): void {
 
   ctx.beginPath()
   ctx.ellipse(0, 0, scaledRadiusX, scaledRadiusY, 0, 0, Math.PI * 2)
-  ctx.fillStyle = fill
-  ctx.fill()
+
+  if (fill) {
+    ctx.fillStyle = fill
+    ctx.fill()
+  }
+
+  if (stroke) {
+    ctx.strokeStyle = stroke
+    ctx.lineWidth = scaledStrokeWidth
+    ctx.stroke()
+  }
+
   ctx.restore()
 }

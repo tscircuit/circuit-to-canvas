@@ -27,7 +27,8 @@ export function drawPcbSilkscreenOval(
     center: oval.center,
     radius_x: oval.radius_x,
     radius_y: oval.radius_y,
-    fill: color,
+    stroke: color,
+    strokeWidth: 0.1,
     realToCanvasMat,
     rotation: oval.ccw_rotation ?? 0,
   })
