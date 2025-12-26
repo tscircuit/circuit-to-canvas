@@ -5,8 +5,8 @@ import type { CanvasContext } from "../types"
 export interface DrawOvalParams {
   ctx: CanvasContext
   center: { x: number; y: number }
-  width: number
-  height: number
+  radius_x: number
+  radius_y: number
   fill: string
   realToCanvasMat: Matrix
   rotation?: number
@@ -16,16 +16,16 @@ export function drawOval(params: DrawOvalParams): void {
   const {
     ctx,
     center,
-    width,
-    height,
+    radius_x,
+    radius_y,
     fill,
     realToCanvasMat,
     rotation = 0,
   } = params
 
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
-  const scaledWidth = width * Math.abs(realToCanvasMat.a)
-  const scaledHeight = height * Math.abs(realToCanvasMat.a)
+  const scaledRadiusX = radius_x * Math.abs(realToCanvasMat.a)
+  const scaledRadiusY = radius_y * Math.abs(realToCanvasMat.a)
 
   ctx.save()
   ctx.translate(cx, cy)
@@ -35,7 +35,7 @@ export function drawOval(params: DrawOvalParams): void {
   }
 
   ctx.beginPath()
-  ctx.ellipse(0, 0, scaledWidth / 2, scaledHeight / 2, 0, 0, Math.PI * 2)
+  ctx.ellipse(0, 0, scaledRadiusX, scaledRadiusY, 0, 0, Math.PI * 2)
   ctx.fillStyle = fill
   ctx.fill()
   ctx.restore()

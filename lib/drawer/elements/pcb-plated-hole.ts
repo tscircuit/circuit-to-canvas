@@ -43,8 +43,8 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     drawOval({
       ctx,
       center: { x: hole.x, y: hole.y },
-      width: hole.outer_width,
-      height: hole.outer_height,
+      radius_x: hole.outer_width / 2,
+      radius_y: hole.outer_height / 2,
       fill: colorMap.copper.top,
       realToCanvasMat,
       rotation: hole.ccw_rotation,
@@ -54,8 +54,8 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     drawOval({
       ctx,
       center: { x: hole.x, y: hole.y },
-      width: hole.hole_width,
-      height: hole.hole_height,
+      radius_x: hole.hole_width / 2,
+      radius_y: hole.hole_height / 2,
       fill: colorMap.drill,
       realToCanvasMat,
       rotation: hole.ccw_rotation,
@@ -201,8 +201,8 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       drawOval({
         ctx,
         center: { x: holeX, y: holeY },
-        width: hole.hole_width ?? 0,
-        height: hole.hole_height ?? 0,
+        radius_x: (hole.hole_width ?? 0) / 2,
+        radius_y: (hole.hole_height ?? 0) / 2,
         fill: colorMap.drill,
         realToCanvasMat,
       })

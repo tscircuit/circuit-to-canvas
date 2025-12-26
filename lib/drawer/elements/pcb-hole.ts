@@ -43,8 +43,8 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
     drawOval({
       ctx,
       center: { x: hole.x, y: hole.y },
-      width: hole.hole_width,
-      height: hole.hole_height,
+      radius_x: hole.hole_width / 2,
+      radius_y: hole.hole_height / 2,
       fill: colorMap.drill,
       realToCanvasMat,
     })

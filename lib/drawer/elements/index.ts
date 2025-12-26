@@ -48,6 +48,11 @@ export {
   type DrawPcbSilkscreenPillParams,
 } from "./pcb-silkscreen-pill"
 
+export {
+  drawPcbSilkscreenOval,
+  type DrawPcbSilkscreenOvalParams,
+} from "./pcb-silkscreen-oval"
+
 export { drawPcbCutout, type DrawPcbCutoutParams } from "./pcb-cutout"
 
 export {

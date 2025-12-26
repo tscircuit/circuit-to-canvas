@@ -13,10 +13,11 @@ test("draw oval", async () => {
   drawOval({
     ctx,
     center: { x: 50, y: 50 },
-    width: 70,
-    height: 40,
+    radius_x: 50,
+    radius_y: 25,
     fill: "#0000ff",
     realToCanvasMat: identity(),
+    rotation: 45,
   })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
