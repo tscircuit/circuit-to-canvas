@@ -11,6 +11,7 @@ import type {
   PcbSilkscreenCircle,
   PcbSilkscreenLine,
   PcbSilkscreenPath,
+  PcbSilkscreenPill,
   PcbCutout,
   PcbCopperPour,
   PcbCopperText,
@@ -363,10 +364,10 @@ export class CircuitToCanvasDrawer {
       })
     }
 
-    if ((element as any).type === "pcb_silkscreen_pill") {
+    if (element.type === "pcb_silkscreen_pill") {
       drawPcbSilkscreenPill({
         ctx: this.ctx,
-        pill: element as any,
+        pill: element as PcbSilkscreenPill,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
