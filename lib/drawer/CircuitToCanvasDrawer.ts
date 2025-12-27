@@ -25,6 +25,7 @@ import type {
   PcbNoteDimension,
   PcbNoteLine,
   PcbRenderLayer,
+  PcbCopperPourBRep,
 } from "circuit-json"
 import {
   identity,
@@ -68,6 +69,7 @@ import { drawPcbNotePath } from "./elements/pcb-note-path"
 import { drawPcbNoteText } from "./elements/pcb-note-text"
 import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
+import { drawPcbCopperPourBRep } from "./elements/pcb-copper-pour"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
@@ -394,12 +396,21 @@ export class CircuitToCanvasDrawer {
     }
 
     if (element.type === "pcb_copper_pour") {
-      drawPcbCopperPour({
-        ctx: this.ctx,
-        pour: element as PcbCopperPour,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
+      if (element.shape === "brep") {
+        drawPcbCopperPourBRep({
+          ctx: this.ctx,
+          element: element as PcbCopperPourBRep,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      } else {
+        drawPcbCopperPour({
+          ctx: this.ctx,
+          pour: element as PcbCopperPour,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
     }
 
     if (element.type === "pcb_copper_text") {
