@@ -68,7 +68,7 @@ import { drawPcbNotePath } from "./elements/pcb-note-path"
 import { drawPcbNoteText } from "./elements/pcb-note-text"
 import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
-import { drawPcbBrepShape } from "./elements/pcb-brep-shape"
+import { drawPcbCopperPourBRep } from "./elements/pcb-copper-pour"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
@@ -396,7 +396,7 @@ export class CircuitToCanvasDrawer {
 
     if (element.type === "pcb_copper_pour") {
       if (element.shape === "brep") {
-        drawPcbBrepShape({
+        drawPcbCopperPourBRep({
           ctx: this.ctx,
           element: element as any,
           realToCanvasMat: this.realToCanvasMat,
