@@ -7,6 +7,10 @@ export { drawLine, type DrawLineParams } from "./line"
 export { drawPath, type DrawPathParams } from "./path"
 export { drawArrow, type DrawArrowParams } from "./arrow"
 export {
+  drawDimensionLine,
+  type DrawDimensionLineParams,
+} from "./dimension-line"
+export {
   drawText,
   type DrawTextParams,
   getAlphabetLayout,
