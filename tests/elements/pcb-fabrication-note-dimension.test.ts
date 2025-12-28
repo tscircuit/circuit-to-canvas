@@ -1,37 +1,42 @@
 import { expect, test } from "bun:test"
-import { createCanvas } from "@napi-rs/canvas"
-import type { PcbFabricationNoteDimension } from "circuit-json"
-import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import type {
+  AnyCircuitElement,
+  PcbFabricationNoteDimension,
+} from "circuit-json"
+import { getStackedPngSvgComparison } from "../fixtures/getStackedPngSvgComparison"
 
 test("draw pcb fabrication note dimension - basic", async () => {
-  const width = 200
-  const height = 100
-  const dpr = 2
-  const canvas = createCanvas(width * dpr, height * dpr)
-  const ctx = canvas.getContext("2d")
-  ctx.scale(dpr, dpr)
-  const drawer = new CircuitToCanvasDrawer(ctx)
-
-  // Background
-  ctx.fillStyle = "#1a1a1a"
-  ctx.fillRect(0, 0, width, height)
-
-  const circuitjson: PcbFabricationNoteDimension = {
+  const dim: PcbFabricationNoteDimension = {
     type: "pcb_fabrication_note_dimension",
     pcb_fabrication_note_dimension_id: "fab_dim_1",
-    from: { x: 20, y: 50 },
-    to: { x: 180, y: 50 },
-    arrow_size: 4,
-    font_size: 6,
-    text: "160mm",
+    from: { x: 2, y: 5 },
+    to: { x: 18, y: 5 },
+    arrow_size: 0.4,
+    font_size: 0.6,
+    text: "16mm",
     layer: "top",
     pcb_component_id: "comp_1",
     font: "tscircuit2024",
   }
 
-  drawer.drawElements([circuitjson])
+  const circuitJson: AnyCircuitElement[] = [
+    {
+      type: "pcb_board",
+      pcb_board_id: "board1",
+      center: { x: 10, y: 5 },
+      width: 25,
+      height: 15,
+      thickness: 1.6,
+      num_layers: 2,
+      material: "fr4",
+    },
+    dim,
+  ]
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,
-  )
+  const stackedPng = await getStackedPngSvgComparison(circuitJson, {
+    width: 400,
+    height: 800,
+  })
+
+  await expect(stackedPng).toMatchPngSnapshot(import.meta.path)
 })
