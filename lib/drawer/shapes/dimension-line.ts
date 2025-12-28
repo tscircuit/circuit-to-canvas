@@ -15,11 +15,20 @@ export interface DrawDimensionLineParams {
   arrowSize?: number
   strokeWidth?: number
   text?: string
-  textRotation?: number
+  textRotation?: number // CCW rotation in degrees
   offset?: {
     distance: number
     direction: { x: number; y: number }
   }
+}
+
+const TEXT_OFFSET_MULTIPLIER = 1.5
+const CHARACTER_WIDTH_MULTIPLIER = 0.6
+const TEXT_INTERSECTION_PADDING_MULTIPLIER = 0.3
+
+function normalize(v: { x: number; y: number }) {
+  const len = Math.hypot(v.x, v.y) || 1
+  return { x: v.x / len, y: v.y / len }
 }
 
 export function drawDimensionLine(params: DrawDimensionLineParams): void {
@@ -33,137 +42,187 @@ export function drawDimensionLine(params: DrawDimensionLineParams): void {
     arrowSize = 1,
     strokeWidth: manualStrokeWidth,
     text,
-    textRotation: manualTextRotation,
+    textRotation,
     offset,
   } = params
 
-  const STROKE_WIDTH_RATIO = 0.13
-  const strokeWidth =
-    manualStrokeWidth ?? Math.max(fontSize * STROKE_WIDTH_RATIO, 0.05)
+  const direction = normalize({ x: to.x - from.x, y: to.y - from.y })
+  const perpendicular = { x: -direction.y, y: direction.x }
 
-  let fromX = from.x
-  let fromY = from.y
-  let toX = to.x
-  let toY = to.y
+  const hasOffsetDirection =
+    offset?.direction &&
+    typeof offset.direction.x === "number" &&
+    typeof offset.direction.y === "number"
 
-  // Handle offset and extension lines
-  if (offset && offset.distance !== 0) {
-    const { distance, direction } = offset
-    const dirLen = Math.hypot(direction.x, direction.y)
-    if (dirLen > 0) {
-      const normX = direction.x / dirLen
-      const normY = direction.y / dirLen
-      const offsetX = distance * normX
-      const offsetY = distance * normY
+  const normalizedOffsetDirection = hasOffsetDirection
+    ? normalize(offset!.direction)
+    : { x: 0, y: 0 }
 
-      // Draw extension lines
-      drawLine({
-        ctx,
-        start: { x: from.x, y: from.y },
-        end: { x: from.x + offsetX, y: from.y + offsetY },
-        strokeWidth,
-        stroke: color,
-        realToCanvasMat,
-      })
-      drawLine({
-        ctx,
-        start: { x: to.x, y: to.y },
-        end: { x: to.x + offsetX, y: to.y + offsetY },
-        strokeWidth,
-        stroke: color,
-        realToCanvasMat,
-      })
-
-      fromX += offsetX
-      fromY += offsetY
-      toX += offsetX
-      toY += offsetY
-    }
+  const offsetMagnitude = offset?.distance ?? 0
+  const offsetVector = {
+    x: normalizedOffsetDirection.x * offsetMagnitude,
+    y: normalizedOffsetDirection.y * offsetMagnitude,
   }
 
-  // Draw the main dimension line
+  const fromOffset = { x: from.x + offsetVector.x, y: from.y + offsetVector.y }
+  const toOffset = { x: to.x + offsetVector.x, y: to.y + offsetVector.y }
+
+  const fromBase = {
+    x: fromOffset.x + direction.x * arrowSize,
+    y: fromOffset.y + direction.y * arrowSize,
+  }
+  const toBase = {
+    x: toOffset.x - direction.x * arrowSize,
+    y: toOffset.y - direction.y * arrowSize,
+  }
+
+  const scaleValue = Math.abs(realToCanvasMat.a)
+  const strokeWidth = manualStrokeWidth ?? arrowSize / 5
+  const lineColor = color || "rgba(255,255,255,0.5)"
+
+  // Extension lines (ticks)
+  const extensionDirection =
+    hasOffsetDirection &&
+    (Math.abs(normalizedOffsetDirection.x) > Number.EPSILON ||
+      Math.abs(normalizedOffsetDirection.y) > Number.EPSILON)
+      ? normalizedOffsetDirection
+      : perpendicular
+
+  const extensionLength = offsetMagnitude + 0.5
+
+  const drawExtension = (anchor: { x: number; y: number }) => {
+    const endPoint = {
+      x: anchor.x + extensionDirection.x * extensionLength,
+      y: anchor.y + extensionDirection.y * extensionLength,
+    }
+    drawLine({
+      ctx,
+      start: anchor,
+      end: endPoint,
+      strokeWidth,
+      stroke: lineColor,
+      realToCanvasMat,
+    })
+  }
+
+  drawExtension(from)
+  drawExtension(to)
+
+  // Main dimension line
   drawLine({
     ctx,
-    start: { x: fromX, y: fromY },
-    end: { x: toX, y: toY },
+    start: fromBase,
+    end: toBase,
     strokeWidth,
-    stroke: color,
+    stroke: lineColor,
     realToCanvasMat,
   })
 
-  // Draw arrows
+  // Arrows (Keep V-shaped but matching size)
   const [canvasFromX, canvasFromY] = applyToPoint(realToCanvasMat, [
-    fromX,
-    fromY,
+    fromOffset.x,
+    fromOffset.y,
   ])
-  const [canvasToX, canvasToY] = applyToPoint(realToCanvasMat, [toX, toY])
+  const [canvasToX, canvasToY] = applyToPoint(realToCanvasMat, [
+    toOffset.x,
+    toOffset.y,
+  ])
+  const [canvasToDirX, canvasToDirY] = applyToPoint(realToCanvasMat, [
+    toOffset.x + direction.x,
+    toOffset.y + direction.y,
+  ])
 
-  const canvasDx = canvasToX - canvasFromX
-  const canvasDy = canvasToY - canvasFromY
-  const lineAngle = Math.atan2(canvasDy, canvasDx)
-  const scaleValue = Math.abs(realToCanvasMat.a)
-  const scaledArrowSize = arrowSize * scaleValue
-  const scaledStrokeWidth = strokeWidth * scaleValue
+  const canvasLineAngle = Math.atan2(
+    canvasToDirY - canvasToY,
+    canvasToDirX - canvasToX,
+  )
 
-  // Arrow at 'from' (pointing toward 'from' from the line)
   drawArrow({
     ctx,
     x: canvasFromX,
     y: canvasFromY,
-    angle: lineAngle + Math.PI,
-    arrowSize: scaledArrowSize,
-    color,
-    strokeWidth: scaledStrokeWidth,
+    angle: canvasLineAngle + Math.PI,
+    arrowSize: arrowSize * scaleValue,
+    color: lineColor,
+    strokeWidth: strokeWidth * scaleValue,
   })
 
-  // Arrow at 'to' (pointing toward 'to' from the line)
   drawArrow({
     ctx,
     x: canvasToX,
     y: canvasToY,
-    angle: lineAngle,
-    arrowSize: scaledArrowSize,
-    color,
-    strokeWidth: scaledStrokeWidth,
+    angle: canvasLineAngle,
+    arrowSize: arrowSize * scaleValue,
+    color: lineColor,
+    strokeWidth: strokeWidth * scaleValue,
   })
 
-  // Draw text
+  // Text
   if (text) {
-    let textX = (fromX + toX) / 2
-    let textY = (fromY + toY) / 2
-
-    const dx = toX - fromX
-    const dy = toY - fromY
-    const length = Math.sqrt(dx * dx + dy * dy)
-
-    if (length > 0) {
-      const perpX = dy / length
-      const perpY = -dx / length
-      const offsetDistance = fontSize * 1.5
-      textX += perpX * offsetDistance
-      textY += perpY * offsetDistance
+    const midPoint = {
+      x: (from.x + to.x) / 2 + offsetVector.x,
+      y: (from.y + to.y) / 2 + offsetVector.y,
     }
 
-    const rotation =
-      manualTextRotation ??
-      -(() => {
-        const raw = (lineAngle * 180) / Math.PI
-        let deg = ((raw + 180) % 360) - 180
-        if (deg > 90) deg -= 180
-        if (deg < -90) deg += 180
-        return deg
-      })()
+    const [screenFromX, screenFromY] = applyToPoint(realToCanvasMat, [
+      fromOffset.x,
+      fromOffset.y,
+    ])
+    const [screenToX, screenToY] = applyToPoint(realToCanvasMat, [
+      toOffset.x,
+      toOffset.y,
+    ])
+
+    const screenDirection = normalize({
+      x: screenToX - screenFromX,
+      y: screenToY - screenFromY,
+    })
+
+    let textAngle =
+      (Math.atan2(screenDirection.y, screenDirection.x) * 180) / Math.PI
+    if (textAngle > 90 || textAngle < -90) {
+      textAngle += 180
+    }
+
+    const finalTextAngle =
+      typeof textRotation === "number" && Number.isFinite(textRotation)
+        ? textAngle - textRotation
+        : textAngle
+
+    let additionalOffset = 0
+    if (
+      text &&
+      typeof textRotation === "number" &&
+      Number.isFinite(textRotation)
+    ) {
+      const textWidth = text.length * fontSize * CHARACTER_WIDTH_MULTIPLIER
+      const textHeight = fontSize
+      const rotationRad = (textRotation * Math.PI) / 180
+      const sinRot = Math.abs(Math.sin(rotationRad))
+      const cosRot = Math.abs(Math.cos(rotationRad))
+      const halfWidth = textWidth / 2
+      const halfHeight = textHeight / 2
+      const maxExtension = halfWidth * sinRot + halfHeight * cosRot
+      additionalOffset =
+        maxExtension + fontSize * TEXT_INTERSECTION_PADDING_MULTIPLIER
+    }
+
+    const textOffset = arrowSize * TEXT_OFFSET_MULTIPLIER + additionalOffset
+    const textPoint = {
+      x: midPoint.x + perpendicular.x * textOffset,
+      y: midPoint.y + perpendicular.y * textOffset,
+    }
 
     drawText({
       ctx,
       text,
-      x: textX,
-      y: textY,
+      x: textPoint.x,
+      y: textPoint.y,
       fontSize,
-      color,
+      color: lineColor,
       realToCanvasMat,
       anchorAlignment: "center",
-      rotation,
+      rotation: -finalTextAngle, // drawText expects CCW rotation in degrees
     })
   }
 }

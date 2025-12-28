@@ -26,9 +26,7 @@ export function drawPcbNoteDimension(params: DrawPcbNoteDimensionParams): void {
     fontSize: pcbNoteDimension.font_size,
     arrowSize: pcbNoteDimension.arrow_size,
     text: pcbNoteDimension.text,
-    textRotation: pcbNoteDimension.text_ccw_rotation
-      ? -pcbNoteDimension.text_ccw_rotation
-      : undefined,
+    textRotation: pcbNoteDimension.text_ccw_rotation,
     offset:
       pcbNoteDimension.offset_distance && pcbNoteDimension.offset_direction
         ? {

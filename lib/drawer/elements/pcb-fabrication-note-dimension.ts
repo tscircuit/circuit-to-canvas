@@ -29,5 +29,14 @@ export function drawPcbFabricationNoteDimension(
     fontSize: pcbFabricationNoteDimension.font_size ?? 1,
     arrowSize: pcbFabricationNoteDimension.arrow_size ?? 1,
     text: pcbFabricationNoteDimension.text,
+    textRotation: pcbFabricationNoteDimension.text_ccw_rotation,
+    offset:
+      pcbFabricationNoteDimension.offset_distance &&
+      pcbFabricationNoteDimension.offset_direction
+        ? {
+            distance: pcbFabricationNoteDimension.offset_distance,
+            direction: pcbFabricationNoteDimension.offset_direction,
+          }
+        : undefined,
   })
 }

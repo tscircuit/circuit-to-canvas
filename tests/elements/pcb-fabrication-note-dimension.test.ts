@@ -6,19 +6,6 @@ import type {
 import { getStackedPngSvgComparison } from "../fixtures/getStackedPngSvgComparison"
 
 test("draw pcb fabrication note dimension - basic", async () => {
-  const dim: PcbFabricationNoteDimension = {
-    type: "pcb_fabrication_note_dimension",
-    pcb_fabrication_note_dimension_id: "fab_dim_1",
-    from: { x: 2, y: 5 },
-    to: { x: 18, y: 5 },
-    arrow_size: 0.4,
-    font_size: 0.6,
-    text: "16mm",
-    layer: "top",
-    pcb_component_id: "comp_1",
-    font: "tscircuit2024",
-  }
-
   const circuitJson: AnyCircuitElement[] = [
     {
       type: "pcb_board",
@@ -30,7 +17,18 @@ test("draw pcb fabrication note dimension - basic", async () => {
       num_layers: 2,
       material: "fr4",
     },
-    dim,
+    {
+      type: "pcb_fabrication_note_dimension",
+      pcb_fabrication_note_dimension_id: "fab_dim_1",
+      from: { x: 2, y: 5 },
+      to: { x: 18, y: 5 },
+      arrow_size: 0.4,
+      font_size: 0.6,
+      text: "16mm",
+      layer: "top",
+      pcb_component_id: "comp_1",
+      font: "tscircuit2024",
+    },
   ]
 
   const stackedPng = await getStackedPngSvgComparison(circuitJson, {
