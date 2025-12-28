@@ -99,3 +99,8 @@ export {
   drawPcbNoteDimension,
   type DrawPcbNoteDimensionParams,
 } from "./pcb-note-dimension"
+
+export {
+  drawPcbFabricationNoteDimension,
+  type DrawPcbFabricationNoteDimensionParams,
+} from "./pcb-fabrication-note-dimension"
