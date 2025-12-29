@@ -23,14 +23,11 @@ export function drawArrow(params: DrawArrowParams): void {
   ctx.beginPath()
   ctx.moveTo(0, 0)
   ctx.lineTo(-arrowSize, -arrowSize / 2)
-  ctx.moveTo(0, 0)
   ctx.lineTo(-arrowSize, arrowSize / 2)
+  ctx.closePath()
 
-  ctx.lineWidth = strokeWidth
-  ctx.strokeStyle = color
-  ctx.lineCap = "round"
-  ctx.lineJoin = "round"
-  ctx.stroke()
+  ctx.fillStyle = color
+  ctx.fill()
 
   ctx.restore()
 }
