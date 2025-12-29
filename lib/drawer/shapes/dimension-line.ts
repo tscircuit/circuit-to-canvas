@@ -67,14 +67,8 @@ export function drawDimensionLine(params: DrawDimensionLineParams): void {
   const fromOffset = { x: from.x + offsetVector.x, y: from.y + offsetVector.y }
   const toOffset = { x: to.x + offsetVector.x, y: to.y + offsetVector.y }
 
-  const fromBase = {
-    x: fromOffset.x + direction.x * arrowSize,
-    y: fromOffset.y + direction.y * arrowSize,
-  }
-  const toBase = {
-    x: toOffset.x - direction.x * arrowSize,
-    y: toOffset.y - direction.y * arrowSize,
-  }
+  const fromBase = fromOffset
+  const toBase = toOffset
 
   const scaleValue = Math.abs(realToCanvasMat.a)
   const strokeWidth = manualStrokeWidth ?? arrowSize / 5
