@@ -121,85 +121,80 @@ export function drawDimensionLine(params: DrawDimensionLineParams): void {
     ]
   }
 
-  // Extension lines (ticks)
-  const ext1 = getExtensionPoints(from)
-  allPoints.push(...ext1, ext1[0]!)
+  // Unified Perimeter Approach:
+  // Draw the main line and both arrows as a single continuous perimeter path.
+  // This eliminates self-intersections and winding issues.
 
-  const ext2 = getExtensionPoints(to)
-  allPoints.push(...ext2, ext2[0]!)
+  // 1. Tip 1
+  allPoints.push(fromOffset)
 
-  // Main dimension line
-  const halfWidth = strokeWidth / 2
-  const mainLine = [
-    {
-      x: fromBase.x + perpendicular.x * halfWidth,
-      y: fromBase.y + perpendicular.y * halfWidth,
-    },
-    {
-      x: fromBase.x - perpendicular.x * halfWidth,
-      y: fromBase.y - perpendicular.y * halfWidth,
-    },
-    {
-      x: toBase.x - perpendicular.x * halfWidth,
-      y: toBase.y - perpendicular.y * halfWidth,
-    },
-    {
-      x: toBase.x + perpendicular.x * halfWidth,
-      y: toBase.y + perpendicular.y * halfWidth,
-    },
-  ]
-  allPoints.push(...mainLine, mainLine[0]!)
+  // 2. Arrow 1 base corner 1
+  allPoints.push({
+    x: fromBase.x + perpendicular.x * (arrowSize / 2),
+    y: fromBase.y + perpendicular.y * (arrowSize / 2),
+  })
 
-  // Arrows
-  const arrow1 = [
-    fromOffset,
-    {
-      x:
-        fromOffset.x +
-        direction.x * arrowSize +
-        perpendicular.x * (arrowSize / 2),
-      y:
-        fromOffset.y +
-        direction.y * arrowSize +
-        perpendicular.y * (arrowSize / 2),
-    },
-    {
-      x:
-        fromOffset.x +
-        direction.x * arrowSize -
-        perpendicular.x * (arrowSize / 2),
-      y:
-        fromOffset.y +
-        direction.y * arrowSize -
-        perpendicular.y * (arrowSize / 2),
-    },
-  ]
-  allPoints.push(...arrow1, arrow1[0]!)
+  // 3. Main Line corner 1
+  allPoints.push({
+    x: fromBase.x + perpendicular.x * (strokeWidth / 2),
+    y: fromBase.y + perpendicular.y * (strokeWidth / 2),
+  })
 
-  const arrow2 = [
-    toOffset,
-    {
-      x:
-        toOffset.x -
-        direction.x * arrowSize +
-        perpendicular.x * (arrowSize / 2),
-      y:
-        toOffset.y -
-        direction.y * arrowSize +
-        perpendicular.y * (arrowSize / 2),
-    },
-    {
-      x:
-        toOffset.x -
-        direction.x * arrowSize -
-        perpendicular.x * (arrowSize / 2),
-      y:
-        toOffset.y -
-        direction.y * arrowSize -
-        perpendicular.y * (arrowSize / 2),
-    },
-  ]
-  allPoints.push(...arrow2, arrow2[0]!)
+  // 4. Main Line corner 2 (at toBase)
+  allPoints.push({
+    x: toBase.x + perpendicular.x * (strokeWidth / 2),
+    y: toBase.y + perpendicular.y * (strokeWidth / 2),
+  })
+
+  // 5. Arrow 2 base corner 1
+  allPoints.push({
+    x: toBase.x + perpendicular.x * (arrowSize / 2),
+    y: toBase.y + perpendicular.y * (arrowSize / 2),
+  })
+
+  // 6. Tip 2
+  allPoints.push(toOffset)
+
+  // 7. Arrow 2 base corner 2
+  allPoints.push({
+    x: toBase.x - perpendicular.x * (arrowSize / 2),
+    y: toBase.y - perpendicular.y * (arrowSize / 2),
+  })
+
+  // 8. Main Line corner 3 (at toBase)
+  allPoints.push({
+    x: toBase.x - perpendicular.x * (strokeWidth / 2),
+    y: toBase.y - perpendicular.y * (strokeWidth / 2),
+  })
+
+  // 9. Main Line corner 4 (at fromBase)
+  allPoints.push({
+    x: fromBase.x - perpendicular.x * (strokeWidth / 2),
+    y: fromBase.y - perpendicular.y * (strokeWidth / 2),
+  })
+
+  // 10. Arrow 1 base corner 2
+  allPoints.push({
+    x: fromBase.x - perpendicular.x * (arrowSize / 2),
+    y: fromBase.y - perpendicular.y * (arrowSize / 2),
+  })
+
+  // 11. Back to Tip 1
+  allPoints.push(fromOffset)
+
+  // Bridge Ticks (Extension lines)
+  const startPoint = allPoints[0]!
+  const addTick = (anchor: { x: number; y: number }) => {
+    const pts = getExtensionPoints(anchor)
+    allPoints.push(startPoint)
+    allPoints.push(pts[0]!)
+    allPoints.push(...pts)
+    allPoints.push(pts[0]!)
+    allPoints.push(startPoint)
+  }
+
+  addTick(from)
+  addTick(to)
 
   drawPolygon({
     ctx,
