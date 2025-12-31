@@ -44,6 +44,10 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
   const margin = hasSoldermask ? pad.soldermask_margin! : 0
   const soldermaskRingColor = getSoldermaskColor(pad.layer, colorMap)
   const positiveMarginColor = colorMap.substrate
+  // Only add overlay when covered with soldermask but NO margin (new behavior)
+  const isCoveredWithSoldermaskNoMargin =
+    pad.is_covered_with_solder_mask === true && !hasSoldermask
+  const soldermaskOverlayColor = getSoldermaskColor(pad.layer, colorMap)
 
   // Draw the copper pad
   if (pad.shape === "rect") {
@@ -93,6 +97,22 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         soldermaskRingColor,
         color,
       )
+    }
+
+    // If fully covered with soldermask but NO margin, draw soldermaskOverCopper overlay
+    if (isCoveredWithSoldermaskNoMargin) {
+      drawRect({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width,
+        height: pad.height,
+        fill: soldermaskOverlayColor,
+        realToCanvasMat,
+        borderRadius:
+          (pad as { corner_radius?: number }).corner_radius ??
+          pad.rect_border_radius ??
+          0,
+      })
     }
     return
   }
@@ -147,6 +167,23 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         color,
       )
     }
+
+    // If fully covered with soldermask but NO margin, draw soldermaskOverCopper overlay
+    if (isCoveredWithSoldermaskNoMargin) {
+      drawRect({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width,
+        height: pad.height,
+        fill: soldermaskOverlayColor,
+        realToCanvasMat,
+        borderRadius:
+          (pad as { corner_radius?: number }).corner_radius ??
+          pad.rect_border_radius ??
+          0,
+        rotation: pad.ccw_rotation ?? 0,
+      })
+    }
     return
   }
 
@@ -182,6 +219,17 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         soldermaskRingColor,
         color,
       )
+    }
+
+    // If fully covered with soldermask but NO margin, draw soldermaskOverCopper overlay
+    if (isCoveredWithSoldermaskNoMargin) {
+      drawCircle({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        radius: pad.radius,
+        fill: soldermaskOverlayColor,
+        realToCanvasMat,
+      })
     }
     return
   }
@@ -222,6 +270,18 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         soldermaskRingColor,
         color,
       )
+    }
+
+    // If fully covered with soldermask but NO margin, draw soldermaskOverCopper overlay
+    if (isCoveredWithSoldermaskNoMargin) {
+      drawPill({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width,
+        height: pad.height,
+        fill: soldermaskOverlayColor,
+        realToCanvasMat,
+      })
     }
     return
   }
@@ -265,17 +325,41 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         color,
       )
     }
+
+    // If fully covered with soldermask but NO margin, draw soldermaskOverCopper overlay
+    if (isCoveredWithSoldermaskNoMargin) {
+      drawPill({
+        ctx,
+        center: { x: pad.x, y: pad.y },
+        width: pad.width,
+        height: pad.height,
+        fill: soldermaskOverlayColor,
+        realToCanvasMat,
+        rotation: pad.ccw_rotation ?? 0,
+      })
+    }
     return
   }
 
   if (pad.shape === "polygon") {
     if (pad.points && pad.points.length >= 3) {
+      // Draw the copper pad
       drawPolygon({
         ctx,
         points: pad.points,
         fill: color,
         realToCanvasMat,
       })
+
+      // If fully covered with soldermask but NO margin, draw soldermaskOverCopper overlay
+      if (isCoveredWithSoldermaskNoMargin) {
+        drawPolygon({
+          ctx,
+          points: pad.points,
+          fill: soldermaskOverlayColor,
+          realToCanvasMat,
+        })
+      }
     }
     return
   }
