@@ -264,3 +264,63 @@ export function drawSoldermaskRingForPill(
 
   ctx.restore()
 }
+
+/**
+ * Draws a soldermask ring for oval shapes with negative margin
+ * (soldermask appears inside the hole boundary)
+ */
+export function drawSoldermaskRingForOval(
+  ctx: CanvasContext,
+  center: { x: number; y: number },
+  radius_x: number,
+  radius_y: number,
+  margin: number,
+  rotation: number,
+  realToCanvasMat: Matrix,
+  soldermaskColor: string,
+  holeColor: string,
+): void {
+  const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
+  const scaledRadiusX = radius_x * Math.abs(realToCanvasMat.a)
+  const scaledRadiusY = radius_y * Math.abs(realToCanvasMat.a)
+  const scaledMargin = Math.abs(margin) * Math.abs(realToCanvasMat.a)
+
+  ctx.save()
+  ctx.translate(cx, cy)
+
+  if (rotation !== 0) {
+    ctx.rotate(-rotation * (Math.PI / 180))
+  }
+
+  // For negative margins, outer is hole boundary, inner is reduced by margin
+  // Use source-atop so the ring only appears on the hole
+  const prevCompositeOp = ctx.globalCompositeOperation
+  if (ctx.globalCompositeOperation !== undefined) {
+    ctx.globalCompositeOperation = "source-atop"
+  }
+
+  // Draw outer oval filled (at hole boundary)
+  ctx.beginPath()
+  ctx.ellipse(0, 0, scaledRadiusX, scaledRadiusY, 0, 0, Math.PI * 2)
+  ctx.fillStyle = soldermaskColor
+  ctx.fill()
+
+  // Reset composite operation and restore hole color in inner area
+  if (ctx.globalCompositeOperation !== undefined) {
+    ctx.globalCompositeOperation = prevCompositeOp || "source-over"
+  }
+
+  // Restore hole color in inner oval (reduced by margin)
+  // For ovals, we reduce both radii by the margin
+  const innerRadiusX = Math.max(0, scaledRadiusX - scaledMargin)
+  const innerRadiusY = Math.max(0, scaledRadiusY - scaledMargin)
+
+  if (innerRadiusX > 0 && innerRadiusY > 0) {
+    ctx.beginPath()
+    ctx.ellipse(0, 0, innerRadiusX, innerRadiusY, 0, 0, Math.PI * 2)
+    ctx.fillStyle = holeColor
+    ctx.fill()
+  }
+
+  ctx.restore()
+}

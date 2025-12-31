@@ -160,16 +160,25 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    // Check if any pad has is_covered_with_solder_mask: true
+    // Check if any pad or hole has is_covered_with_solder_mask: true
     const hasSoldermaskPads = elements.some(
       (el) =>
         el.type === "pcb_smtpad" &&
         (el as PcbSmtPad).is_covered_with_solder_mask === true,
     )
+    const hasSoldermaskHoles = elements.some(
+      (el) =>
+        el.type === "pcb_hole" &&
+        (el as PcbHole & { is_covered_with_solder_mask?: boolean })
+          .is_covered_with_solder_mask === true,
+    )
 
     for (const element of elements) {
-      if (element.type === "pcb_board" && hasSoldermaskPads) {
-        // Draw board with soldermask fill when pads have soldermask
+      if (
+        element.type === "pcb_board" &&
+        (hasSoldermaskPads || hasSoldermaskHoles)
+      ) {
+        // Draw board with soldermask fill when pads or holes have soldermask
         this.drawBoardWithSoldermask(element as PcbBoard)
       } else {
         this.drawElement(element, options)
