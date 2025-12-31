@@ -36,10 +36,10 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   const { ctx, hole, realToCanvasMat, colorMap } = params
 
   const hasSoldermask =
-    (hole as any).is_covered_with_solder_mask === true &&
-    (hole as any).soldermask_margin !== undefined &&
-    (hole as any).soldermask_margin !== 0
-  const margin = hasSoldermask ? (hole as any).soldermask_margin! : 0
+    hole.is_covered_with_solder_mask === true &&
+    hole.soldermask_margin !== undefined &&
+    hole.soldermask_margin !== 0
+  const margin = hasSoldermask ? hole.soldermask_margin! : 0
   const soldermaskRingColor = getSoldermaskColor(hole.layers, colorMap)
   const positiveMarginColor = colorMap.substrate
   const copperColor = colorMap.copper.top
