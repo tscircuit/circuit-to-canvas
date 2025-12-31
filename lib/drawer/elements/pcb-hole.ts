@@ -5,12 +5,6 @@ import { drawCircle } from "../shapes/circle"
 import { drawRect } from "../shapes/rect"
 import { drawOval } from "../shapes/oval"
 import { drawPill } from "../shapes/pill"
-import {
-  drawSoldermaskRingForRect,
-  drawSoldermaskRingForCircle,
-  drawSoldermaskRingForPill,
-  drawSoldermaskRingForOval,
-} from "./soldermask-margin"
 
 export interface DrawPcbHoleParams {
   ctx: CanvasContext
@@ -25,9 +19,8 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
   const hasSoldermask =
     hole.is_covered_with_solder_mask === true &&
     hole.soldermask_margin !== undefined &&
-    hole.soldermask_margin !== 0
+    hole.soldermask_margin > 0
   const margin = hasSoldermask ? hole.soldermask_margin! : 0
-  const soldermaskRingColor = colorMap.soldermaskOverCopper.top
   const positiveMarginColor = colorMap.substrate
 
   if (hole.hole_shape === "circle") {
@@ -50,19 +43,6 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       fill: colorMap.drill,
       realToCanvasMat,
     })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForCircle(
-        ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_diameter / 2,
-        margin,
-        realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
-    }
     return
   }
 
@@ -88,22 +68,6 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       fill: colorMap.drill,
       realToCanvasMat,
     })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForRect(
-        ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_diameter,
-        hole.hole_diameter,
-        margin,
-        0,
-        0,
-        realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
-    }
     return
   }
 
@@ -129,21 +93,6 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       fill: colorMap.drill,
       realToCanvasMat,
     })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForOval(
-        ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width / 2,
-        hole.hole_height / 2,
-        margin,
-        0,
-        realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
-    }
     return
   }
 
@@ -169,22 +118,6 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       fill: colorMap.drill,
       realToCanvasMat,
     })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForRect(
-        ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width,
-        hole.hole_height,
-        margin,
-        0,
-        0,
-        realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
-    }
     return
   }
 
@@ -210,26 +143,11 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       fill: colorMap.drill,
       realToCanvasMat,
     })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForPill(
-        ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width,
-        hole.hole_height,
-        margin,
-        0,
-        realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
-    }
     return
   }
 
   if (hole.hole_shape === "rotated_pill") {
-    const rotation = hole.ccw_rotation ?? 0
+    const rotation = (hole as any).ccw_rotation ?? 0
 
     // For positive margins, draw extended mask area first
     if (hasSoldermask && margin > 0) {
@@ -254,21 +172,6 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       realToCanvasMat,
       rotation,
     })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForPill(
-        ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width,
-        hole.hole_height,
-        margin,
-        rotation,
-        realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
-    }
     return
   }
 }
