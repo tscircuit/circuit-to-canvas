@@ -1,9 +1,8 @@
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../types"
-import { drawLine } from "./line"
+import { drawPolygon } from "./polygon"
 import { drawText } from "./text"
-import { drawArrow } from "./arrow"
 
 export interface DrawDimensionLineParams {
   ctx: CanvasContext
@@ -90,71 +89,123 @@ export function drawDimensionLine(params: DrawDimensionLineParams): void {
 
   const extensionLength = offsetMagnitude + 0.5
 
-  const drawExtension = (anchor: { x: number; y: number }) => {
+  const allPoints: Array<{ x: number; y: number }> = []
+
+  const getExtensionPoints = (anchor: { x: number; y: number }) => {
     const endPoint = {
       x: anchor.x + extensionDirection.x * extensionLength,
       y: anchor.y + extensionDirection.y * extensionLength,
     }
-    drawLine({
-      ctx,
-      start: anchor,
-      end: endPoint,
-      strokeWidth,
-      stroke: lineColor,
-      realToCanvasMat,
-    })
+    const halfWidth = strokeWidth / 2
+    const extPerpendicular = {
+      x: -extensionDirection.y,
+      y: extensionDirection.x,
+    }
+    return [
+      {
+        x: anchor.x + extPerpendicular.x * halfWidth,
+        y: anchor.y + extPerpendicular.y * halfWidth,
+      },
+      {
+        x: anchor.x - extPerpendicular.x * halfWidth,
+        y: anchor.y - extPerpendicular.y * halfWidth,
+      },
+      {
+        x: endPoint.x - extPerpendicular.x * halfWidth,
+        y: endPoint.y - extPerpendicular.y * halfWidth,
+      },
+      {
+        x: endPoint.x + extPerpendicular.x * halfWidth,
+        y: endPoint.y + extPerpendicular.y * halfWidth,
+      },
+    ]
   }
 
-  drawExtension(from)
-  drawExtension(to)
+  // Extension lines (ticks)
+  const ext1 = getExtensionPoints(from)
+  allPoints.push(...ext1, ext1[0]!)
+
+  const ext2 = getExtensionPoints(to)
+  allPoints.push(...ext2, ext2[0]!)
 
   // Main dimension line
-  drawLine({
+  const halfWidth = strokeWidth / 2
+  const mainLine = [
+    {
+      x: fromBase.x + perpendicular.x * halfWidth,
+      y: fromBase.y + perpendicular.y * halfWidth,
+    },
+    {
+      x: fromBase.x - perpendicular.x * halfWidth,
+      y: fromBase.y - perpendicular.y * halfWidth,
+    },
+    {
+      x: toBase.x - perpendicular.x * halfWidth,
+      y: toBase.y - perpendicular.y * halfWidth,
+    },
+    {
+      x: toBase.x + perpendicular.x * halfWidth,
+      y: toBase.y + perpendicular.y * halfWidth,
+    },
+  ]
+  allPoints.push(...mainLine, mainLine[0]!)
+
+  // Arrows
+  const arrow1 = [
+    fromOffset,
+    {
+      x:
+        fromOffset.x +
+        direction.x * arrowSize +
+        perpendicular.x * (arrowSize / 2),
+      y:
+        fromOffset.y +
+        direction.y * arrowSize +
+        perpendicular.y * (arrowSize / 2),
+    },
+    {
+      x:
+        fromOffset.x +
+        direction.x * arrowSize -
+        perpendicular.x * (arrowSize / 2),
+      y:
+        fromOffset.y +
+        direction.y * arrowSize -
+        perpendicular.y * (arrowSize / 2),
+    },
+  ]
+  allPoints.push(...arrow1, arrow1[0]!)
+
+  const arrow2 = [
+    toOffset,
+    {
+      x:
+        toOffset.x -
+        direction.x * arrowSize +
+        perpendicular.x * (arrowSize / 2),
+      y:
+        toOffset.y -
+        direction.y * arrowSize +
+        perpendicular.y * (arrowSize / 2),
+    },
+    {
+      x:
+        toOffset.x -
+        direction.x * arrowSize -
+        perpendicular.x * (arrowSize / 2),
+      y:
+        toOffset.y -
+        direction.y * arrowSize -
+        perpendicular.y * (arrowSize / 2),
+    },
+  ]
+  allPoints.push(...arrow2, arrow2[0]!)
+
+  drawPolygon({
     ctx,
-    start: fromBase,
-    end: toBase,
-    strokeWidth,
-    stroke: lineColor,
+    points: allPoints,
+    fill: lineColor,
     realToCanvasMat,
-  })
-
-  // Arrows (Keep V-shaped but matching size)
-  const [canvasFromX, canvasFromY] = applyToPoint(realToCanvasMat, [
-    fromOffset.x,
-    fromOffset.y,
-  ])
-  const [canvasToX, canvasToY] = applyToPoint(realToCanvasMat, [
-    toOffset.x,
-    toOffset.y,
-  ])
-  const [canvasToDirX, canvasToDirY] = applyToPoint(realToCanvasMat, [
-    toOffset.x + direction.x,
-    toOffset.y + direction.y,
-  ])
-
-  const canvasLineAngle = Math.atan2(
-    canvasToDirY - canvasToY,
-    canvasToDirX - canvasToX,
-  )
-
-  drawArrow({
-    ctx,
-    x: canvasFromX,
-    y: canvasFromY,
-    angle: canvasLineAngle + Math.PI,
-    arrowSize: arrowSize * scaleValue,
-    color: lineColor,
-    strokeWidth: strokeWidth * scaleValue,
-  })
-
-  drawArrow({
-    ctx,
-    x: canvasToX,
-    y: canvasToY,
-    angle: canvasLineAngle,
-    arrowSize: arrowSize * scaleValue,
-    color: lineColor,
-    strokeWidth: strokeWidth * scaleValue,
   })
 
   // Text
