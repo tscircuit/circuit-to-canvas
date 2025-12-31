@@ -6,6 +6,12 @@ import { drawRect } from "../shapes/rect"
 import { drawOval } from "../shapes/oval"
 import { drawPill } from "../shapes/pill"
 import { drawPolygon } from "../shapes/polygon"
+import {
+  drawSoldermaskRingForCircle,
+  drawSoldermaskRingForOval,
+  drawSoldermaskRingForPill,
+  drawSoldermaskRingForRect,
+} from "./soldermask-margin"
 
 export interface DrawPcbPlatedHoleParams {
   ctx: CanvasContext
@@ -14,18 +20,63 @@ export interface DrawPcbPlatedHoleParams {
   colorMap: PcbColorMap
 }
 
+function getSoldermaskColor(
+  layers: string[] | undefined,
+  colorMap: PcbColorMap,
+): string {
+  const layer = layers?.includes("top") ? "top" : "bottom"
+  return (
+    colorMap.soldermaskOverCopper[
+      layer as keyof typeof colorMap.soldermaskOverCopper
+    ] ?? colorMap.soldermaskOverCopper.top
+  )
+}
+
 export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   const { ctx, hole, realToCanvasMat, colorMap } = params
 
+  const hasSoldermask =
+    (hole as any).is_covered_with_solder_mask === true &&
+    (hole as any).soldermask_margin !== undefined &&
+    (hole as any).soldermask_margin !== 0
+  const margin = hasSoldermask ? (hole as any).soldermask_margin! : 0
+  const soldermaskRingColor = getSoldermaskColor(hole.layers, colorMap)
+  const positiveMarginColor = colorMap.substrate
+  const copperColor = colorMap.copper.top
+
   if (hole.shape === "circle") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawCircle({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius: hole.outer_diameter / 2 + margin,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+      })
+    }
+
     // Draw outer copper ring
     drawCircle({
       ctx,
       center: { x: hole.x, y: hole.y },
       radius: hole.outer_diameter / 2,
-      fill: colorMap.copper.top,
+      fill: copperColor,
       realToCanvasMat,
     })
+
+    // For negative margins, draw soldermask ring on top of the copper ring
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForCircle(
+        ctx,
+        { x: hole.x, y: hole.y },
+        hole.outer_diameter / 2,
+        margin,
+        realToCanvasMat,
+        soldermaskRingColor,
+        copperColor,
+      )
+    }
 
     // Draw inner drill hole
     drawCircle({
@@ -39,16 +90,44 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "oval") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawOval({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius_x: hole.outer_width / 2 + margin,
+        radius_y: hole.outer_height / 2 + margin,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    }
+
     // Draw outer copper oval
     drawOval({
       ctx,
       center: { x: hole.x, y: hole.y },
       radius_x: hole.outer_width / 2,
       radius_y: hole.outer_height / 2,
-      fill: colorMap.copper.top,
+      fill: copperColor,
       realToCanvasMat,
       rotation: hole.ccw_rotation,
     })
+
+    // For negative margins, draw soldermask ring on top of the copper oval
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForOval(
+        ctx,
+        { x: hole.x, y: hole.y },
+        hole.outer_width / 2,
+        hole.outer_height / 2,
+        margin,
+        hole.ccw_rotation ?? 0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        copperColor,
+      )
+    }
 
     // Draw inner drill hole
     drawOval({
@@ -64,16 +143,44 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "pill") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawPill({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.outer_width + margin * 2,
+        height: hole.outer_height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    }
+
     // Draw outer copper pill
     drawPill({
       ctx,
       center: { x: hole.x, y: hole.y },
       width: hole.outer_width,
       height: hole.outer_height,
-      fill: colorMap.copper.top,
+      fill: copperColor,
       realToCanvasMat,
       rotation: hole.ccw_rotation,
     })
+
+    // For negative margins, draw soldermask ring on top of the copper pill
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForPill(
+        ctx,
+        { x: hole.x, y: hole.y },
+        hole.outer_width,
+        hole.outer_height,
+        margin,
+        hole.ccw_rotation ?? 0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        copperColor,
+      )
+    }
 
     // Draw inner drill hole
     drawPill({
@@ -89,16 +196,45 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "circular_hole_with_rect_pad") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawRect({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.rect_pad_width + margin * 2,
+        height: hole.rect_pad_height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        borderRadius: (hole.rect_border_radius ?? 0) + margin,
+      })
+    }
+
     // Draw rectangular pad
     drawRect({
       ctx,
       center: { x: hole.x, y: hole.y },
       width: hole.rect_pad_width,
       height: hole.rect_pad_height,
-      fill: colorMap.copper.top,
+      fill: copperColor,
       realToCanvasMat,
       borderRadius: hole.rect_border_radius ?? 0,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForRect(
+        ctx,
+        { x: hole.x, y: hole.y },
+        hole.rect_pad_width,
+        hole.rect_pad_height,
+        margin,
+        hole.rect_border_radius ?? 0,
+        0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        copperColor,
+      )
+    }
 
     // Draw circular drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
@@ -114,16 +250,45 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "pill_hole_with_rect_pad") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawRect({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.rect_pad_width + margin * 2,
+        height: hole.rect_pad_height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        borderRadius: (hole.rect_border_radius ?? 0) + margin,
+      })
+    }
+
     // Draw rectangular pad
     drawRect({
       ctx,
       center: { x: hole.x, y: hole.y },
       width: hole.rect_pad_width,
       height: hole.rect_pad_height,
-      fill: colorMap.copper.top,
+      fill: copperColor,
       realToCanvasMat,
       borderRadius: hole.rect_border_radius ?? 0,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForRect(
+        ctx,
+        { x: hole.x, y: hole.y },
+        hole.rect_pad_width,
+        hole.rect_pad_height,
+        margin,
+        hole.rect_border_radius ?? 0,
+        0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        copperColor,
+      )
+    }
 
     // Draw pill drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
@@ -140,17 +305,47 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "rotated_pill_hole_with_rect_pad") {
+    // For positive margins, draw extended mask area first
+    if (hasSoldermask && margin > 0) {
+      drawRect({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.rect_pad_width + margin * 2,
+        height: hole.rect_pad_height + margin * 2,
+        fill: positiveMarginColor,
+        realToCanvasMat,
+        borderRadius: (hole.rect_border_radius ?? 0) + margin,
+        rotation: hole.rect_ccw_rotation,
+      })
+    }
+
     // Draw rotated rectangular pad
     drawRect({
       ctx,
       center: { x: hole.x, y: hole.y },
       width: hole.rect_pad_width,
       height: hole.rect_pad_height,
-      fill: colorMap.copper.top,
+      fill: copperColor,
       realToCanvasMat,
       borderRadius: hole.rect_border_radius ?? 0,
       rotation: hole.rect_ccw_rotation,
     })
+
+    // For negative margins, draw soldermask ring on top of the pad
+    if (hasSoldermask && margin < 0) {
+      drawSoldermaskRingForRect(
+        ctx,
+        { x: hole.x, y: hole.y },
+        hole.rect_pad_width,
+        hole.rect_pad_height,
+        margin,
+        hole.rect_border_radius ?? 0,
+        hole.rect_ccw_rotation ?? 0,
+        realToCanvasMat,
+        soldermaskRingColor,
+        copperColor,
+      )
+    }
 
     // Draw rotated pill drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
@@ -168,6 +363,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "hole_with_polygon_pad") {
+    // Note: Polygon pads don't support soldermask margins (similar to SMT polygon pads)
     // Draw polygon pad
     const padOutline = hole.pad_outline
     if (padOutline && padOutline.length >= 3) {
@@ -179,7 +375,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       drawPolygon({
         ctx,
         points: padPoints,
-        fill: colorMap.copper.top,
+        fill: copperColor,
         realToCanvasMat,
       })
     }

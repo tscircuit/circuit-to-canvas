@@ -172,11 +172,17 @@ export class CircuitToCanvasDrawer {
         (el as PcbHole & { is_covered_with_solder_mask?: boolean })
           .is_covered_with_solder_mask === true,
     )
+    const hasSoldermaskPlatedHoles = elements.some(
+      (el) =>
+        el.type === "pcb_plated_hole" &&
+        (el as PcbPlatedHole & { is_covered_with_solder_mask?: boolean })
+          .is_covered_with_solder_mask === true,
+    )
 
     for (const element of elements) {
       if (
         element.type === "pcb_board" &&
-        (hasSoldermaskPads || hasSoldermaskHoles)
+        (hasSoldermaskPads || hasSoldermaskHoles || hasSoldermaskPlatedHoles)
       ) {
         // Draw board with soldermask fill when pads or holes have soldermask
         this.drawBoardWithSoldermask(element as PcbBoard)
