@@ -89,6 +89,10 @@ export interface PcbColorMap {
   }
   substrate: string
   courtyard: string
+  debugComponent?: {
+    fill: string
+    stroke: string
+  } | null
 }
 
 export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
@@ -122,6 +126,7 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
   },
   boardOutline: "rgba(255, 255, 255, 0.5)",
   courtyard: "#FF00FF",
+  debugComponent: null,
 }
 
 export interface DrawerConfig {

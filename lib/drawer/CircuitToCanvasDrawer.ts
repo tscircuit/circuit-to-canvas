@@ -25,6 +25,7 @@ import type {
   PcbNoteDimension,
   PcbFabricationNoteDimension,
   PcbNoteLine,
+  PcbComponent,
   PcbRenderLayer,
 } from "circuit-json"
 import {
@@ -70,6 +71,7 @@ import { drawPcbNoteText } from "./elements/pcb-note-text"
 import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbFabricationNoteDimension } from "./elements/pcb-fabrication-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
+import { drawPcbComponent } from "./elements/pcb-component"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
@@ -128,6 +130,10 @@ export class CircuitToCanvasDrawer {
           ...this.colorMap.soldermaskOverCopper,
           ...config.colorOverrides.soldermaskOverCopper,
         },
+        debugComponent:
+          config.colorOverrides.debugComponent !== undefined
+            ? config.colorOverrides.debugComponent
+            : this.colorMap.debugComponent,
       }
     }
   }
@@ -504,6 +510,15 @@ export class CircuitToCanvasDrawer {
       drawPcbFabricationNoteDimension({
         ctx: this.ctx,
         pcbFabricationNoteDimension: element as PcbFabricationNoteDimension,
+        realToCanvasMat: this.realToCanvasMat,
+        colorMap: this.colorMap,
+      })
+    }
+
+    if (element.type === "pcb_component") {
+      drawPcbComponent({
+        ctx: this.ctx,
+        component: element as PcbComponent,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
