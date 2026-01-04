@@ -26,7 +26,31 @@ test("draw rectangular cutout", async () => {
     import.meta.path,
   )
 })
+test("draw rectangular cutout with corner radius", async () => {
+  const canvas = createCanvas(100, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
 
+  ctx.fillStyle = "#1a1a1a"
+  ctx.fillRect(0, 0, 100, 100)
+
+  const cutout: PcbCutout = {
+    type: "pcb_cutout",
+    pcb_cutout_id: "cutout1",
+    shape: "rect",
+    center: { x: 50, y: 50 },
+    width: 30,
+    height: 20,
+    corner_radius: 10,
+  }
+
+  drawer.drawElements([cutout])
+
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "rect-cutout-with-corner-radius",
+  )
+})
 test("draw circular cutout", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
