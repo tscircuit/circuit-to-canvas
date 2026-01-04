@@ -56,6 +56,8 @@ export {
 
 export { drawPcbCutout, type DrawPcbCutoutParams } from "./pcb-cutout"
 
+export { drawPcbKeepout, type DrawPcbKeepoutParams } from "./pcb-keepout"
+
 export {
   drawPcbCopperPour,
   type DrawPcbCopperPourParams,
