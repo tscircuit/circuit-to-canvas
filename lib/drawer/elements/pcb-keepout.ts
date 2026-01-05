@@ -2,7 +2,6 @@ import type { PCBKeepout } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
-import { drawRect } from "../shapes/rect"
 
 export interface DrawPcbKeepoutParams {
   ctx: CanvasContext
@@ -11,12 +10,22 @@ export interface DrawPcbKeepoutParams {
   colorMap: PcbColorMap
 }
 
+/**
+ * Converts hex color to rgba with transparency
+ */
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
   const { ctx, keepout, realToCanvasMat, colorMap } = params
 
-  // Keepout zones are shown with diagonal red lines pattern and dashed border
+  // Keepout zones are shown with transparent red background and diagonal red lines pattern
   const strokeColor = colorMap.keepout
-  const strokeWidth = 0.3 // Thicker stroke for better visibility
+  const fillColor = hexToRgba(colorMap.keepout, 0.2) // Slight transparent red background
   const hatchSpacing = 1.0 // Spacing between diagonal lines
 
   if (keepout.shape === "rect") {
@@ -26,7 +35,6 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
     ])
     const scaledWidth = keepout.width * Math.abs(realToCanvasMat.a)
     const scaledHeight = keepout.height * Math.abs(realToCanvasMat.a)
-    const scaledStrokeWidth = strokeWidth * Math.abs(realToCanvasMat.a)
     const rotation = (keepout as { rotation?: number }).rotation ?? 0
 
     ctx.save()
@@ -35,6 +43,12 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
     if (rotation !== 0) {
       ctx.rotate(-rotation * (Math.PI / 180))
     }
+
+    // Draw transparent red background
+    ctx.beginPath()
+    ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
+    ctx.fillStyle = fillColor
+    ctx.fill()
 
     // Set up clipping path for the rectangle
     ctx.beginPath()
@@ -72,20 +86,6 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
     }
 
     ctx.restore()
-
-    // Draw dashed border
-    drawRect({
-      ctx,
-      center: keepout.center,
-      width: keepout.width,
-      height: keepout.height,
-      fill: undefined,
-      stroke: strokeColor,
-      strokeWidth,
-      realToCanvasMat,
-      rotation,
-      isStrokeDashed: true,
-    })
     return
   }
 
@@ -95,11 +95,16 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
       keepout.center.y,
     ])
     const scaledRadius = keepout.radius * Math.abs(realToCanvasMat.a)
-    const scaledStrokeWidth = strokeWidth * Math.abs(realToCanvasMat.a)
     const scaledSpacing = hatchSpacing * Math.abs(realToCanvasMat.a)
 
     ctx.save()
     ctx.translate(cx, cy)
+
+    // Draw transparent red background
+    ctx.beginPath()
+    ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2)
+    ctx.fillStyle = fillColor
+    ctx.fill()
 
     // Set up clipping path for the circle
     ctx.beginPath()
@@ -125,16 +130,6 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
       ctx.stroke()
     }
 
-    ctx.restore()
-
-    // Draw dashed border
-    ctx.save()
-    ctx.setLineDash([scaledStrokeWidth * 3, scaledStrokeWidth * 2])
-    ctx.beginPath()
-    ctx.arc(cx, cy, scaledRadius, 0, Math.PI * 2)
-    ctx.strokeStyle = strokeColor
-    ctx.lineWidth = scaledStrokeWidth
-    ctx.stroke()
     ctx.restore()
     return
   }
