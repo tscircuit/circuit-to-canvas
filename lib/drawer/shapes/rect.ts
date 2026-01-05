@@ -46,13 +46,6 @@ export function drawRect(params: DrawRectParams): void {
     ctx.rotate(-rotation * (Math.PI / 180))
   }
 
-  // Set up dashed line if needed
-  if (isStrokeDashed && scaledStrokeWidth) {
-    ctx.setLineDash([scaledStrokeWidth * 2, scaledStrokeWidth * 2])
-  } else {
-    ctx.setLineDash([])
-  }
-
   ctx.beginPath()
 
   if (scaledRadius > 0) {
@@ -85,6 +78,12 @@ export function drawRect(params: DrawRectParams): void {
   }
 
   if (stroke && scaledStrokeWidth) {
+    // Set up dashed line if needed (after path is drawn, before stroke)
+    if (isStrokeDashed) {
+      ctx.setLineDash([scaledStrokeWidth * 3, scaledStrokeWidth * 2])
+    } else {
+      ctx.setLineDash([])
+    }
     ctx.strokeStyle = stroke
     ctx.lineWidth = scaledStrokeWidth
     ctx.stroke()

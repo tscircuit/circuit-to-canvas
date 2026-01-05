@@ -31,6 +31,7 @@ export interface CanvasContext {
   moveTo(x: number, y: number): void
   save(): void
   restore(): void
+  clip(): void
   translate(x: number, y: number): void
   rotate(angle: number): void
   scale(x: number, y: number): void
@@ -89,6 +90,7 @@ export interface PcbColorMap {
   }
   substrate: string
   courtyard: string
+  keepout: string
 }
 
 export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
@@ -122,6 +124,7 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
   },
   boardOutline: "rgba(255, 255, 255, 0.5)",
   courtyard: "#FF00FF",
+  keepout: "#FF6B6B", // Red color for keepout zones
 }
 
 export interface DrawerConfig {

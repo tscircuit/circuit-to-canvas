@@ -14,6 +14,7 @@ import type {
   PcbSilkscreenPath,
   PcbSilkscreenPill,
   PcbCutout,
+  PCBKeepout,
   PcbCopperPour,
   PcbCopperText,
   PcbFabricationNoteText,
@@ -59,6 +60,7 @@ import { drawPcbSilkscreenPath } from "./elements/pcb-silkscreen-path"
 import { drawPcbSilkscreenOval } from "./elements/pcb-silkscreen-oval"
 import { drawPcbSilkscreenPill } from "./elements/pcb-silkscreen-pill"
 import { drawPcbCutout } from "./elements/pcb-cutout"
+import { drawPcbKeepout } from "./elements/pcb-keepout"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
 import { drawPcbFabricationNoteText } from "./elements/pcb-fabrication-note-text"
@@ -405,6 +407,15 @@ export class CircuitToCanvasDrawer {
       drawPcbCutout({
         ctx: this.ctx,
         cutout: element as PcbCutout,
+        realToCanvasMat: this.realToCanvasMat,
+        colorMap: this.colorMap,
+      })
+    }
+
+    if (element.type === "pcb_keepout") {
+      drawPcbKeepout({
+        ctx: this.ctx,
+        keepout: element as PCBKeepout,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
