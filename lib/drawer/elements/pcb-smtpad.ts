@@ -33,6 +33,14 @@ function getSoldermaskColor(layer: string, colorMap: PcbColorMap): string {
   )
 }
 
+function getBorderRadius(pad: PcbSmtPad, margin: number = 0): number {
+  return (
+    ((pad as { corner_radius?: number }).corner_radius ??
+      (pad as { rect_border_radius?: number }).rect_border_radius ??
+      0) + margin
+  )
+}
+
 export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
   const { ctx, pad, realToCanvasMat, colorMap } = params
 
@@ -62,10 +70,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         height: pad.height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius:
-          ((pad as { corner_radius?: number }).corner_radius ??
-            pad.rect_border_radius ??
-            0) + margin,
+        borderRadius: getBorderRadius(pad, margin),
       })
     }
 
@@ -77,10 +82,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
       height: pad.height,
       fill: color,
       realToCanvasMat,
-      borderRadius:
-        (pad as { corner_radius?: number }).corner_radius ??
-        pad.rect_border_radius ??
-        0,
+      borderRadius: getBorderRadius(pad),
     })
 
     // For negative margins, draw soldermask ring on top of the pad
@@ -91,9 +93,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         pad.width,
         pad.height,
         margin,
-        (pad as { corner_radius?: number }).corner_radius ??
-          pad.rect_border_radius ??
-          0,
+        getBorderRadius(pad),
         0,
         realToCanvasMat,
         soldermaskRingColor,
@@ -110,10 +110,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         height: pad.height,
         fill: soldermaskOverlayColor,
         realToCanvasMat,
-        borderRadius:
-          (pad as { corner_radius?: number }).corner_radius ??
-          pad.rect_border_radius ??
-          0,
+        borderRadius: getBorderRadius(pad),
       })
     }
     return
@@ -129,10 +126,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         height: pad.height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius:
-          ((pad as { corner_radius?: number }).corner_radius ??
-            pad.rect_border_radius ??
-            0) + margin,
+        borderRadius: getBorderRadius(pad, margin),
         rotation: pad.ccw_rotation ?? 0,
       })
     }
@@ -145,10 +139,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
       height: pad.height,
       fill: color,
       realToCanvasMat,
-      borderRadius:
-        (pad as { corner_radius?: number }).corner_radius ??
-        pad.rect_border_radius ??
-        0,
+      borderRadius: getBorderRadius(pad),
       rotation: pad.ccw_rotation ?? 0,
     })
 
@@ -160,9 +151,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         pad.width,
         pad.height,
         margin,
-        (pad as { corner_radius?: number }).corner_radius ??
-          pad.rect_border_radius ??
-          0,
+        getBorderRadius(pad),
         pad.ccw_rotation ?? 0,
         realToCanvasMat,
         soldermaskRingColor,
@@ -179,10 +168,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         height: pad.height,
         fill: soldermaskOverlayColor,
         realToCanvasMat,
-        borderRadius:
-          (pad as { corner_radius?: number }).corner_radius ??
-          pad.rect_border_radius ??
-          0,
+        borderRadius: getBorderRadius(pad),
         rotation: pad.ccw_rotation ?? 0,
       })
     }
