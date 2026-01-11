@@ -1,13 +1,12 @@
 import type { PcbCopperText } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../types"
 import {
   getAlphabetLayout,
-  strokeAlphabetText,
   getTextStartPosition,
-  type AnchorAlignment,
+  strokeAlphabetText,
 } from "../shapes/text"
+import type { CanvasContext, PcbColorMap } from "../types"
 
 export interface DrawPcbCopperTextParams {
   ctx: CanvasContext
@@ -17,20 +16,6 @@ export interface DrawPcbCopperTextParams {
 }
 
 const DEFAULT_PADDING = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 }
-
-function layerToCopperColor(layer: string, colorMap: PcbColorMap): string {
-  return (
-    colorMap.copper[layer as keyof typeof colorMap.copper] ??
-    colorMap.copper.top
-  )
-}
-
-function mapAnchorAlignment(alignment?: string): AnchorAlignment {
-  if (!alignment) return "center"
-  if (alignment.includes("left")) return "center_left"
-  if (alignment.includes("right")) return "center_right"
-  return "center"
-}
 
 export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
   const { ctx, text, realToCanvasMat, colorMap } = params
@@ -49,13 +34,19 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     ...DEFAULT_PADDING,
     ...text.knockout_padding,
   }
-  const textColor = layerToCopperColor(text.layer, colorMap)
+  const textColor =
+    colorMap.copper[text.layer as keyof typeof colorMap.copper] ??
+    colorMap.copper.top
   const layout = getAlphabetLayout(content, fontSize)
   const totalWidth = layout.width + layout.strokeWidth
-  const alignment = mapAnchorAlignment(text.anchor_alignment)
+  const alignment = !text.anchor_alignment
+    ? "center"
+    : text.anchor_alignment.includes("left")
+      ? "center_left"
+      : text.anchor_alignment.includes("right")
+        ? "center_right"
+        : "center"
   const startPos = getTextStartPosition(alignment, layout)
-  const startX = startPos.x
-  const startY = startPos.y
 
   ctx.save()
   ctx.translate(x, y)
@@ -71,32 +62,26 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     const paddingRight = padding.right * scale
     const paddingTop = padding.top * scale
     const paddingBottom = padding.bottom * scale
-    // Calculate knockout rectangle to cover the text box
-    const textBoxTop = startY - layout.strokeWidth / 2
-    const textBoxBottom = startY + layout.height + layout.strokeWidth / 2
-    const textBoxHeight = textBoxBottom - textBoxTop
+    // Draw knockout by drawing a filled rectangle in background color, then drawing text in that color
+    const rectX = startPos.x - paddingLeft * 4
+    const rectY = startPos.y - paddingTop * 4
+    const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
+    const rectHeight =
+      layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
 
-    const xOffset = startX - paddingLeft
-    const yOffset = textBoxTop - paddingTop
-    const knockoutWidth = totalWidth + paddingLeft + paddingRight
-    const knockoutHeight = textBoxHeight + paddingTop + paddingBottom
-
+    // Draw knockout rectangle
     ctx.fillStyle = textColor
-    ctx.fillRect(xOffset, yOffset, knockoutWidth, knockoutHeight)
-
-    const previousCompositeOperation = ctx.globalCompositeOperation
-    ctx.globalCompositeOperation = "destination-out"
-    ctx.fillStyle = "rgba(0,0,0,1)"
-    ctx.strokeStyle = "rgba(0,0,0,1)"
-    strokeAlphabetText({ ctx, text: content, fontSize, startX, startY })
-    if (previousCompositeOperation) {
-      ctx.globalCompositeOperation = previousCompositeOperation
-    } else {
-      ctx.globalCompositeOperation = "source-over"
-    }
+    ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
   } else {
     ctx.strokeStyle = textColor
-    strokeAlphabetText({ ctx, text: content, fontSize, startX, startY })
   }
+
+  strokeAlphabetText({
+    ctx,
+    text: content,
+    fontSize,
+    startX: startPos.x,
+    startY: startPos.y,
+  })
   ctx.restore()
 }
