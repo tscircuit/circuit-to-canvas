@@ -60,7 +60,9 @@ export { drawPcbKeepout, type DrawPcbKeepoutParams } from "./pcb-keepout"
 
 export {
   drawPcbCopperPour,
+  drawPcbCopperPourBRep,
   type DrawPcbCopperPourParams,
+  type DrawPcbCopperPourBRepParams,
 } from "./pcb-copper-pour"
 
 export {
