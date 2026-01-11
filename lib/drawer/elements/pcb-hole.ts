@@ -13,6 +13,14 @@ export interface DrawPcbHoleParams {
   colorMap: PcbColorMap
 }
 
+// Helper function to safely access ccw_rotation property
+function getRotation(hole: PCBHole): number {
+  if ("ccw_rotation" in hole && typeof hole.ccw_rotation === "number") {
+    return hole.ccw_rotation
+  }
+  return 0
+}
+
 export function drawPcbHole(params: DrawPcbHoleParams): void {
   const { ctx, hole, realToCanvasMat, colorMap } = params
 
@@ -47,6 +55,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
   }
 
   if (hole.hole_shape === "square") {
+    const rotation = getRotation(hole)
     // For positive margins, draw extended mask area first
     if (hasSoldermask && margin > 0) {
       drawRect({
@@ -56,6 +65,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
         height: hole.hole_diameter + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
+        rotation,
       })
     }
 
@@ -67,11 +77,13 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       height: hole.hole_diameter,
       fill: colorMap.drill,
       realToCanvasMat,
+      rotation,
     })
     return
   }
 
   if (hole.hole_shape === "oval") {
+    const rotation = getRotation(hole)
     // For positive margins, draw extended mask area first
     if (hasSoldermask && margin > 0) {
       drawOval({
@@ -81,6 +93,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
         radius_y: hole.hole_height / 2 + margin,
         fill: positiveMarginColor,
         realToCanvasMat,
+        rotation,
       })
     }
 
@@ -92,11 +105,13 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       radius_y: hole.hole_height / 2,
       fill: colorMap.drill,
       realToCanvasMat,
+      rotation,
     })
     return
   }
 
   if (hole.hole_shape === "rect") {
+    const rotation = getRotation(hole)
     // For positive margins, draw extended mask area first
     if (hasSoldermask && margin > 0) {
       drawRect({
@@ -106,6 +121,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
         height: hole.hole_height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
+        rotation,
       })
     }
 
@@ -117,11 +133,13 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       height: hole.hole_height,
       fill: colorMap.drill,
       realToCanvasMat,
+      rotation,
     })
     return
   }
 
   if (hole.hole_shape === "pill") {
+    const rotation = getRotation(hole)
     // For positive margins, draw extended mask area first
     if (hasSoldermask && margin > 0) {
       drawPill({
@@ -131,6 +149,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
         height: hole.hole_height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
+        rotation,
       })
     }
 
@@ -142,12 +161,13 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       height: hole.hole_height,
       fill: colorMap.drill,
       realToCanvasMat,
+      rotation,
     })
     return
   }
 
   if (hole.hole_shape === "rotated_pill") {
-    const rotation = (hole as any).ccw_rotation ?? 0
+    const rotation = getRotation(hole)
 
     // For positive margins, draw extended mask area first
     if (hasSoldermask && margin > 0) {

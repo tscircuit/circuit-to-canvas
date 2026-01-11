@@ -103,3 +103,110 @@ test("draw pill hole", async () => {
     "pill-hole",
   )
 })
+
+test("draw rotated oval hole", async () => {
+  const canvas = createCanvas(100, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+
+  ctx.fillStyle = "#1a1a1a"
+  ctx.fillRect(0, 0, 100, 100)
+
+  const hole: PCBHole & { ccw_rotation?: number } = {
+    type: "pcb_hole",
+    pcb_hole_id: "hole1",
+    hole_shape: "oval",
+    hole_width: 50,
+    hole_height: 30,
+    x: 50,
+    y: 50,
+    ccw_rotation: 45,
+  }
+
+  drawer.drawElements([hole])
+
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "rotated-oval-hole",
+  )
+})
+
+test("draw rotated rect hole", async () => {
+  const canvas = createCanvas(100, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+
+  ctx.fillStyle = "#1a1a1a"
+  ctx.fillRect(0, 0, 100, 100)
+
+  const hole: PCBHole & { ccw_rotation?: number } = {
+    type: "pcb_hole",
+    pcb_hole_id: "hole1",
+    hole_shape: "rect",
+    hole_width: 50,
+    hole_height: 30,
+    x: 50,
+    y: 50,
+    ccw_rotation: 45,
+  }
+
+  drawer.drawElements([hole])
+
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "rotated-rect-hole",
+  )
+})
+
+test("draw rotated square hole", async () => {
+  const canvas = createCanvas(100, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+
+  ctx.fillStyle = "#1a1a1a"
+  ctx.fillRect(0, 0, 100, 100)
+
+  const hole: PCBHole & { ccw_rotation?: number } = {
+    type: "pcb_hole",
+    pcb_hole_id: "hole1",
+    hole_shape: "square",
+    hole_diameter: 30,
+    x: 50,
+    y: 50,
+    ccw_rotation: 45,
+  }
+
+  drawer.drawElements([hole])
+
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "rotated-square-hole",
+  )
+})
+
+test("draw rotated pill hole", async () => {
+  const canvas = createCanvas(100, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+
+  ctx.fillStyle = "#1a1a1a"
+  ctx.fillRect(0, 0, 100, 100)
+
+  const hole: PCBHole & { ccw_rotation?: number } = {
+    type: "pcb_hole",
+    pcb_hole_id: "hole1",
+    hole_shape: "pill",
+    hole_width: 60,
+    hole_height: 30,
+    x: 50,
+    y: 50,
+    ccw_rotation: 45,
+  }
+
+  drawer.drawElements([hole])
+
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "rotated-pill-hole",
+  )
+})
