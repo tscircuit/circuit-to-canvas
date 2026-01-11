@@ -11,6 +11,8 @@ import {
   drawSoldermaskRingForOval,
   drawSoldermaskRingForPill,
   drawSoldermaskRingForRect,
+  drawSoldermaskRingForPolygon,
+  offsetPolygonPoints,
 } from "./soldermask-margin"
 
 export interface DrawPcbPlatedHoleParams {
@@ -249,7 +251,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         height: hole.rect_pad_height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius: (hole.rect_border_radius ?? 0) + margin,
+        borderRadius: hole.rect_border_radius ?? 0,
       })
     }
 
@@ -318,7 +320,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         height: hole.rect_pad_height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius: (hole.rect_border_radius ?? 0) + margin,
+        borderRadius: hole.rect_border_radius ?? 0,
       })
     }
 
@@ -388,7 +390,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         height: hole.rect_pad_height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius: (hole.rect_border_radius ?? 0) + margin,
+        borderRadius: hole.rect_border_radius ?? 0,
         rotation: hole.rect_ccw_rotation,
       })
     }
@@ -453,8 +455,6 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "hole_with_polygon_pad") {
-    // Note: Polygon pads don't support soldermask margins (similar to SMT polygon pads)
-    // Draw polygon pad
     const padOutline = hole.pad_outline
     if (padOutline && padOutline.length >= 3) {
       // Transform pad_outline points to be relative to hole.x, hole.y
@@ -462,12 +462,47 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         x: hole.x + point.x,
         y: hole.y + point.y,
       }))
+
+      // For positive margins, draw extended mask area first
+      if (hasSoldermask && margin > 0) {
+        const expandedPoints = offsetPolygonPoints(padPoints, margin)
+        drawPolygon({
+          ctx,
+          points: expandedPoints,
+          fill: positiveMarginColor,
+          realToCanvasMat,
+        })
+      }
+
+      // Draw polygon pad
       drawPolygon({
         ctx,
         points: padPoints,
         fill: copperColor,
         realToCanvasMat,
       })
+
+      // For negative margins, draw soldermask ring on top of the pad
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForPolygon(
+          ctx,
+          padPoints,
+          margin,
+          realToCanvasMat,
+          soldermaskRingColor,
+          copperColor,
+        )
+      }
+
+      // If fully covered, draw soldermask overlay
+      if (isCoveredWithSoldermask) {
+        drawPolygon({
+          ctx,
+          points: padPoints,
+          fill: soldermaskRingColor,
+          realToCanvasMat,
+        })
+      }
     }
 
     // Draw drill hole (with offset, only if not fully covered with soldermask)

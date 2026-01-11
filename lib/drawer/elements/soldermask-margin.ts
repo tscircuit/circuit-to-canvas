@@ -324,3 +324,133 @@ export function drawSoldermaskRingForOval(
 
   ctx.restore()
 }
+
+/**
+ * Offsets polygon points by a given distance (positive = outward, negative = inward)
+ */
+export function offsetPolygonPoints(
+  points: Array<{ x: number; y: number }>,
+  offset: number,
+): Array<{ x: number; y: number }> {
+  if (points.length < 3 || offset === 0) return points
+
+  // Calculate polygon centroid
+  let centerX = 0
+  let centerY = 0
+  for (const point of points) {
+    centerX += point.x
+    centerY += point.y
+  }
+  centerX /= points.length
+  centerY /= points.length
+
+  const result: Array<{ x: number; y: number }> = []
+
+  for (const point of points) {
+    // Calculate vector from center to point
+    const vectorX = point.x - centerX
+    const vectorY = point.y - centerY
+
+    // Calculate distance from center
+    const distance = Math.sqrt(vectorX * vectorX + vectorY * vectorY)
+
+    if (distance > 0) {
+      // Normalize vector and offset
+      const normalizedX = vectorX / distance
+      const normalizedY = vectorY / distance
+
+      result.push({
+        x: point.x + normalizedX * offset,
+        y: point.y + normalizedY * offset,
+      })
+    } else {
+      // Point is at center, offset in arbitrary direction
+      result.push({
+        x: point.x + offset,
+        y: point.y,
+      })
+    }
+  }
+
+  return result
+}
+
+/**
+ * Draws a soldermask ring for polygon shapes with negative margin
+ * (soldermask appears inside the pad boundary)
+ */
+export function drawSoldermaskRingForPolygon(
+  ctx: CanvasContext,
+  points: Array<{ x: number; y: number }>,
+  margin: number,
+  realToCanvasMat: Matrix,
+  soldermaskColor: string,
+  padColor: string,
+): void {
+  if (points.length < 3 || margin >= 0) return
+
+  const scaledMargin = Math.abs(margin) * Math.abs(realToCanvasMat.a)
+
+  // For negative margins, outer is pad boundary, inner is contracted by margin
+  // Use source-atop so the ring only appears on the pad
+  const prevCompositeOp = ctx.globalCompositeOperation
+  if (ctx.globalCompositeOperation !== undefined) {
+    ctx.globalCompositeOperation = "source-atop"
+  }
+
+  // Draw outer polygon filled (at pad boundary)
+  ctx.beginPath()
+  const canvasPoints = points.map((p) =>
+    applyToPoint(realToCanvasMat, [p.x, p.y]),
+  )
+
+  const firstPoint = canvasPoints[0]
+  if (firstPoint) {
+    const [firstX, firstY] = firstPoint
+    ctx.moveTo(firstX, firstY)
+
+    for (let i = 1; i < canvasPoints.length; i++) {
+      const point = canvasPoints[i]
+      if (point) {
+        const [x, y] = point
+        ctx.lineTo(x, y)
+      }
+    }
+    ctx.closePath()
+    ctx.fillStyle = soldermaskColor
+    ctx.fill()
+  }
+
+  // Reset composite operation and restore pad color in inner area
+  if (ctx.globalCompositeOperation !== undefined) {
+    ctx.globalCompositeOperation = prevCompositeOp || "source-over"
+  }
+
+  // Restore pad color in inner polygon (contracted by margin)
+  const innerPoints = offsetPolygonPoints(points, margin)
+  if (innerPoints.length >= 3) {
+    ctx.beginPath()
+    const innerCanvasPoints = innerPoints.map((p) =>
+      applyToPoint(realToCanvasMat, [p.x, p.y]),
+    )
+
+    const firstInnerPoint = innerCanvasPoints[0]
+    if (firstInnerPoint) {
+      const [firstX, firstY] = firstInnerPoint
+      ctx.moveTo(firstX, firstY)
+
+      for (let i = 1; i < innerCanvasPoints.length; i++) {
+        const point = innerCanvasPoints[i]
+        if (point) {
+          const [x, y] = point
+          ctx.lineTo(x, y)
+        }
+      }
+      ctx.closePath()
+      ctx.fillStyle = padColor
+      ctx.fill()
+    }
+  }
+
+  ctx.restore()
+}

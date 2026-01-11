@@ -9,6 +9,8 @@ import {
   drawSoldermaskRingForRect,
   drawSoldermaskRingForCircle,
   drawSoldermaskRingForPill,
+  drawSoldermaskRingForPolygon,
+  offsetPolygonPoints,
 } from "./soldermask-margin"
 
 export interface DrawPcbSmtPadParams {
@@ -67,7 +69,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         height: pad.height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius: getBorderRadius(pad, margin),
+        borderRadius: getBorderRadius(pad),
       })
     }
 
@@ -123,7 +125,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         height: pad.height + margin * 2,
         fill: positiveMarginColor,
         realToCanvasMat,
-        borderRadius: getBorderRadius(pad, margin),
+        borderRadius: getBorderRadius(pad),
         rotation: pad.ccw_rotation ?? 0,
       })
     }
@@ -328,6 +330,17 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
 
   if (pad.shape === "polygon") {
     if (pad.points && pad.points.length >= 3) {
+      // For positive margins, draw extended mask area first
+      if (hasSoldermask && margin > 0) {
+        const expandedPoints = offsetPolygonPoints(pad.points, margin)
+        drawPolygon({
+          ctx,
+          points: expandedPoints,
+          fill: positiveMarginColor,
+          realToCanvasMat,
+        })
+      }
+
       // Draw the copper pad
       drawPolygon({
         ctx,
@@ -336,8 +349,20 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
         realToCanvasMat,
       })
 
-      // If covered with soldermask and margin >= 0, draw soldermaskOverCopper overlay
-      if (isCoveredWithSoldermask && margin >= 0) {
+      // For negative margins, draw soldermask ring on top of the pad
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForPolygon(
+          ctx,
+          pad.points,
+          margin,
+          realToCanvasMat,
+          soldermaskRingColor,
+          color,
+        )
+      }
+
+      // If covered with soldermask and margin == 0 (treat as 0 positive margin), draw soldermaskOverCopper overlay
+      if (isCoveredWithSoldermask && margin === 0) {
         drawPolygon({
           ctx,
           points: pad.points,
