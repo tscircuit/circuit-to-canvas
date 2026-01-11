@@ -90,14 +90,16 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw inner drill hole
-    drawCircle({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      radius: hole.hole_diameter / 2,
-      fill: colorMap.drill,
-      realToCanvasMat,
-    })
+    // Draw inner drill hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawCircle({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius: hole.hole_diameter / 2,
+        fill: colorMap.drill,
+        realToCanvasMat,
+      })
+    }
     return
   }
 
@@ -154,16 +156,18 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw inner drill hole
-    drawOval({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      radius_x: hole.hole_width / 2,
-      radius_y: hole.hole_height / 2,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation: hole.ccw_rotation,
-    })
+    // Draw inner drill hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawOval({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius_x: hole.hole_width / 2,
+        radius_y: hole.hole_height / 2,
+        fill: colorMap.drill,
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    }
     return
   }
 
@@ -220,16 +224,18 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw inner drill hole
-    drawPill({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      width: hole.hole_width,
-      height: hole.hole_height,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation: hole.ccw_rotation,
-    })
+    // Draw inner drill hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawPill({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: colorMap.drill,
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    }
     return
   }
 
@@ -287,16 +293,18 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw circular drill hole (with offset)
-    const holeX = hole.x + (hole.hole_offset_x ?? 0)
-    const holeY = hole.y + (hole.hole_offset_y ?? 0)
-    drawCircle({
-      ctx,
-      center: { x: holeX, y: holeY },
-      radius: hole.hole_diameter / 2,
-      fill: colorMap.drill,
-      realToCanvasMat,
-    })
+    // Draw circular drill hole (with offset, only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      const holeX = hole.x + (hole.hole_offset_x ?? 0)
+      const holeY = hole.y + (hole.hole_offset_y ?? 0)
+      drawCircle({
+        ctx,
+        center: { x: holeX, y: holeY },
+        radius: hole.hole_diameter / 2,
+        fill: colorMap.drill,
+        realToCanvasMat,
+      })
+    }
     return
   }
 
@@ -354,17 +362,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw pill drill hole (with offset)
-    const holeX = hole.x + (hole.hole_offset_x ?? 0)
-    const holeY = hole.y + (hole.hole_offset_y ?? 0)
-    drawPill({
-      ctx,
-      center: { x: holeX, y: holeY },
-      width: hole.hole_width,
-      height: hole.hole_height,
-      fill: colorMap.drill,
-      realToCanvasMat,
-    })
+    // Draw pill drill hole (with offset, only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      const holeX = hole.x + (hole.hole_offset_x ?? 0)
+      const holeY = hole.y + (hole.hole_offset_y ?? 0)
+      drawPill({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: colorMap.drill,
+        realToCanvasMat,
+      })
+    }
     return
   }
 
@@ -425,18 +435,20 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw rotated pill drill hole (with offset)
-    const holeX = hole.x + (hole.hole_offset_x ?? 0)
-    const holeY = hole.y + (hole.hole_offset_y ?? 0)
-    drawPill({
-      ctx,
-      center: { x: holeX, y: holeY },
-      width: hole.hole_width,
-      height: hole.hole_height,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation: hole.hole_ccw_rotation,
-    })
+    // Draw rotated pill drill hole (with offset, only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      const holeX = hole.x + (hole.hole_offset_x ?? 0)
+      const holeY = hole.y + (hole.hole_offset_y ?? 0)
+      drawPill({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: colorMap.drill,
+        realToCanvasMat,
+        rotation: hole.hole_ccw_rotation,
+      })
+    }
     return
   }
 
@@ -458,46 +470,48 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       })
     }
 
-    // Draw drill hole (with offset)
-    const holeX = hole.x + (hole.hole_offset_x ?? 0)
-    const holeY = hole.y + (hole.hole_offset_y ?? 0)
-    const holeShape = hole.hole_shape
+    // Draw drill hole (with offset, only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      const holeX = hole.x + (hole.hole_offset_x ?? 0)
+      const holeY = hole.y + (hole.hole_offset_y ?? 0)
+      const holeShape = hole.hole_shape
 
-    if (holeShape === "circle") {
-      drawCircle({
-        ctx,
-        center: { x: holeX, y: holeY },
-        radius: (hole.hole_diameter ?? 0) / 2,
-        fill: colorMap.drill,
-        realToCanvasMat,
-      })
-    } else if (holeShape === "oval") {
-      drawOval({
-        ctx,
-        center: { x: holeX, y: holeY },
-        radius_x: (hole.hole_width ?? 0) / 2,
-        radius_y: (hole.hole_height ?? 0) / 2,
-        fill: colorMap.drill,
-        realToCanvasMat,
-      })
-    } else if (holeShape === "pill") {
-      drawPill({
-        ctx,
-        center: { x: holeX, y: holeY },
-        width: hole.hole_width ?? 0,
-        height: hole.hole_height ?? 0,
-        fill: colorMap.drill,
-        realToCanvasMat,
-      })
-    } else if (holeShape === "rotated_pill") {
-      drawPill({
-        ctx,
-        center: { x: holeX, y: holeY },
-        width: hole.hole_width ?? 0,
-        height: hole.hole_height ?? 0,
-        fill: colorMap.drill,
-        realToCanvasMat,
-      })
+      if (holeShape === "circle") {
+        drawCircle({
+          ctx,
+          center: { x: holeX, y: holeY },
+          radius: (hole.hole_diameter ?? 0) / 2,
+          fill: colorMap.drill,
+          realToCanvasMat,
+        })
+      } else if (holeShape === "oval") {
+        drawOval({
+          ctx,
+          center: { x: holeX, y: holeY },
+          radius_x: (hole.hole_width ?? 0) / 2,
+          radius_y: (hole.hole_height ?? 0) / 2,
+          fill: colorMap.drill,
+          realToCanvasMat,
+        })
+      } else if (holeShape === "pill") {
+        drawPill({
+          ctx,
+          center: { x: holeX, y: holeY },
+          width: hole.hole_width ?? 0,
+          height: hole.hole_height ?? 0,
+          fill: colorMap.drill,
+          realToCanvasMat,
+        })
+      } else if (holeShape === "rotated_pill") {
+        drawPill({
+          ctx,
+          center: { x: holeX, y: holeY },
+          width: hole.hole_width ?? 0,
+          height: hole.hole_height ?? 0,
+          fill: colorMap.drill,
+          realToCanvasMat,
+        })
+      }
     }
     return
   }

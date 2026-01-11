@@ -52,26 +52,28 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       })
     }
 
-    // Draw the hole
-    drawCircle({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      radius: hole.hole_diameter / 2,
-      fill: colorMap.drill,
-      realToCanvasMat,
-    })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForCircle(
+    // Draw the hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawCircle({
         ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_diameter / 2,
-        margin,
+        center: { x: hole.x, y: hole.y },
+        radius: hole.hole_diameter / 2,
+        fill: colorMap.drill,
         realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
+      })
+
+      // For negative margins, draw soldermask ring on top of the hole
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForCircle(
+          ctx,
+          { x: hole.x, y: hole.y },
+          hole.hole_diameter / 2,
+          margin,
+          realToCanvasMat,
+          soldermaskRingColor,
+          colorMap.drill,
+        )
+      }
     }
 
     // If fully covered, draw soldermask overlay
@@ -102,31 +104,33 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       })
     }
 
-    // Draw the hole
-    drawRect({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      width: hole.hole_diameter,
-      height: hole.hole_diameter,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation,
-    })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForRect(
+    // Draw the hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawRect({
         ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_diameter,
-        hole.hole_diameter,
-        margin,
-        0,
-        rotation,
+        center: { x: hole.x, y: hole.y },
+        width: hole.hole_diameter,
+        height: hole.hole_diameter,
+        fill: colorMap.drill,
         realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
+        rotation,
+      })
+
+      // For negative margins, draw soldermask ring on top of the hole
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForRect(
+          ctx,
+          { x: hole.x, y: hole.y },
+          hole.hole_diameter,
+          hole.hole_diameter,
+          margin,
+          0,
+          rotation,
+          realToCanvasMat,
+          soldermaskRingColor,
+          colorMap.drill,
+        )
+      }
     }
 
     // If fully covered, draw soldermask overlay
@@ -159,30 +163,32 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       })
     }
 
-    // Draw the hole
-    drawOval({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      radius_x: hole.hole_width / 2,
-      radius_y: hole.hole_height / 2,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation,
-    })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForOval(
+    // Draw the hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawOval({
         ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width / 2,
-        hole.hole_height / 2,
-        margin,
-        rotation,
+        center: { x: hole.x, y: hole.y },
+        radius_x: hole.hole_width / 2,
+        radius_y: hole.hole_height / 2,
+        fill: colorMap.drill,
         realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
+        rotation,
+      })
+
+      // For negative margins, draw soldermask ring on top of the hole
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForOval(
+          ctx,
+          { x: hole.x, y: hole.y },
+          hole.hole_width / 2,
+          hole.hole_height / 2,
+          margin,
+          rotation,
+          realToCanvasMat,
+          soldermaskRingColor,
+          colorMap.drill,
+        )
+      }
     }
 
     // If fully covered, draw soldermask overlay
@@ -215,31 +221,33 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       })
     }
 
-    // Draw the hole
-    drawRect({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      width: hole.hole_width,
-      height: hole.hole_height,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation,
-    })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForRect(
+    // Draw the hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawRect({
         ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width,
-        hole.hole_height,
-        margin,
-        0,
-        rotation,
+        center: { x: hole.x, y: hole.y },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: colorMap.drill,
         realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
+        rotation,
+      })
+
+      // For negative margins, draw soldermask ring on top of the hole
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForRect(
+          ctx,
+          { x: hole.x, y: hole.y },
+          hole.hole_width,
+          hole.hole_height,
+          margin,
+          0,
+          rotation,
+          realToCanvasMat,
+          soldermaskRingColor,
+          colorMap.drill,
+        )
+      }
     }
 
     // If fully covered, draw soldermask overlay
@@ -272,30 +280,32 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       })
     }
 
-    // Draw the hole
-    drawPill({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      width: hole.hole_width,
-      height: hole.hole_height,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation,
-    })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForPill(
+    // Draw the hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawPill({
         ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width,
-        hole.hole_height,
-        margin,
-        rotation,
+        center: { x: hole.x, y: hole.y },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: colorMap.drill,
         realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
+        rotation,
+      })
+
+      // For negative margins, draw soldermask ring on top of the hole
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForPill(
+          ctx,
+          { x: hole.x, y: hole.y },
+          hole.hole_width,
+          hole.hole_height,
+          margin,
+          rotation,
+          realToCanvasMat,
+          soldermaskRingColor,
+          colorMap.drill,
+        )
+      }
     }
 
     // If fully covered, draw soldermask overlay
@@ -329,30 +339,32 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       })
     }
 
-    // Draw the hole
-    drawPill({
-      ctx,
-      center: { x: hole.x, y: hole.y },
-      width: hole.hole_width,
-      height: hole.hole_height,
-      fill: colorMap.drill,
-      realToCanvasMat,
-      rotation,
-    })
-
-    // For negative margins, draw soldermask ring on top of the hole
-    if (hasSoldermask && margin < 0) {
-      drawSoldermaskRingForPill(
+    // Draw the hole (only if not fully covered with soldermask)
+    if (!isCoveredWithSoldermask) {
+      drawPill({
         ctx,
-        { x: hole.x, y: hole.y },
-        hole.hole_width,
-        hole.hole_height,
-        margin,
-        rotation,
+        center: { x: hole.x, y: hole.y },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: colorMap.drill,
         realToCanvasMat,
-        soldermaskRingColor,
-        colorMap.drill,
-      )
+        rotation,
+      })
+
+      // For negative margins, draw soldermask ring on top of the hole
+      if (hasSoldermask && margin < 0) {
+        drawSoldermaskRingForPill(
+          ctx,
+          { x: hole.x, y: hole.y },
+          hole.hole_width,
+          hole.hole_height,
+          margin,
+          rotation,
+          realToCanvasMat,
+          soldermaskRingColor,
+          colorMap.drill,
+        )
+      }
     }
 
     // If fully covered, draw soldermask overlay
