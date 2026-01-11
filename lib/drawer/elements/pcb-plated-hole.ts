@@ -35,11 +35,12 @@ function getSoldermaskColor(
 export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   const { ctx, hole, realToCanvasMat, colorMap } = params
 
+  const isCoveredWithSoldermask = hole.is_covered_with_solder_mask === true
+  const margin = isCoveredWithSoldermask ? 0 : (hole.soldermask_margin ?? 0)
   const hasSoldermask =
-    hole.is_covered_with_solder_mask === true &&
+    !isCoveredWithSoldermask &&
     hole.soldermask_margin !== undefined &&
     hole.soldermask_margin !== 0
-  const margin = hasSoldermask ? hole.soldermask_margin! : 0
   const soldermaskRingColor = getSoldermaskColor(hole.layers, colorMap)
   const positiveMarginColor = colorMap.substrate
   const copperColor = colorMap.copper.top
@@ -76,6 +77,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         soldermaskRingColor,
         copperColor,
       )
+    }
+
+    // If fully covered, draw soldermask overlay
+    if (isCoveredWithSoldermask) {
+      drawCircle({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius: hole.outer_diameter / 2,
+        fill: soldermaskRingColor,
+        realToCanvasMat,
+      })
     }
 
     // Draw inner drill hole
@@ -129,6 +141,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       )
     }
 
+    // If fully covered, draw soldermask overlay
+    if (isCoveredWithSoldermask) {
+      drawOval({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius_x: hole.outer_width / 2,
+        radius_y: hole.outer_height / 2,
+        fill: soldermaskRingColor,
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    }
+
     // Draw inner drill hole
     drawOval({
       ctx,
@@ -180,6 +205,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         soldermaskRingColor,
         copperColor,
       )
+    }
+
+    // If fully covered, draw soldermask overlay
+    if (isCoveredWithSoldermask) {
+      drawPill({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.outer_width,
+        height: hole.outer_height,
+        fill: soldermaskRingColor,
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
     }
 
     // Draw inner drill hole
@@ -236,6 +274,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       )
     }
 
+    // If fully covered, draw soldermask overlay
+    if (isCoveredWithSoldermask) {
+      drawRect({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.rect_pad_width,
+        height: hole.rect_pad_height,
+        fill: soldermaskRingColor,
+        realToCanvasMat,
+        borderRadius: hole.rect_border_radius ?? 0,
+      })
+    }
+
     // Draw circular drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
     const holeY = hole.y + (hole.hole_offset_y ?? 0)
@@ -288,6 +339,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         soldermaskRingColor,
         copperColor,
       )
+    }
+
+    // If fully covered, draw soldermask overlay
+    if (isCoveredWithSoldermask) {
+      drawRect({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.rect_pad_width,
+        height: hole.rect_pad_height,
+        fill: soldermaskRingColor,
+        realToCanvasMat,
+        borderRadius: hole.rect_border_radius ?? 0,
+      })
     }
 
     // Draw pill drill hole (with offset)
@@ -345,6 +409,20 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         soldermaskRingColor,
         copperColor,
       )
+    }
+
+    // If fully covered, draw soldermask overlay
+    if (isCoveredWithSoldermask) {
+      drawRect({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.rect_pad_width,
+        height: hole.rect_pad_height,
+        fill: soldermaskRingColor,
+        realToCanvasMat,
+        borderRadius: hole.rect_border_radius ?? 0,
+        rotation: hole.rect_ccw_rotation,
+      })
     }
 
     // Draw rotated pill drill hole (with offset)

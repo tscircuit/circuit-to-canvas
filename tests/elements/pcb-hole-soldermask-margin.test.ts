@@ -26,7 +26,7 @@ test("draw holes with positive soldermask margins", async () => {
       x: -4,
       y: 2,
       hole_diameter: 1.0,
-      is_covered_with_solder_mask: true,
+
       soldermask_margin: 0.2,
     },
     // Square with positive margin
@@ -37,7 +37,7 @@ test("draw holes with positive soldermask margins", async () => {
       x: -1,
       y: 2,
       hole_diameter: 1.0,
-      is_covered_with_solder_mask: true,
+
       soldermask_margin: 0.15,
     },
     // Oval with positive margin
@@ -49,7 +49,7 @@ test("draw holes with positive soldermask margins", async () => {
       y: 2,
       hole_width: 1.5,
       hole_height: 0.8,
-      is_covered_with_solder_mask: true,
+
       soldermask_margin: 0.1,
     },
     // Rect with positive margin
@@ -61,7 +61,7 @@ test("draw holes with positive soldermask margins", async () => {
       y: 2,
       hole_width: 1.6,
       hole_height: 1.1,
-      is_covered_with_solder_mask: true,
+
       soldermask_margin: 0.15,
     },
     // Pill with positive margin
@@ -73,7 +73,7 @@ test("draw holes with positive soldermask margins", async () => {
       y: 0,
       hole_width: 2.0,
       hole_height: 0.8,
-      is_covered_with_solder_mask: true,
+
       soldermask_margin: 0.1,
     },
     // Silkscreen labels for positive margin holes

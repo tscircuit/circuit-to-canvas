@@ -182,11 +182,7 @@ export class CircuitToCanvasDrawer {
     )
 
     for (const element of elements) {
-      if (
-        element.type === "pcb_board" &&
-        (hasSoldermaskPads || hasSoldermaskHoles || hasSoldermaskPlatedHoles)
-      ) {
-        // Draw board with soldermask fill when pads or holes have soldermask
+      if (element.type === "pcb_board") {
         this.drawBoardWithSoldermask(element as PcbBoard)
       } else {
         this.drawElement(element, options)

@@ -28,7 +28,6 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
       y: 2,
       width: 1.6,
       height: 1.1,
-      is_covered_with_solder_mask: true,
       soldermask_margin: 0.2,
     },
     // Rectangle with negative margin (spacing around copper, copper visible)
@@ -41,7 +40,6 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
       y: -2,
       width: 1.6,
       height: 1.1,
-      is_covered_with_solder_mask: true,
       soldermask_margin: -0.15,
     },
     // Circle with positive margin
@@ -53,7 +51,6 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
       x: 0,
       y: 2,
       radius: 0.75,
-      is_covered_with_solder_mask: true,
       soldermask_margin: 0.15,
     },
     // Circle with negative margin
@@ -65,7 +62,6 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
       x: 0,
       y: -2,
       radius: 0.75,
-      is_covered_with_solder_mask: true,
       soldermask_margin: -0.2,
     },
     // Pill with positive margin
@@ -79,7 +75,6 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
       width: 2.4,
       height: 1,
       radius: 0.5,
-      is_covered_with_solder_mask: true,
       soldermask_margin: 0.1,
     },
     // Pill with negative margin
@@ -93,7 +88,6 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
       width: 2.4,
       height: 1,
       radius: 0.5,
-      is_covered_with_solder_mask: true,
       soldermask_margin: -0.12,
     },
     // Silkscreen labels for positive margin pads (top row)
