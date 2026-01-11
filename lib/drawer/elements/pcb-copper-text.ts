@@ -1,4 +1,4 @@
-import type { PcbCopperText } from "circuit-json"
+import type { NinePointAnchor, PcbCopperText } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import {
@@ -16,6 +16,14 @@ export interface DrawPcbCopperTextParams {
 }
 
 const DEFAULT_PADDING = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 }
+
+function mapAnchorAlignment(alignment?: string): NinePointAnchor {
+  // Vertical component is intentionally collapsed to center; callers only care about left/center/right.
+  if (!alignment) return "center"
+  if (alignment.includes("left")) return "center_left"
+  if (alignment.includes("right")) return "center_right"
+  return "center"
+}
 
 export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
   const { ctx, text, realToCanvasMat, colorMap } = params
@@ -39,13 +47,7 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     colorMap.copper.top
   const layout = getAlphabetLayout(content, fontSize)
   const totalWidth = layout.width + layout.strokeWidth
-  const alignment = !text.anchor_alignment
-    ? "center"
-    : text.anchor_alignment.includes("left")
-      ? "center_left"
-      : text.anchor_alignment.includes("right")
-        ? "center_right"
-        : "center"
+  const alignment = mapAnchorAlignment(text.anchor_alignment)
   const startPos = getTextStartPosition(alignment, layout)
 
   ctx.save()
@@ -62,7 +64,6 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     const paddingRight = padding.right * scale
     const paddingTop = padding.top * scale
     const paddingBottom = padding.bottom * scale
-    // Draw knockout by drawing a filled rectangle in background color, then drawing text in that color
     const rectX = startPos.x - paddingLeft * 4
     const rectY = startPos.y - paddingTop * 4
     const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
