@@ -16,13 +16,7 @@
     "source_port_id": "source_port_0",
     "name": "pin1",
     "pin_number": 1,
-    "port_hints": [
-      "pin1",
-      "anode",
-      "pos",
-      "left",
-      "1"
-    ],
+    "port_hints": ["pin1", "anode", "pos", "left", "1"],
     "source_component_id": "source_component_0",
     "subcircuit_id": "subcircuit_source_group_0",
     "subcircuit_connectivity_map_key": "unnamedsubcircuit59_connectivity_net0"
@@ -32,13 +26,7 @@
     "source_port_id": "source_port_1",
     "name": "pin2",
     "pin_number": 2,
-    "port_hints": [
-      "pin2",
-      "cathode",
-      "neg",
-      "right",
-      "2"
-    ],
+    "port_hints": ["pin2", "cathode", "neg", "right", "2"],
     "source_component_id": "source_component_0",
     "subcircuit_id": "subcircuit_source_group_0"
   },
@@ -48,11 +36,7 @@
     "ftype": "simple_resistor",
     "name": "R1",
     "supplier_part_numbers": {
-      "jlcpcb": [
-        "C11702",
-        "C25543",
-        "C2906864"
-      ]
+      "jlcpcb": ["C11702", "C25543", "C2906864"]
     },
     "resistance": 1000,
     "display_resistance": "1kΩ",
@@ -64,12 +48,7 @@
     "source_port_id": "source_port_2",
     "name": "pin1",
     "pin_number": 1,
-    "port_hints": [
-      "pin1",
-      "pos",
-      "anode",
-      "1"
-    ],
+    "port_hints": ["pin1", "pos", "anode", "1"],
     "source_component_id": "source_component_1",
     "subcircuit_id": "subcircuit_source_group_0",
     "subcircuit_connectivity_map_key": "unnamedsubcircuit59_connectivity_net0"
@@ -79,12 +58,7 @@
     "source_port_id": "source_port_3",
     "name": "pin2",
     "pin_number": 2,
-    "port_hints": [
-      "pin2",
-      "neg",
-      "cathode",
-      "2"
-    ],
+    "port_hints": ["pin2", "neg", "cathode", "2"],
     "source_component_id": "source_component_1",
     "subcircuit_id": "subcircuit_source_group_0"
   },
@@ -94,11 +68,7 @@
     "ftype": "simple_capacitor",
     "name": "C1",
     "supplier_part_numbers": {
-      "jlcpcb": [
-        "C1523",
-        "C106205",
-        "C696907"
-      ]
+      "jlcpcb": ["C1523", "C106205", "C696907"]
     },
     "capacitance": 1e-9,
     "display_capacitance": "1000pF",
@@ -113,10 +83,7 @@
   {
     "type": "source_trace",
     "source_trace_id": "source_trace_0",
-    "connected_source_port_ids": [
-      "source_port_0",
-      "source_port_2"
-    ],
+    "connected_source_port_ids": ["source_port_0", "source_port_2"],
     "connected_source_net_ids": [],
     "subcircuit_id": "subcircuit_source_group_0",
     "max_length": null,
@@ -398,10 +365,7 @@
     "shape": "rect",
     "width": 0.54,
     "height": 0.64,
-    "port_hints": [
-      "1",
-      "left"
-    ],
+    "port_hints": ["1", "left"],
     "is_covered_with_solder_mask": false,
     "x": -0.51,
     "y": 4.297398843930636,
@@ -429,10 +393,7 @@
     "shape": "rect",
     "width": 0.54,
     "height": 0.64,
-    "port_hints": [
-      "2",
-      "right"
-    ],
+    "port_hints": ["2", "right"],
     "is_covered_with_solder_mask": false,
     "x": 0.51,
     "y": 4.297398843930636,
@@ -502,10 +463,7 @@
     "shape": "rect",
     "width": 0.54,
     "height": 0.64,
-    "port_hints": [
-      "1",
-      "left"
-    ],
+    "port_hints": ["1", "left"],
     "is_covered_with_solder_mask": false,
     "x": -2.0500000000000007,
     "y": 4.297398843930636,
@@ -533,10 +491,7 @@
     "shape": "rect",
     "width": 0.54,
     "height": 0.64,
-    "port_hints": [
-      "2",
-      "right"
-    ],
+    "port_hints": ["2", "right"],
     "is_covered_with_solder_mask": false,
     "x": -3.0700000000000003,
     "y": 4.297398843930636,
@@ -601,9 +556,7 @@
     "type": "pcb_port",
     "pcb_port_id": "pcb_port_0",
     "pcb_component_id": "pcb_component_0",
-    "layers": [
-      "top"
-    ],
+    "layers": ["top"],
     "subcircuit_id": "subcircuit_source_group_0",
     "x": -0.51,
     "y": 4.297398843930636,
@@ -613,9 +566,7 @@
     "type": "pcb_port",
     "pcb_port_id": "pcb_port_1",
     "pcb_component_id": "pcb_component_0",
-    "layers": [
-      "top"
-    ],
+    "layers": ["top"],
     "subcircuit_id": "subcircuit_source_group_0",
     "x": 0.51,
     "y": 4.297398843930636,
@@ -625,9 +576,7 @@
     "type": "pcb_port",
     "pcb_port_id": "pcb_port_2",
     "pcb_component_id": "pcb_component_1",
-    "layers": [
-      "top"
-    ],
+    "layers": ["top"],
     "subcircuit_id": "subcircuit_source_group_0",
     "x": -2.0500000000000007,
     "y": 4.297398843930636,
@@ -637,9 +586,7 @@
     "type": "pcb_port",
     "pcb_port_id": "pcb_port_3",
     "pcb_component_id": "pcb_component_1",
-    "layers": [
-      "top"
-    ],
+    "layers": ["top"],
     "subcircuit_id": "subcircuit_source_group_0",
     "x": -3.0700000000000003,
     "y": 4.297398843930636,
