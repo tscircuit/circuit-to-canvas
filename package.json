@@ -1,7 +1,7 @@
 {
   "name": "circuit-to-canvas",
   "main": "dist/index.js",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "type": "module",
   "scripts": {
     "build": "tsup-node ./lib/index.ts --format esm --dts",
