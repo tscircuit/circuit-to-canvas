@@ -13,6 +13,7 @@ export interface CanvasContext {
     radius: number,
     startAngle: number,
     endAngle: number,
+    counterclockwise?: boolean,
   ): void
   arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void
   ellipse(
@@ -24,7 +25,7 @@ export interface CanvasContext {
     startAngle: number,
     endAngle: number,
   ): void
-  fill(): void
+  fill(fillRule?: "nonzero" | "evenodd"): void
   stroke(): void
   rect(x: number, y: number, w: number, h: number): void
   lineTo(x: number, y: number): void
@@ -38,6 +39,7 @@ export interface CanvasContext {
   globalCompositeOperation?: string
   fillStyle: string | CanvasGradient | CanvasPattern
   strokeStyle: string | CanvasGradient | CanvasPattern
+  globalAlpha: number
   lineWidth: number
   lineCap: "butt" | "round" | "square"
   lineJoin: "bevel" | "round" | "miter"
