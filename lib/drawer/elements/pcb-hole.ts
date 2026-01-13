@@ -37,8 +37,8 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
     hole.soldermask_margin !== undefined &&
     hole.soldermask_margin !== 0
   const positiveMarginColor = colorMap.substrate
-  const soldermaskOverlayColor = colorMap.soldermask.top
-  const soldermaskRingColor = colorMap.soldermask.top
+  const soldermaskOverlayColor = colorMap.soldermaskOverCopper.top
+  const soldermaskRingColor = colorMap.soldermaskOverCopper.top
 
   if (hole.hole_shape === "circle") {
     // For positive margins, draw extended mask area first
