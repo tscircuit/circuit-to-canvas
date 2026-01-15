@@ -15,6 +15,7 @@ export interface StrokeAlphabetTextParams {
   fontSize: number
   startX: number
   startY: number
+  anchorAlignment?: NinePointAnchor
 }
 
 export interface StrokeAlphabetLineParams {
@@ -59,14 +60,21 @@ function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
 }
 
 export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
-  const { ctx, text, fontSize, startX, startY } = params
+  const {
+    ctx,
+    text,
+    fontSize,
+    startX,
+    startY,
+    anchorAlignment = "center",
+  } = params
   const layout = getAlphabetLayout(text, fontSize)
   const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
 
   lines.forEach((line, lineIndex) => {
     const lineStartX =
       startX +
-      getLineStartX("center", lineWidths[lineIndex], width, strokeWidth)
+      getLineStartX(anchorAlignment, lineWidths[lineIndex]!, width, strokeWidth)
     const lineStartY = startY + lineIndex * lineHeight
 
     strokeAlphabetLine({
@@ -130,7 +138,7 @@ export function drawText(params: DrawTextParams): void {
   lines.forEach((line, lineIndex) => {
     const lineStartX =
       startPos.x +
-      getLineStartX(anchorAlignment, lineWidths[lineIndex], width, strokeWidth)
+      getLineStartX(anchorAlignment, lineWidths[lineIndex]!, width, strokeWidth)
     const lineStartY = startPos.y + lineIndex * lineHeight
 
     strokeAlphabetLine({

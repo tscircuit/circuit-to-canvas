@@ -112,7 +112,7 @@ export function drawPcbSilkscreenText(
   lines.forEach((line, lineIndex) => {
     const lineStartX =
       startPos.x +
-      getLineStartX(alignment, lineWidths[lineIndex], width, strokeWidth)
+      getLineStartX(alignment, lineWidths[lineIndex]!, width, strokeWidth)
     const lineStartY = startPos.y + lineIndex * lineHeight
 
     strokeSingleLine(ctx, line, fontSize, lineStartX, lineStartY, layout)
