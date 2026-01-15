@@ -4,10 +4,11 @@ import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import {
   getAlphabetLayout,
-  strokeAlphabetText,
   getTextStartPosition,
+  getLineStartX,
   type AnchorAlignment,
 } from "../shapes/text"
+import { lineAlphabet } from "@tscircuit/alphabet"
 
 export interface DrawPcbSilkscreenTextParams {
   ctx: CanvasContext
@@ -25,6 +26,47 @@ function layerToSilkscreenColor(layer: string, colorMap: PcbColorMap): string {
 function mapAnchorAlignment(alignment?: string): AnchorAlignment {
   if (!alignment) return "center"
   return alignment as AnchorAlignment
+}
+
+const getGlyphLines = (char: string) =>
+  lineAlphabet[char] ?? lineAlphabet[char.toUpperCase()]
+
+function strokeSingleLine(
+  ctx: CanvasContext,
+  line: string,
+  fontSize: number,
+  startX: number,
+  startY: number,
+  layout: ReturnType<typeof getAlphabetLayout>,
+): void {
+  const { glyphWidth, letterSpacing, spaceWidth, strokeWidth } = layout
+  const height = fontSize
+  const topY = startY
+  const characters = Array.from(line)
+  let cursor = startX + strokeWidth / 2
+
+  characters.forEach((char, index) => {
+    const glyphLines = getGlyphLines(char)
+    const advance = char === " " ? spaceWidth : glyphWidth
+
+    if (glyphLines?.length) {
+      ctx.beginPath()
+      for (const glyph of glyphLines) {
+        const x1 = cursor + glyph.x1 * glyphWidth
+        const y1 = topY + (1 - glyph.y1) * height
+        const x2 = cursor + glyph.x2 * glyphWidth
+        const y2 = topY + (1 - glyph.y2) * height
+        ctx.moveTo(x1, y1)
+        ctx.lineTo(x2, y2)
+      }
+      ctx.stroke()
+    }
+
+    cursor += advance
+    if (index < characters.length - 1) {
+      cursor += letterSpacing
+    }
+  })
 }
 
 export function drawPcbSilkscreenText(
@@ -65,12 +107,15 @@ export function drawPcbSilkscreenText(
   ctx.lineJoin = "round"
   ctx.strokeStyle = color
 
-  strokeAlphabetText({
-    ctx,
-    text: content,
-    fontSize,
-    startX: startPos.x,
-    startY: startPos.y,
+  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+  lines.forEach((line, lineIndex) => {
+    const lineStartX =
+      startPos.x +
+      getLineStartX(alignment, lineWidths[lineIndex], width, strokeWidth)
+    const lineStartY = startPos.y + lineIndex * lineHeight
+
+    strokeSingleLine(ctx, line, fontSize, lineStartX, lineStartY, layout)
   })
 
   ctx.restore()
