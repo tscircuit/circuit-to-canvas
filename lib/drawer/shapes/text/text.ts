@@ -74,7 +74,12 @@ export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
   lines.forEach((line, lineIndex) => {
     const lineStartX =
       startX +
-      getLineStartX(anchorAlignment, lineWidths[lineIndex]!, width, strokeWidth)
+      getLineStartX({
+        alignment: anchorAlignment,
+        lineWidth: lineWidths[lineIndex]!,
+        maxWidth: width,
+        strokeWidth,
+      })
     const lineStartY = startY + lineIndex * lineHeight
 
     strokeAlphabetLine({
@@ -138,7 +143,12 @@ export function drawText(params: DrawTextParams): void {
   lines.forEach((line, lineIndex) => {
     const lineStartX =
       startPos.x +
-      getLineStartX(anchorAlignment, lineWidths[lineIndex]!, width, strokeWidth)
+      getLineStartX({
+        alignment: anchorAlignment,
+        lineWidth: lineWidths[lineIndex]!,
+        maxWidth: width,
+        strokeWidth,
+      })
     const lineStartY = startPos.y + lineIndex * lineHeight
 
     strokeAlphabetLine({

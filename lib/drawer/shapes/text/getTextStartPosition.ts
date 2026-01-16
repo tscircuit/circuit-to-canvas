@@ -56,12 +56,15 @@ export function getTextStartPosition(
   return { x, y }
 }
 
-export function getLineStartX(
-  alignment: NinePointAnchor,
-  lineWidth: number,
-  maxWidth: number,
-  strokeWidth: number,
-): number {
+export interface GetLineStartXParams {
+  alignment: NinePointAnchor
+  lineWidth: number
+  maxWidth: number
+  strokeWidth: number
+}
+
+export function getLineStartX(params: GetLineStartXParams): number {
+  const { alignment, lineWidth, maxWidth, strokeWidth } = params
   const totalLineWidth = lineWidth + strokeWidth
   const totalMaxWidth = maxWidth + strokeWidth
 
