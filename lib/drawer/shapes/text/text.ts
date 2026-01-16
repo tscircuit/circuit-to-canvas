@@ -27,7 +27,7 @@ export interface StrokeAlphabetLineParams {
   layout: AlphabetLayout
 }
 
-function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
+export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
   const { ctx, line, fontSize, startX, startY, layout } = params
   const { glyphWidth, letterSpacing, spaceWidth, strokeWidth } = layout
   const height = fontSize
