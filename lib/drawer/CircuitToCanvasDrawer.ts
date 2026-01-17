@@ -72,6 +72,7 @@ import { drawPcbNoteText } from "./elements/pcb-note-text"
 import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbFabricationNoteDimension } from "./elements/pcb-fabrication-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
+import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
@@ -162,358 +163,298 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    // Check if any pad or hole has is_covered_with_solder_mask: true
-    const hasSoldermaskPads = elements.some(
-      (el) =>
-        el.type === "pcb_smtpad" &&
-        (el as PcbSmtPad).is_covered_with_solder_mask === true,
-    )
-    const hasSoldermaskHoles = elements.some(
-      (el) =>
-        el.type === "pcb_hole" &&
-        (el as PcbHole & { is_covered_with_solder_mask?: boolean })
-          .is_covered_with_solder_mask === true,
-    )
-    const hasSoldermaskPlatedHoles = elements.some(
-      (el) =>
-        el.type === "pcb_plated_hole" &&
-        (el as PcbPlatedHole & { is_covered_with_solder_mask?: boolean })
-          .is_covered_with_solder_mask === true,
-    )
+    // Find the board element
+    const board = elements.find((el) => el.type === "pcb_board") as
+      | PcbBoard
+      | undefined
 
-    for (const element of elements) {
-      if (element.type === "pcb_board") {
-        this.drawBoardWithSoldermask(element as PcbBoard)
-      } else {
-        this.drawElement(element, options)
-      }
-    }
-  }
+    // Drawing order:
+    // 1. Board outline (just the outline stroke, no fill)
+    // 2. Copper elements underneath soldermask (pads, copper text)
+    // 3. Soldermask (covers everything except openings)
+    // 4. Silkscreen (on soldermask, under top copper layers)
+    // 5. Copper pour and traces (drawn on top of soldermask and silkscreen)
+    // 6. Plated holes, vias (copper ring + drill hole on top of soldermask)
+    // 7. Holes and cutouts (punch through everything)
+    // 8. Other annotations
 
-  private drawBoardWithSoldermask(board: PcbBoard): void {
-    const { width, height, center, outline } = board
-    const layer = "top" // Default to top layer for soldermask color
-
-    // If the board has a custom outline, draw it as a path with soldermask fill
-    if (outline && Array.isArray(outline) && outline.length >= 3) {
-      const soldermaskColor =
-        this.colorMap.soldermask[
-          layer as keyof typeof this.colorMap.soldermask
-        ] ?? this.colorMap.soldermask.top
-
-      // Draw filled path
-      const canvasPoints = outline.map((p) => {
-        const [x, y] = applyToPoint(this.realToCanvasMat, [p.x, p.y])
-        return { x, y }
-      })
-
-      this.ctx.beginPath()
-      const firstPoint = canvasPoints[0]
-      if (firstPoint) {
-        this.ctx.moveTo(firstPoint.x, firstPoint.y)
-        for (let i = 1; i < canvasPoints.length; i++) {
-          const point = canvasPoints[i]
-          if (point) {
-            this.ctx.lineTo(point.x, point.y)
-          }
-        }
-        this.ctx.closePath()
-      }
-
-      this.ctx.fillStyle = soldermaskColor
-      this.ctx.fill()
-
-      // Draw outline stroke
-      drawPath({
-        ctx: this.ctx,
-        points: outline.map((p) => ({ x: p.x, y: p.y })),
-        stroke: this.colorMap.boardOutline,
-        strokeWidth: 0.1,
-        realToCanvasMat: this.realToCanvasMat,
-        closePath: true,
-      })
-      return
-    }
-
-    // Otherwise draw a rectangle with soldermask fill
-    if (width !== undefined && height !== undefined && center) {
-      const soldermaskColor =
-        this.colorMap.soldermask[
-          layer as keyof typeof this.colorMap.soldermask
-        ] ?? this.colorMap.soldermask.top
-
-      // Draw filled rectangle
-      drawRect({
-        ctx: this.ctx,
-        center,
-        width,
-        height,
-        fill: soldermaskColor,
-        realToCanvasMat: this.realToCanvasMat,
-      })
-
-      // Draw the outline stroke separately using path
-      const halfWidth = width / 2
-      const halfHeight = height / 2
-      const corners = [
-        { x: center.x - halfWidth, y: center.y - halfHeight },
-        { x: center.x + halfWidth, y: center.y - halfHeight },
-        { x: center.x + halfWidth, y: center.y + halfHeight },
-        { x: center.x - halfWidth, y: center.y + halfHeight },
-      ]
-
-      drawPath({
-        ctx: this.ctx,
-        points: corners,
-        stroke: this.colorMap.boardOutline,
-        strokeWidth: 0.1,
-        realToCanvasMat: this.realToCanvasMat,
-        closePath: true,
-      })
-    }
-  }
-
-  private drawElement(
-    element: AnyCircuitElement,
-    options: DrawElementsOptions,
-  ): void {
-    // Check if element should be drawn based on layer options
-    if (!shouldDrawElement(element, options)) {
-      return
-    }
-
-    if (element.type === "pcb_plated_hole") {
-      drawPcbPlatedHole({
-        ctx: this.ctx,
-        hole: element as PcbPlatedHole,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_via") {
-      drawPcbVia({
-        ctx: this.ctx,
-        via: element as PcbVia,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_hole") {
-      drawPcbHole({
-        ctx: this.ctx,
-        hole: element as PcbHole,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_smtpad") {
-      drawPcbSmtPad({
-        ctx: this.ctx,
-        pad: element as PcbSmtPad,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_trace") {
-      drawPcbTrace({
-        ctx: this.ctx,
-        trace: element as PcbTrace,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_board") {
+    // Step 1: Draw board outline
+    if (board) {
       drawPcbBoard({
         ctx: this.ctx,
-        board: element as PcbBoard,
+        board,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
       })
     }
 
-    if (element.type === "pcb_silkscreen_text") {
-      drawPcbSilkscreenText({
+    // Step 2: Draw copper elements underneath soldermask (pads, copper text)
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_smtpad") {
+        drawPcbSmtPad({
+          ctx: this.ctx,
+          pad: element as PcbSmtPad,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_copper_text") {
+        drawPcbCopperText({
+          ctx: this.ctx,
+          text: element as PcbCopperText,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+    }
+
+    // Step 3: Draw soldermask layer
+    if (board) {
+      drawPcbSoldermask({
         ctx: this.ctx,
-        text: element as PcbSilkscreenText,
+        board,
+        elements,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
+        layer: "top",
       })
     }
 
-    if (element.type === "pcb_silkscreen_rect") {
-      drawPcbSilkscreenRect({
-        ctx: this.ctx,
-        rect: element as PcbSilkscreenRect,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
+    // Step 4: Draw silkscreen (on soldermask, under top copper layers)
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_silkscreen_text") {
+        drawPcbSilkscreenText({
+          ctx: this.ctx,
+          text: element as PcbSilkscreenText,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_silkscreen_rect") {
+        drawPcbSilkscreenRect({
+          ctx: this.ctx,
+          rect: element as PcbSilkscreenRect,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_silkscreen_circle") {
+        drawPcbSilkscreenCircle({
+          ctx: this.ctx,
+          circle: element as PcbSilkscreenCircle,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_silkscreen_line") {
+        drawPcbSilkscreenLine({
+          ctx: this.ctx,
+          line: element as PcbSilkscreenLine,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_silkscreen_path") {
+        drawPcbSilkscreenPath({
+          ctx: this.ctx,
+          path: element as PcbSilkscreenPath,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_silkscreen_pill") {
+        drawPcbSilkscreenPill({
+          ctx: this.ctx,
+          pill: element as PcbSilkscreenPill,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_silkscreen_oval") {
+        drawPcbSilkscreenOval({
+          ctx: this.ctx,
+          oval: element as PcbSilkscreenOval,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
     }
 
-    if (element.type === "pcb_silkscreen_circle") {
-      drawPcbSilkscreenCircle({
-        ctx: this.ctx,
-        circle: element as PcbSilkscreenCircle,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
+    // Step 5: Draw copper pour and traces (on top of soldermask and silkscreen)
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_copper_pour") {
+        drawPcbCopperPour({
+          ctx: this.ctx,
+          pour: element as PcbCopperPour,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_trace") {
+        drawPcbTrace({
+          ctx: this.ctx,
+          trace: element as PcbTrace,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
     }
 
-    if (element.type === "pcb_silkscreen_line") {
-      drawPcbSilkscreenLine({
-        ctx: this.ctx,
-        line: element as PcbSilkscreenLine,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
+    // Step 6: Draw plated holes, vias (copper ring + drill hole on top of soldermask)
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_plated_hole") {
+        drawPcbPlatedHole({
+          ctx: this.ctx,
+          hole: element as PcbPlatedHole,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+          soldermaskMargin: (element as PcbPlatedHole).soldermask_margin,
+        })
+      }
+
+      if (element.type === "pcb_via") {
+        drawPcbVia({
+          ctx: this.ctx,
+          via: element as PcbVia,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
     }
 
-    if (element.type === "pcb_silkscreen_path") {
-      drawPcbSilkscreenPath({
-        ctx: this.ctx,
-        path: element as PcbSilkscreenPath,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
+    // Step 7: Draw holes and cutouts (these punch through everything)
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_hole") {
+        drawPcbHole({
+          ctx: this.ctx,
+          hole: element as PcbHole,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+          soldermaskMargin: (element as PcbHole).soldermask_margin,
+        })
+      }
+
+      if (element.type === "pcb_cutout") {
+        drawPcbCutout({
+          ctx: this.ctx,
+          cutout: element as PcbCutout,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
     }
 
-    if (element.type === "pcb_silkscreen_pill") {
-      drawPcbSilkscreenPill({
-        ctx: this.ctx,
-        pill: element as PcbSilkscreenPill,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+    // Step 8: Draw other annotations
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
 
-    if (element.type === "pcb_silkscreen_oval") {
-      drawPcbSilkscreenOval({
-        ctx: this.ctx,
-        oval: element as PcbSilkscreenOval,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_keepout") {
+        drawPcbKeepout({
+          ctx: this.ctx,
+          keepout: element as PCBKeepout,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_cutout") {
-      drawPcbCutout({
-        ctx: this.ctx,
-        cutout: element as PcbCutout,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_fabrication_note_text") {
+        drawPcbFabricationNoteText({
+          ctx: this.ctx,
+          text: element as PcbFabricationNoteText,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_keepout") {
-      drawPcbKeepout({
-        ctx: this.ctx,
-        keepout: element as PCBKeepout,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_fabrication_note_rect") {
+        drawPcbFabricationNoteRect({
+          ctx: this.ctx,
+          rect: element as PcbFabricationNoteRect,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_copper_pour") {
-      drawPcbCopperPour({
-        ctx: this.ctx,
-        pour: element as PcbCopperPour,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_note_rect") {
+        drawPcbNoteRect({
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+          ctx: this.ctx,
+          rect: element as PcbNoteRect,
+        })
+      }
 
-    if (element.type === "pcb_copper_text") {
-      drawPcbCopperText({
-        ctx: this.ctx,
-        text: element as PcbCopperText,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_fabrication_note_path") {
+        drawPcbFabricationNotePath({
+          ctx: this.ctx,
+          path: element as PcbFabricationNotePath,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_fabrication_note_text") {
-      drawPcbFabricationNoteText({
-        ctx: this.ctx,
-        text: element as PcbFabricationNoteText,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_note_path") {
+        drawPcbNotePath({
+          ctx: this.ctx,
+          path: element as PcbNotePath,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_fabrication_note_rect") {
-      drawPcbFabricationNoteRect({
-        ctx: this.ctx,
-        rect: element as PcbFabricationNoteRect,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_note_text") {
+        drawPcbNoteText({
+          ctx: this.ctx,
+          text: element as PcbNoteText,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_note_rect") {
-      drawPcbNoteRect({
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-        ctx: this.ctx,
-        rect: element as PcbNoteRect,
-      })
-    }
+      if (element.type === "pcb_note_line") {
+        drawPcbNoteLine({
+          ctx: this.ctx,
+          line: element as PcbNoteLine,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_fabrication_note_path") {
-      drawPcbFabricationNotePath({
-        ctx: this.ctx,
-        path: element as PcbFabricationNotePath,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
+      if (element.type === "pcb_note_dimension") {
+        drawPcbNoteDimension({
+          ctx: this.ctx,
+          pcbNoteDimension: element as PcbNoteDimension,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
 
-    if (element.type === "pcb_note_path") {
-      drawPcbNotePath({
-        ctx: this.ctx,
-        path: element as PcbNotePath,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_note_text") {
-      drawPcbNoteText({
-        ctx: this.ctx,
-        text: element as PcbNoteText,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_note_line") {
-      drawPcbNoteLine({
-        ctx: this.ctx,
-        line: element as PcbNoteLine,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_note_dimension") {
-      drawPcbNoteDimension({
-        ctx: this.ctx,
-        pcbNoteDimension: element as PcbNoteDimension,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
-    }
-
-    if (element.type === "pcb_fabrication_note_dimension") {
-      drawPcbFabricationNoteDimension({
-        ctx: this.ctx,
-        pcbFabricationNoteDimension: element as PcbFabricationNoteDimension,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-      })
+      if (element.type === "pcb_fabrication_note_dimension") {
+        drawPcbFabricationNoteDimension({
+          ctx: this.ctx,
+          pcbFabricationNoteDimension: element as PcbFabricationNoteDimension,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
     }
   }
 }

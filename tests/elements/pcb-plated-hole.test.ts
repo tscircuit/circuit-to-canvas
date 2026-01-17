@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
-import type { PcbPlatedHole } from "circuit-json"
+import type { PcbBoard, PcbPlatedHole } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
 test("draw circular plated hole", async () => {
@@ -22,7 +22,19 @@ test("draw circular plated hole", async () => {
     layers: ["top", "bottom"],
   }
 
-  drawer.drawElements([hole])
+  const board: PcbBoard = {
+    type: "pcb_board",
+    pcb_board_id: "board1",
+    center: { x: 50, y: 50 },
+    width: 100,
+    height: 100,
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
+  }
+
+  drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
+  drawer.drawElements([board, hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
@@ -51,7 +63,19 @@ test("draw oval plated hole", async () => {
     ccw_rotation: 0,
   }
 
-  drawer.drawElements([hole])
+  const board: PcbBoard = {
+    type: "pcb_board",
+    pcb_board_id: "board1",
+    center: { x: 50, y: 50 },
+    width: 100,
+    height: 100,
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
+  }
+
+  drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
+  drawer.drawElements([board, hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
@@ -81,7 +105,19 @@ test("draw pill plated hole", async () => {
     ccw_rotation: 0,
   }
 
-  drawer.drawElements([hole])
+  const board: PcbBoard = {
+    type: "pcb_board",
+    pcb_board_id: "board1",
+    center: { x: 50, y: 50 },
+    width: 100,
+    height: 100,
+    thickness: 1.6,
+    num_layers: 2,
+    material: "fr4",
+  }
+
+  drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
+  drawer.drawElements([board, hole])
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

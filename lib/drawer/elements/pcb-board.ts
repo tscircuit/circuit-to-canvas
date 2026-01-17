@@ -15,8 +15,18 @@ export function drawPcbBoard(params: DrawPcbBoardParams): void {
   const { ctx, board, realToCanvasMat, colorMap } = params
   const { width, height, center, outline } = board
 
-  // If the board has a custom outline, draw it as a path
+  // If the board has a custom outline, draw substrate and outline
   if (outline && Array.isArray(outline) && outline.length >= 3) {
+    // Draw substrate fill
+    drawPath({
+      ctx,
+      points: outline.map((p) => ({ x: p.x, y: p.y })),
+      fill: colorMap.substrate,
+      realToCanvasMat,
+      closePath: true,
+    })
+
+    // Draw outline stroke
     drawPath({
       ctx,
       points: outline.map((p) => ({ x: p.x, y: p.y })),
@@ -30,13 +40,13 @@ export function drawPcbBoard(params: DrawPcbBoardParams): void {
 
   // Otherwise draw a rectangle
   if (width !== undefined && height !== undefined && center) {
-    // Draw the board outline as a rectangle stroke
+    // Draw substrate fill
     drawRect({
       ctx,
       center,
       width,
       height,
-      fill: "transparent",
+      fill: colorMap.substrate,
       realToCanvasMat,
     })
 
