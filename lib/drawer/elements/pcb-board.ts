@@ -9,18 +9,17 @@ export interface DrawPcbBoardParams {
   board: PcbBoard
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
-  showBoardFrontMaterial: boolean
+  drawBoardMaterial: boolean
 }
 
 export function drawPcbBoard(params: DrawPcbBoardParams): void {
-  const { ctx, board, realToCanvasMat, colorMap, showBoardFrontMaterial } =
-    params
+  const { ctx, board, realToCanvasMat, colorMap, drawBoardMaterial } = params
   const { width, height, center, outline } = board
 
   // If the board has a custom outline, draw substrate and outline
   if (outline && Array.isArray(outline) && outline.length >= 3) {
-    // Draw substrate fill only if showBoardFrontMaterial is true
-    if (showBoardFrontMaterial) {
+    // Draw substrate fill only if drawBoardMaterial is true
+    if (drawBoardMaterial) {
       drawPath({
         ctx,
         points: outline.map((p) => ({ x: p.x, y: p.y })),
@@ -44,8 +43,8 @@ export function drawPcbBoard(params: DrawPcbBoardParams): void {
 
   // Otherwise draw a rectangle
   if (width !== undefined && height !== undefined && center) {
-    // Draw substrate fill only if showBoardFrontMaterial is true
-    if (showBoardFrontMaterial) {
+    // Draw substrate fill only if drawBoardMaterial is true
+    if (drawBoardMaterial) {
       drawRect({
         ctx,
         center,

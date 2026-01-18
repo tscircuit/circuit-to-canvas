@@ -64,8 +64,6 @@ import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTrace } from "./elements/pcb-trace"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
-import { drawPath } from "./shapes/path"
-import { drawRect } from "./shapes/rect"
 import {
   type CameraBounds,
   type CanvasContext,
@@ -78,7 +76,7 @@ export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
-  /** Whether to render the board front material (substrate fill). Defaults to false. */
+  /** Whether to render the board material (substrate fill). Defaults to false. */
   drawBoardMaterial?: boolean
 }
 
@@ -189,7 +187,7 @@ export class CircuitToCanvasDrawer {
         board,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
-        showBoardFrontMaterial: options.drawBoardMaterial ?? false,
+        drawBoardMaterial: options.drawBoardMaterial ?? false,
       })
     }
 
