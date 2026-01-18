@@ -76,6 +76,8 @@ import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
+  /** Whether to render the soldermask layer. Defaults to false. */
+  showSoldermask?: boolean
 }
 
 interface CanvasLike {
@@ -211,8 +213,9 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 3: Draw soldermask layer
-    if (board) {
+    // Step 3: Draw soldermask layer (only if showSoldermask is true)
+    const showSoldermask = options.showSoldermask ?? false
+    if (board && showSoldermask) {
       drawPcbSoldermask({
         ctx: this.ctx,
         board,

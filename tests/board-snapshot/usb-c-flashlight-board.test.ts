@@ -9,6 +9,7 @@ test("USB-C flashlight - comprehensive comparison (circuit-to-canvas vs circuit-
   const stackedPng = await getStackedPngSvgComparison(circuitElements, {
     width: 400,
     height: 800,
+    showSoldermask: true,
   })
 
   await expect(stackedPng).toMatchPngSnapshot(import.meta.path)

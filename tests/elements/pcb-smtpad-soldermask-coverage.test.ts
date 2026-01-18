@@ -154,7 +154,7 @@ test("draw smt pads fully covered with soldermask and board with soldermask", as
   ]
 
   drawer.setCameraBounds({ minX: -7, maxX: 7, minY: -5, maxY: 5 })
-  drawer.drawElements(circuit)
+  drawer.drawElements(circuit, { showSoldermask: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

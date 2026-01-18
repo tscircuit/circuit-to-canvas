@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
-import { CircuitToCanvasDrawer } from "../../lib/drawer"
 import type { AnyCircuitElement } from "circuit-json"
+import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
 /**
  * Comprehensive test for soldermask margin functionality:
@@ -1273,7 +1273,7 @@ test("comprehensive soldermask margin test", async () => {
   ]
 
   drawer.setCameraBounds({ minX: -95, maxX: 90, minY: -22, maxY: 22 })
-  drawer.drawElements(circuit)
+  drawer.drawElements(circuit, { showSoldermask: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

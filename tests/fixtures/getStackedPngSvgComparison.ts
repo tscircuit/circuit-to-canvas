@@ -10,6 +10,7 @@ export interface StackedPngSvgComparisonOptions {
   width?: number
   height?: number
   padding?: number
+  showSoldermask?: boolean
 }
 
 /**
@@ -23,7 +24,12 @@ export async function getStackedPngSvgComparison(
   circuitJson: AnyCircuitElement[],
   options: StackedPngSvgComparisonOptions = {},
 ): Promise<Buffer> {
-  const { width = 400, height = 800, padding = 4 } = options
+  const {
+    width = 400,
+    height = 800,
+    padding = 4,
+    showSoldermask = false,
+  } = options
 
   const bounds = getBoundsOfPcbElements(circuitJson)
 
@@ -41,7 +47,7 @@ export async function getStackedPngSvgComparison(
     minY: bounds.minY,
     maxY: bounds.maxY,
   })
-  drawer.drawElements(circuitJson)
+  drawer.drawElements(circuitJson, { showSoldermask })
 
   const canvasPng = canvas.toBuffer("image/png")
 
