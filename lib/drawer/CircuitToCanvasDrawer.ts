@@ -1,83 +1,83 @@
 import type {
   AnyCircuitElement,
-  PcbPlatedHole,
-  PcbVia,
-  PcbHole,
-  PcbSmtPad,
-  PcbTrace,
+  PCBKeepout,
   PcbBoard,
-  PcbSilkscreenText,
-  PcbSilkscreenRect,
+  PcbCopperPour,
+  PcbCopperText,
+  PcbCutout,
+  PcbFabricationNoteDimension,
+  PcbFabricationNotePath,
+  PcbFabricationNoteRect,
+  PcbFabricationNoteText,
+  PcbHole,
+  PcbNoteDimension,
+  PcbNoteLine,
+  PcbNotePath,
+  PcbNoteRect,
+  PcbNoteText,
+  PcbPlatedHole,
+  PcbRenderLayer,
   PcbSilkscreenCircle,
   PcbSilkscreenLine,
   PcbSilkscreenOval,
   PcbSilkscreenPath,
   PcbSilkscreenPill,
-  PcbCutout,
-  PCBKeepout,
-  PcbCopperPour,
-  PcbCopperText,
-  PcbFabricationNoteText,
-  PcbFabricationNoteRect,
-  PcbNoteRect,
-  PcbFabricationNotePath,
-  PcbNotePath,
-  PcbNoteText,
-  PcbNoteDimension,
-  PcbFabricationNoteDimension,
-  PcbNoteLine,
-  PcbRenderLayer,
+  PcbSilkscreenRect,
+  PcbSilkscreenText,
+  PcbSmtPad,
+  PcbTrace,
+  PcbVia,
 } from "circuit-json"
-import {
-  identity,
-  compose,
-  translate,
-  scale,
-  applyToPoint,
-} from "transformation-matrix"
-import { shouldDrawElement } from "./pcb-render-layer-filter"
 import type { Matrix } from "transformation-matrix"
 import {
-  type CanvasContext,
-  type PcbColorMap,
-  type DrawerConfig,
-  type CameraBounds,
-  DEFAULT_PCB_COLOR_MAP,
-} from "./types"
-import { drawPcbPlatedHole } from "./elements/pcb-plated-hole"
-import { drawPcbVia } from "./elements/pcb-via"
-import { drawPcbHole } from "./elements/pcb-hole"
-import { drawPcbSmtPad } from "./elements/pcb-smtpad"
-import { drawPcbTrace } from "./elements/pcb-trace"
+  applyToPoint,
+  compose,
+  identity,
+  scale,
+  translate,
+} from "transformation-matrix"
 import { drawPcbBoard } from "./elements/pcb-board"
-import { drawPath } from "./shapes/path"
-import { drawRect } from "./shapes/rect"
-import { drawPcbSilkscreenText } from "./elements/pcb-silkscreen-text"
-import { drawPcbSilkscreenRect } from "./elements/pcb-silkscreen-rect"
-import { drawPcbSilkscreenCircle } from "./elements/pcb-silkscreen-circle"
-import { drawPcbSilkscreenLine } from "./elements/pcb-silkscreen-line"
-import { drawPcbSilkscreenPath } from "./elements/pcb-silkscreen-path"
-import { drawPcbSilkscreenOval } from "./elements/pcb-silkscreen-oval"
-import { drawPcbSilkscreenPill } from "./elements/pcb-silkscreen-pill"
-import { drawPcbCutout } from "./elements/pcb-cutout"
-import { drawPcbKeepout } from "./elements/pcb-keepout"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
-import { drawPcbFabricationNoteText } from "./elements/pcb-fabrication-note-text"
-import { drawPcbFabricationNoteRect } from "./elements/pcb-fabrication-note-rect"
-import { drawPcbNoteRect } from "./elements/pcb-note-rect"
-import { drawPcbFabricationNotePath } from "./elements/pcb-fabrication-note-path"
-import { drawPcbNotePath } from "./elements/pcb-note-path"
-import { drawPcbNoteText } from "./elements/pcb-note-text"
-import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
+import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbFabricationNoteDimension } from "./elements/pcb-fabrication-note-dimension"
+import { drawPcbFabricationNotePath } from "./elements/pcb-fabrication-note-path"
+import { drawPcbFabricationNoteRect } from "./elements/pcb-fabrication-note-rect"
+import { drawPcbFabricationNoteText } from "./elements/pcb-fabrication-note-text"
+import { drawPcbHole } from "./elements/pcb-hole"
+import { drawPcbKeepout } from "./elements/pcb-keepout"
+import { drawPcbNoteDimension } from "./elements/pcb-note-dimension"
 import { drawPcbNoteLine } from "./elements/pcb-note-line"
+import { drawPcbNotePath } from "./elements/pcb-note-path"
+import { drawPcbNoteRect } from "./elements/pcb-note-rect"
+import { drawPcbNoteText } from "./elements/pcb-note-text"
+import { drawPcbPlatedHole } from "./elements/pcb-plated-hole"
+import { drawPcbSilkscreenCircle } from "./elements/pcb-silkscreen-circle"
+import { drawPcbSilkscreenLine } from "./elements/pcb-silkscreen-line"
+import { drawPcbSilkscreenOval } from "./elements/pcb-silkscreen-oval"
+import { drawPcbSilkscreenPath } from "./elements/pcb-silkscreen-path"
+import { drawPcbSilkscreenPill } from "./elements/pcb-silkscreen-pill"
+import { drawPcbSilkscreenRect } from "./elements/pcb-silkscreen-rect"
+import { drawPcbSilkscreenText } from "./elements/pcb-silkscreen-text"
+import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
+import { drawPcbTrace } from "./elements/pcb-trace"
+import { drawPcbVia } from "./elements/pcb-via"
+import { shouldDrawElement } from "./pcb-render-layer-filter"
+import {
+  type CameraBounds,
+  type CanvasContext,
+  DEFAULT_PCB_COLOR_MAP,
+  type DrawerConfig,
+  type PcbColorMap,
+} from "./types"
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /** Whether to render the soldermask layer. Defaults to false. */
-  showSoldermask?: boolean
+  drawSoldermask?: boolean
+  /** Whether to render the board material (substrate fill). Defaults to false. */
+  drawBoardMaterial?: boolean
 }
 
 interface CanvasLike {
@@ -187,6 +187,7 @@ export class CircuitToCanvasDrawer {
         board,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
+        drawBoardMaterial: options.drawBoardMaterial ?? false,
       })
     }
 
@@ -214,7 +215,7 @@ export class CircuitToCanvasDrawer {
     }
 
     // Step 3: Draw soldermask layer (only if showSoldermask is true)
-    const showSoldermask = options.showSoldermask ?? false
+    const drawSoldermask = options.drawSoldermask ?? false
     if (board) {
       drawPcbSoldermask({
         ctx: this.ctx,
@@ -223,7 +224,7 @@ export class CircuitToCanvasDrawer {
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "top",
-        showSoldermask,
+        drawSoldermask,
       })
     }
 
@@ -328,10 +329,10 @@ export class CircuitToCanvasDrawer {
           hole: element as PcbPlatedHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: showSoldermask
+          soldermaskMargin: drawSoldermask
             ? (element as PcbPlatedHole).soldermask_margin
             : undefined,
-          showSoldermask,
+          drawSoldermask,
         })
       }
 
@@ -355,7 +356,7 @@ export class CircuitToCanvasDrawer {
           hole: element as PcbHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: showSoldermask
+          soldermaskMargin: drawSoldermask
             ? element.soldermask_margin
             : undefined,
         })

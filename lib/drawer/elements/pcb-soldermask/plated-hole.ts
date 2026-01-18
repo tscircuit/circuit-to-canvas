@@ -16,7 +16,7 @@ export function processPlatedHoleSoldermask(params: {
   colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
-  showSoldermask: boolean
+  drawSoldermask: boolean
 }): void {
   const {
     ctx,
@@ -25,7 +25,7 @@ export function processPlatedHoleSoldermask(params: {
     colorMap,
     soldermaskOverCopperColor,
     layer,
-    showSoldermask,
+    drawSoldermask,
   } = params
   // Check if this hole is on the current layer
   if (hole.layers && !hole.layers.includes(layer)) return
@@ -33,8 +33,8 @@ export function processPlatedHoleSoldermask(params: {
   // When soldermask is disabled, treat all holes as not covered with soldermask
   // and use zero margin (normal rendering)
   const isCoveredWithSoldermask =
-    showSoldermask && hole.is_covered_with_solder_mask === true
-  const margin = showSoldermask ? (hole.soldermask_margin ?? 0) : 0
+    drawSoldermask && hole.is_covered_with_solder_mask === true
+  const margin = drawSoldermask ? (hole.soldermask_margin ?? 0) : 0
   const copperColor = colorMap.copper.top
 
   if (isCoveredWithSoldermask) {

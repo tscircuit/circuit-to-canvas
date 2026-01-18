@@ -16,7 +16,7 @@ export function processSmtPadSoldermask(params: {
   colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
-  showSoldermask: boolean
+  drawSoldermask: boolean
 }): void {
   const {
     ctx,
@@ -25,7 +25,7 @@ export function processSmtPadSoldermask(params: {
     colorMap,
     soldermaskOverCopperColor,
     layer,
-    showSoldermask,
+    drawSoldermask,
   } = params
   // Only process pads on the current layer
   if (pad.layer !== layer) return
@@ -33,8 +33,8 @@ export function processSmtPadSoldermask(params: {
   // When soldermask is disabled, treat all pads as not covered with soldermask
   // and use zero margin (normal rendering)
   const isCoveredWithSoldermask =
-    showSoldermask && pad.is_covered_with_solder_mask === true
-  const margin = showSoldermask ? (pad.soldermask_margin ?? 0) : 0
+    drawSoldermask && pad.is_covered_with_solder_mask === true
+  const margin = drawSoldermask ? (pad.soldermask_margin ?? 0) : 0
 
   // Get asymmetric margins for rect shapes
   let ml = margin

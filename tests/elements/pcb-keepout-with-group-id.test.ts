@@ -37,7 +37,7 @@ test("pcb keepout with pcb_group_id and subcircuit_id", async () => {
     },
   ]
 
-  drawer.drawElements(elements)
+  drawer.drawElements(elements, { drawBoardMaterial: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

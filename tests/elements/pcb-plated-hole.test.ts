@@ -34,7 +34,7 @@ test("draw circular plated hole", async () => {
   }
 
   drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
-  drawer.drawElements([board, hole])
+  drawer.drawElements([board, hole], { drawBoardMaterial: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
@@ -75,7 +75,7 @@ test("draw oval plated hole", async () => {
   }
 
   drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
-  drawer.drawElements([board, hole])
+  drawer.drawElements([board, hole], { drawBoardMaterial: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
@@ -117,7 +117,7 @@ test("draw pill plated hole", async () => {
   }
 
   drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
-  drawer.drawElements([board, hole])
+  drawer.drawElements([board, hole], { drawBoardMaterial: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
