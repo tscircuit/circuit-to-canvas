@@ -1273,7 +1273,7 @@ test("comprehensive soldermask margin test", async () => {
   ]
 
   drawer.setCameraBounds({ minX: -95, maxX: 90, minY: -22, maxY: 22 })
-  drawer.drawElements(circuit, { showSoldermask: true })
+  drawer.drawElements(circuit, { drawSoldermask: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

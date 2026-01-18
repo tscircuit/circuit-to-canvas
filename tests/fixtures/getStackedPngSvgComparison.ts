@@ -1,16 +1,16 @@
 import { createCanvas } from "@napi-rs/canvas"
+import { getBoundsOfPcbElements } from "@tscircuit/circuit-json-util"
+import type { Bounds } from "@tscircuit/math-utils"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
-import type { Bounds } from "@tscircuit/math-utils"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 import { stackPngsVertically, svgToPng } from "./stackPngsVertically"
-import { getBoundsOfPcbElements } from "@tscircuit/circuit-json-util"
 
 export interface StackedPngSvgComparisonOptions {
   width?: number
   height?: number
   padding?: number
-  showSoldermask?: boolean
+  drawSoldermask?: boolean
 }
 
 /**
@@ -28,7 +28,7 @@ export async function getStackedPngSvgComparison(
     width = 400,
     height = 800,
     padding = 4,
-    showSoldermask = false,
+    drawSoldermask = false,
   } = options
 
   const bounds = getBoundsOfPcbElements(circuitJson)
@@ -47,7 +47,7 @@ export async function getStackedPngSvgComparison(
     minY: bounds.minY,
     maxY: bounds.maxY,
   })
-  drawer.drawElements(circuitJson, { showSoldermask })
+  drawer.drawElements(circuitJson, { drawSoldermask })
 
   const canvasPng = canvas.toBuffer("image/png")
 

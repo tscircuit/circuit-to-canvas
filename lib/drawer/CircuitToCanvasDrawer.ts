@@ -77,9 +77,9 @@ import {
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /** Whether to render the soldermask layer. Defaults to false. */
-  showSoldermask?: boolean
+  drawSoldermask?: boolean
   /** Whether to render the board front material (substrate fill). Defaults to false. */
-  showBoardFrontMaterial?: boolean
+  drawBoardMaterial?: boolean
 }
 
 interface CanvasLike {
@@ -189,7 +189,7 @@ export class CircuitToCanvasDrawer {
         board,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
-        showBoardFrontMaterial: options.showBoardFrontMaterial ?? false,
+        showBoardFrontMaterial: options.drawBoardMaterial ?? false,
       })
     }
 
@@ -217,7 +217,7 @@ export class CircuitToCanvasDrawer {
     }
 
     // Step 3: Draw soldermask layer (only if showSoldermask is true)
-    const showSoldermask = options.showSoldermask ?? false
+    const drawSoldermask = options.drawSoldermask ?? false
     if (board) {
       drawPcbSoldermask({
         ctx: this.ctx,
@@ -226,7 +226,7 @@ export class CircuitToCanvasDrawer {
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "top",
-        showSoldermask,
+        drawSoldermask,
       })
     }
 
@@ -331,10 +331,10 @@ export class CircuitToCanvasDrawer {
           hole: element as PcbPlatedHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: showSoldermask
+          soldermaskMargin: drawSoldermask
             ? (element as PcbPlatedHole).soldermask_margin
             : undefined,
-          showSoldermask,
+          drawSoldermask,
         })
       }
 
@@ -358,7 +358,7 @@ export class CircuitToCanvasDrawer {
           hole: element as PcbHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: showSoldermask
+          soldermaskMargin: drawSoldermask
             ? element.soldermask_margin
             : undefined,
         })
