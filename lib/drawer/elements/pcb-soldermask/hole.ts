@@ -12,11 +12,21 @@ export function processHoleSoldermask(params: {
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   soldermaskOverCopperColor: string
+  showSoldermask: boolean
 }): void {
-  const { ctx, hole, realToCanvasMat, colorMap, soldermaskOverCopperColor } =
-    params
-  const isCoveredWithSoldermask = hole.is_covered_with_solder_mask === true
-  const margin = hole.soldermask_margin ?? 0
+  const {
+    ctx,
+    hole,
+    realToCanvasMat,
+    colorMap,
+    soldermaskOverCopperColor,
+    showSoldermask,
+  } = params
+  // When soldermask is disabled, treat all holes as not covered with soldermask
+  // and use zero margin (normal rendering)
+  const isCoveredWithSoldermask =
+    showSoldermask && hole.is_covered_with_solder_mask === true
+  const margin = showSoldermask ? (hole.soldermask_margin ?? 0) : 0
 
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire hole

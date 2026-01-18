@@ -215,7 +215,7 @@ export class CircuitToCanvasDrawer {
 
     // Step 3: Draw soldermask layer (only if showSoldermask is true)
     const showSoldermask = options.showSoldermask ?? false
-    if (board && showSoldermask) {
+    if (board) {
       drawPcbSoldermask({
         ctx: this.ctx,
         board,
@@ -223,6 +223,7 @@ export class CircuitToCanvasDrawer {
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "top",
+        showSoldermask,
       })
     }
 
@@ -327,7 +328,10 @@ export class CircuitToCanvasDrawer {
           hole: element as PcbPlatedHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: (element as PcbPlatedHole).soldermask_margin,
+          soldermaskMargin: showSoldermask
+            ? (element as PcbPlatedHole).soldermask_margin
+            : undefined,
+          showSoldermask,
         })
       }
 
@@ -351,7 +355,9 @@ export class CircuitToCanvasDrawer {
           hole: element as PcbHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: (element as PcbHole).soldermask_margin,
+          soldermaskMargin: showSoldermask
+            ? element.soldermask_margin
+            : undefined,
         })
       }
 

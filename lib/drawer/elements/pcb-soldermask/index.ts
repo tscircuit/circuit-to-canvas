@@ -15,6 +15,7 @@ export interface DrawPcbSoldermaskParams {
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   layer: "top" | "bottom"
+  showSoldermask: boolean
 }
 
 /**
@@ -36,14 +37,24 @@ export interface DrawPcbSoldermaskParams {
  * the soldermask wouldn't reveal anything useful underneath.
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
-  const { ctx, board, elements, realToCanvasMat, colorMap, layer } = params
+  const {
+    ctx,
+    board,
+    elements,
+    realToCanvasMat,
+    colorMap,
+    layer,
+    showSoldermask,
+  } = params
 
   const soldermaskColor = colorMap.soldermask[layer] ?? colorMap.soldermask.top
   const soldermaskOverCopperColor =
     colorMap.soldermaskOverCopper[layer] ?? colorMap.soldermaskOverCopper.top
 
-  // Step 1: Draw the full soldermask covering the board
-  drawBoardSoldermask({ ctx, board, realToCanvasMat, soldermaskColor })
+  // Step 1: Draw the full soldermask covering the board (only if enabled)
+  if (showSoldermask) {
+    drawBoardSoldermask({ ctx, board, realToCanvasMat, soldermaskColor })
+  }
 
   // Step 2: Process each element - draw cutouts and light green areas as needed
   for (const element of elements) {
@@ -54,6 +65,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       colorMap,
       soldermaskOverCopperColor,
       layer,
+      showSoldermask,
     })
   }
 }
@@ -69,6 +81,7 @@ function processElementSoldermask(params: {
   colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
+  showSoldermask: boolean
 }): void {
   const {
     ctx,
@@ -77,6 +90,7 @@ function processElementSoldermask(params: {
     colorMap,
     soldermaskOverCopperColor,
     layer,
+    showSoldermask,
   } = params
 
   if (element.type === "pcb_smtpad") {
@@ -87,6 +101,7 @@ function processElementSoldermask(params: {
       colorMap,
       soldermaskOverCopperColor,
       layer,
+      showSoldermask,
     })
   } else if (element.type === "pcb_plated_hole") {
     processPlatedHoleSoldermask({
@@ -96,6 +111,7 @@ function processElementSoldermask(params: {
       colorMap,
       soldermaskOverCopperColor,
       layer,
+      showSoldermask,
     })
   } else if (element.type === "pcb_hole") {
     processHoleSoldermask({
@@ -104,6 +120,7 @@ function processElementSoldermask(params: {
       realToCanvasMat,
       colorMap,
       soldermaskOverCopperColor,
+      showSoldermask,
     })
   } else if (element.type === "pcb_via") {
     processViaSoldermask({

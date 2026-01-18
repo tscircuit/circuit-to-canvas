@@ -14,13 +14,23 @@ export interface DrawPcbPlatedHoleParams {
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   soldermaskMargin?: number
+  showSoldermask?: boolean
 }
 
 export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
-  const { ctx, hole, realToCanvasMat, colorMap, soldermaskMargin = 0 } = params
+  const {
+    ctx,
+    hole,
+    realToCanvasMat,
+    colorMap,
+    soldermaskMargin = 0,
+    showSoldermask,
+  } = params
 
-  // Skip copper drawing if the hole is fully covered with soldermask
-  if (hole.is_covered_with_solder_mask === true) {
+  // Skip holes that are fully covered with soldermask when soldermask is enabled,
+  // as they should have been handled by soldermask processing.
+  // When soldermask is disabled, fully covered holes should be drawn as normal copper.
+  if (hole.is_covered_with_solder_mask === true && showSoldermask) {
     return
   }
 
