@@ -271,5 +271,31 @@ function drawNegativeMarginRingForPad(
 
     ctx.fill("evenodd")
     ctx.restore()
+  } else if (pad.shape === "polygon" && pad.points && pad.points.length >= 3) {
+    // For polygon, use average thickness from all sides
+    const thickness = Math.max(thicknessL, thicknessR, thicknessT, thicknessB)
+
+    ctx.save()
+    ctx.beginPath()
+
+    // Draw outer polygon (full pad size)
+    const canvasPoints = pad.points.map((p) => {
+      const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
+      return { x, y }
+    })
+    drawPolygonPath(ctx, canvasPoints)
+
+    // Draw inner polygon cutout
+    const innerPoints = offsetPolygonPoints(pad.points, -thickness)
+    if (innerPoints.length >= 3) {
+      const innerCanvasPoints = innerPoints.map((p) => {
+        const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
+        return { x, y }
+      })
+      drawPolygonPath(ctx, innerCanvasPoints)
+    }
+
+    ctx.fill("evenodd")
+    ctx.restore()
   }
 }

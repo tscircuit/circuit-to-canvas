@@ -73,7 +73,7 @@ function processElementSoldermask(
   if (element.type === "pcb_smtpad") {
     processSmtPadSoldermask(
       ctx,
-      element as import("circuit-json").PcbSmtPad,
+      element,
       realToCanvasMat,
       colorMap,
       soldermaskOverCopperColor,
@@ -82,7 +82,7 @@ function processElementSoldermask(
   } else if (element.type === "pcb_plated_hole") {
     processPlatedHoleSoldermask(
       ctx,
-      element as import("circuit-json").PcbPlatedHole,
+      element,
       realToCanvasMat,
       colorMap,
       soldermaskOverCopperColor,
@@ -91,24 +91,14 @@ function processElementSoldermask(
   } else if (element.type === "pcb_hole") {
     processHoleSoldermask(
       ctx,
-      element as import("circuit-json").PcbHole,
+      element,
       realToCanvasMat,
       colorMap,
       soldermaskOverCopperColor,
     )
   } else if (element.type === "pcb_via") {
-    processViaSoldermask(
-      ctx,
-      element as import("circuit-json").PcbVia,
-      realToCanvasMat,
-      colorMap,
-    )
+    processViaSoldermask(ctx, element, realToCanvasMat, colorMap)
   } else if (element.type === "pcb_cutout") {
-    processCutoutSoldermask(
-      ctx,
-      element as import("circuit-json").PcbCutout,
-      realToCanvasMat,
-      colorMap,
-    )
+    processCutoutSoldermask(ctx, element, realToCanvasMat, colorMap)
   }
 }
