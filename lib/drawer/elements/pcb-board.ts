@@ -1,32 +1,36 @@
 import type { PcbBoard } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../types"
 import { drawPath } from "../shapes/path"
 import { drawRect } from "../shapes/rect"
+import type { CanvasContext, PcbColorMap } from "../types"
 
 export interface DrawPcbBoardParams {
   ctx: CanvasContext
   board: PcbBoard
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
+  showBoardFrontMaterial: boolean
 }
 
 export function drawPcbBoard(params: DrawPcbBoardParams): void {
-  const { ctx, board, realToCanvasMat, colorMap } = params
+  const { ctx, board, realToCanvasMat, colorMap, showBoardFrontMaterial } =
+    params
   const { width, height, center, outline } = board
 
   // If the board has a custom outline, draw substrate and outline
   if (outline && Array.isArray(outline) && outline.length >= 3) {
-    // Draw substrate fill
-    drawPath({
-      ctx,
-      points: outline.map((p) => ({ x: p.x, y: p.y })),
-      fill: colorMap.substrate,
-      realToCanvasMat,
-      closePath: true,
-    })
+    // Draw substrate fill only if showBoardFrontMaterial is true
+    if (showBoardFrontMaterial) {
+      drawPath({
+        ctx,
+        points: outline.map((p) => ({ x: p.x, y: p.y })),
+        fill: colorMap.substrate,
+        realToCanvasMat,
+        closePath: true,
+      })
+    }
 
-    // Draw outline stroke
+    // Always draw outline stroke
     drawPath({
       ctx,
       points: outline.map((p) => ({ x: p.x, y: p.y })),
@@ -40,17 +44,19 @@ export function drawPcbBoard(params: DrawPcbBoardParams): void {
 
   // Otherwise draw a rectangle
   if (width !== undefined && height !== undefined && center) {
-    // Draw substrate fill
-    drawRect({
-      ctx,
-      center,
-      width,
-      height,
-      fill: colorMap.substrate,
-      realToCanvasMat,
-    })
+    // Draw substrate fill only if showBoardFrontMaterial is true
+    if (showBoardFrontMaterial) {
+      drawRect({
+        ctx,
+        center,
+        width,
+        height,
+        fill: colorMap.substrate,
+        realToCanvasMat,
+      })
+    }
 
-    // Draw the outline stroke separately using path
+    // Always draw the outline stroke separately using path
     const halfWidth = width / 2
     const halfHeight = height / 2
     const corners = [
