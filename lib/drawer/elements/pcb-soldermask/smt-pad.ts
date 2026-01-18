@@ -33,10 +33,10 @@ export function processSmtPadSoldermask(
   let mb = margin
 
   if (pad.shape === "rect" || pad.shape === "rotated_rect") {
-    ml = (pad as any).soldermask_margin_left ?? margin
-    mr = (pad as any).soldermask_margin_right ?? margin
-    mt = (pad as any).soldermask_margin_top ?? margin
-    mb = (pad as any).soldermask_margin_bottom ?? margin
+    ml = pad.soldermask_margin_left ?? margin
+    mr = pad.soldermask_margin_right ?? margin
+    mt = pad.soldermask_margin_top ?? margin
+    mb = pad.soldermask_margin_bottom ?? margin
   }
 
   const copperColor =
@@ -91,12 +91,11 @@ function drawPadShapePath(
 ): void {
   const rotation =
     pad.shape === "rotated_rect" || pad.shape === "rotated_pill"
-      ? ((pad as any).ccw_rotation ?? 0)
+      ? (pad.ccw_rotation ?? 0)
       : 0
 
   if (pad.shape === "rect" || pad.shape === "rotated_rect") {
-    const borderRadius =
-      (pad as any).corner_radius ?? (pad as any).rect_border_radius ?? 0
+    const borderRadius = pad.corner_radius ?? pad.rect_border_radius ?? 0
     const radians = (rotation * Math.PI) / 180
     const dxLocal = (mr - ml) / 2
     const dyLocal = (mt - mb) / 2
@@ -104,8 +103,8 @@ function drawPadShapePath(
     const dyGlobal = dxLocal * Math.sin(radians) + dyLocal * Math.cos(radians)
 
     const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (pad as any).x + dxGlobal,
-      (pad as any).y + dyGlobal,
+      pad.x + dxGlobal,
+      pad.y + dyGlobal,
     ])
     const scaledWidth = (pad.width + ml + mr) * Math.abs(realToCanvasMat.a)
     const scaledHeight = (pad.height + mt + mb) * Math.abs(realToCanvasMat.a)
@@ -122,10 +121,7 @@ function drawPadShapePath(
     ctx.restore()
   } else if (pad.shape === "circle") {
     const avgMargin = (ml + mr + mt + mb) / 4
-    const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (pad as any).x,
-      (pad as any).y,
-    ])
+    const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
     const scaledRadius = (pad.radius + avgMargin) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
@@ -133,10 +129,7 @@ function drawPadShapePath(
     ctx.closePath()
   } else if (pad.shape === "pill" || pad.shape === "rotated_pill") {
     const avgMargin = (ml + mr) / 2
-    const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (pad as any).x,
-      (pad as any).y,
-    ])
+    const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
     const scaledWidth =
       (pad.width + avgMargin * 2) * Math.abs(realToCanvasMat.a)
     const scaledHeight =
@@ -177,7 +170,7 @@ function drawNegativeMarginRingForPad(
 ): void {
   const rotation =
     pad.shape === "rotated_rect" || pad.shape === "rotated_pill"
-      ? ((pad as any).ccw_rotation ?? 0)
+      ? (pad.ccw_rotation ?? 0)
       : 0
 
   // Calculate the inner dimensions (where copper is exposed)
@@ -189,12 +182,8 @@ function drawNegativeMarginRingForPad(
   ctx.fillStyle = soldermaskOverCopperColor
 
   if (pad.shape === "rect" || pad.shape === "rotated_rect") {
-    const borderRadius =
-      (pad as any).corner_radius ?? (pad as any).rect_border_radius ?? 0
-    const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (pad as any).x,
-      (pad as any).y,
-    ])
+    const borderRadius = pad.corner_radius ?? pad.rect_border_radius ?? 0
+    const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
     const scaledWidth = pad.width * Math.abs(realToCanvasMat.a)
     const scaledHeight = pad.height * Math.abs(realToCanvasMat.a)
     const scaledRadius = borderRadius * Math.abs(realToCanvasMat.a)
@@ -243,10 +232,7 @@ function drawNegativeMarginRingForPad(
     ctx.restore()
   } else if (pad.shape === "circle") {
     const thickness = Math.max(thicknessL, thicknessR, thicknessT, thicknessB)
-    const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (pad as any).x,
-      (pad as any).y,
-    ])
+    const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
     const scaledRadius = pad.radius * Math.abs(realToCanvasMat.a)
     const scaledThickness = thickness * Math.abs(realToCanvasMat.a)
     const innerRadius = Math.max(0, scaledRadius - scaledThickness)
@@ -261,10 +247,7 @@ function drawNegativeMarginRingForPad(
     ctx.restore()
   } else if (pad.shape === "pill" || pad.shape === "rotated_pill") {
     const thickness = Math.max(thicknessL, thicknessR, thicknessT, thicknessB)
-    const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (pad as any).x,
-      (pad as any).y,
-    ])
+    const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
     const scaledWidth = pad.width * Math.abs(realToCanvasMat.a)
     const scaledHeight = pad.height * Math.abs(realToCanvasMat.a)
     const scaledThickness = thickness * Math.abs(realToCanvasMat.a)

@@ -23,8 +23,8 @@ export function processCutoutSoldermask(
 
   if (cutout.shape === "rect") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (cutout as any).center?.x ?? 0,
-      (cutout as any).center?.y ?? 0,
+      cutout.center?.x ?? 0,
+      cutout.center?.y ?? 0,
     ])
     const scaledWidth = cutout.width * Math.abs(realToCanvasMat.a)
     const scaledHeight = cutout.height * Math.abs(realToCanvasMat.a)
@@ -43,8 +43,8 @@ export function processCutoutSoldermask(
     ctx.fill()
   } else if (cutout.shape === "circle") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [
-      (cutout as any).center?.x ?? 0,
-      (cutout as any).center?.y ?? 0,
+      cutout.center?.x ?? 0,
+      cutout.center?.y ?? 0,
     ])
     const scaledRadius = cutout.radius * Math.abs(realToCanvasMat.a)
 

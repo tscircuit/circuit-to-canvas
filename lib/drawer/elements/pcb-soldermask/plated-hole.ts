@@ -83,8 +83,8 @@ function drawPlatedHoleShapePath(
 
     ctx.save()
     ctx.translate(cx, cy)
-    if ((hole as any).ccw_rotation && (hole as any).ccw_rotation !== 0) {
-      ctx.rotate((-(hole as any).ccw_rotation * Math.PI) / 180)
+    if (hole.ccw_rotation && hole.ccw_rotation !== 0) {
+      ctx.rotate(-(hole.ccw_rotation * Math.PI) / 180)
     }
 
     ctx.beginPath()
@@ -100,8 +100,8 @@ function drawPlatedHoleShapePath(
 
     ctx.save()
     ctx.translate(cx, cy)
-    if ((hole as any).ccw_rotation && (hole as any).ccw_rotation !== 0) {
-      ctx.rotate((-(hole as any).ccw_rotation * Math.PI) / 180)
+    if (hole.ccw_rotation && hole.ccw_rotation !== 0) {
+      ctx.rotate(-(hole.ccw_rotation * Math.PI) / 180)
     }
 
     ctx.beginPath()
@@ -198,8 +198,8 @@ function drawNegativeMarginRingForPlatedHole(
 
     ctx.save()
     ctx.translate(cx, cy)
-    if ((hole as any).ccw_rotation && (hole as any).ccw_rotation !== 0) {
-      ctx.rotate((-(hole as any).ccw_rotation * Math.PI) / 180)
+    if (hole.ccw_rotation && hole.ccw_rotation !== 0) {
+      ctx.rotate(-(hole.ccw_rotation * Math.PI) / 180)
     }
 
     ctx.beginPath()
@@ -218,8 +218,8 @@ function drawNegativeMarginRingForPlatedHole(
 
     ctx.save()
     ctx.translate(cx, cy)
-    if ((hole as any).ccw_rotation && (hole as any).ccw_rotation !== 0) {
-      ctx.rotate((-(hole as any).ccw_rotation * Math.PI) / 180)
+    if (hole.ccw_rotation && hole.ccw_rotation !== 0) {
+      ctx.rotate(-(hole.ccw_rotation * Math.PI) / 180)
     }
 
     ctx.beginPath()
