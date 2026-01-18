@@ -22,7 +22,7 @@ test("draw rectangular board", async () => {
     material: "fr4",
   }
 
-  drawer.drawElements([board])
+  drawer.drawElements([board], { drawBoardMaterial: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
@@ -57,7 +57,7 @@ test("draw board with custom outline", async () => {
     ],
   }
 
-  drawer.drawElements([board])
+  drawer.drawElements([board], { drawBoardMaterial: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
