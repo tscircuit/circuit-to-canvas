@@ -2,17 +2,18 @@ import type { PcbBoard } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
-import { drawPolygonPath } from "../helper-functions/draw-paths"
+import { drawPolygonPath } from "../helper-functions/draw-polygon"
 
 /**
  * Draws the base soldermask layer covering the entire board.
  */
-export function drawBoardSoldermask(
-  ctx: CanvasContext,
-  board: PcbBoard,
-  realToCanvasMat: Matrix,
-  soldermaskColor: string,
-): void {
+export function drawBoardSoldermask(params: {
+  ctx: CanvasContext
+  board: PcbBoard
+  realToCanvasMat: Matrix
+  soldermaskColor: string
+}): void {
+  const { ctx, board, realToCanvasMat, soldermaskColor } = params
   const { width, height, center, outline } = board
 
   if (outline && Array.isArray(outline) && outline.length >= 3) {
@@ -23,7 +24,7 @@ export function drawBoardSoldermask(
     })
 
     ctx.beginPath()
-    drawPolygonPath(ctx, canvasPoints)
+    drawPolygonPath({ ctx, points: canvasPoints })
     ctx.fillStyle = soldermaskColor
     ctx.fill()
   } else if (width !== undefined && height !== undefined && center) {

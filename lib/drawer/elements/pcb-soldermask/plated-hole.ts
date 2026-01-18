@@ -2,24 +2,29 @@ import type { PcbPlatedHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
-import {
-  drawPillPath,
-  drawPolygonPath,
-  drawRoundedRectPath,
-} from "../helper-functions/draw-paths"
+import { drawPillPath } from "../helper-functions/draw-pill"
+import { drawPolygonPath } from "../helper-functions/draw-polygon"
+import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { offsetPolygonPoints } from "../soldermask-margin"
-
 /**
  * Process soldermask for a plated hole.
  */
-export function processPlatedHoleSoldermask(
-  ctx: CanvasContext,
-  hole: PcbPlatedHole,
-  realToCanvasMat: Matrix,
-  colorMap: PcbColorMap,
-  soldermaskOverCopperColor: string,
-  layer: "top" | "bottom",
-): void {
+export function processPlatedHoleSoldermask(params: {
+  ctx: CanvasContext
+  hole: PcbPlatedHole
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+  soldermaskOverCopperColor: string
+  layer: "top" | "bottom"
+}): void {
+  const {
+    ctx,
+    hole,
+    realToCanvasMat,
+    colorMap,
+    soldermaskOverCopperColor,
+    layer,
+  } = params
   // Check if this hole is on the current layer
   if (hole.layers && !hole.layers.includes(layer)) return
 
@@ -30,42 +35,43 @@ export function processPlatedHoleSoldermask(
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire hole copper ring
     ctx.fillStyle = soldermaskOverCopperColor
-    drawPlatedHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   } else if (margin < 0) {
     // Negative margin: draw full copper, then light green ring
     ctx.fillStyle = copperColor
-    drawPlatedHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
-    drawNegativeMarginRingForPlatedHole(
+    drawNegativeMarginRingForPlatedHole({
       ctx,
       hole,
       realToCanvasMat,
       soldermaskOverCopperColor,
       margin,
-    )
+    })
   } else if (margin > 0) {
     // Positive margin: draw substrate for larger area, then copper for hole
     ctx.fillStyle = colorMap.substrate
-    drawPlatedHoleShapePath(ctx, hole, realToCanvasMat, margin)
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
     ctx.fill()
     ctx.fillStyle = copperColor
-    drawPlatedHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   } else {
     // Zero margin: just draw copper for the hole
     ctx.fillStyle = copperColor
-    drawPlatedHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   }
 }
 
-function drawPlatedHoleShapePath(
-  ctx: CanvasContext,
-  hole: PcbPlatedHole,
-  realToCanvasMat: Matrix,
-  margin: number,
-): void {
+function drawPlatedHoleShapePath(params: {
+  ctx: CanvasContext
+  hole: PcbPlatedHole
+  realToCanvasMat: Matrix
+  margin: number
+}): void {
+  const { ctx, hole, realToCanvasMat, margin } = params
   if (hole.shape === "circle") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledRadius =
@@ -105,7 +111,13 @@ function drawPlatedHoleShapePath(
     }
 
     ctx.beginPath()
-    drawPillPath(ctx, 0, 0, scaledWidth, scaledHeight)
+    drawPillPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+    })
     ctx.restore()
   } else if (
     hole.shape === "circular_hole_with_rect_pad" ||
@@ -120,7 +132,14 @@ function drawPlatedHoleShapePath(
       (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
-    drawRoundedRectPath(ctx, cx, cy, scaledWidth, scaledHeight, scaledRadius)
+    drawRoundedRectPath({
+      ctx,
+      cx,
+      cy,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: scaledRadius,
+    })
   } else if (hole.shape === "rotated_pill_hole_with_rect_pad") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth =
@@ -137,7 +156,14 @@ function drawPlatedHoleShapePath(
     }
 
     ctx.beginPath()
-    drawRoundedRectPath(ctx, 0, 0, scaledWidth, scaledHeight, scaledRadius)
+    drawRoundedRectPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: scaledRadius,
+    })
     ctx.restore()
   } else if (
     hole.shape === "hole_with_polygon_pad" &&
@@ -158,17 +184,19 @@ function drawPlatedHoleShapePath(
     })
 
     ctx.beginPath()
-    drawPolygonPath(ctx, canvasPoints)
+    drawPolygonPath({ ctx, points: canvasPoints })
   }
 }
 
-function drawNegativeMarginRingForPlatedHole(
-  ctx: CanvasContext,
-  hole: PcbPlatedHole,
-  realToCanvasMat: Matrix,
-  soldermaskOverCopperColor: string,
-  margin: number,
-): void {
+function drawNegativeMarginRingForPlatedHole(params: {
+  ctx: CanvasContext
+  hole: PcbPlatedHole
+  realToCanvasMat: Matrix
+  soldermaskOverCopperColor: string
+  margin: number
+}): void {
+  const { ctx, hole, realToCanvasMat, soldermaskOverCopperColor, margin } =
+    params
   const thickness = Math.abs(margin)
 
   ctx.fillStyle = soldermaskOverCopperColor
@@ -223,12 +251,24 @@ function drawNegativeMarginRingForPlatedHole(
     }
 
     ctx.beginPath()
-    drawPillPath(ctx, 0, 0, scaledWidth, scaledHeight)
+    drawPillPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+    })
 
     const innerWidth = scaledWidth - scaledThickness * 2
     const innerHeight = scaledHeight - scaledThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
-      drawPillPath(ctx, 0, 0, innerWidth, innerHeight)
+      drawPillPath({
+        ctx,
+        cx: 0,
+        cy: 0,
+        width: innerWidth,
+        height: innerHeight,
+      })
     }
 
     ctx.fill("evenodd")
@@ -257,13 +297,27 @@ function drawNegativeMarginRingForPlatedHole(
       : 0
 
     ctx.beginPath()
-    drawRoundedRectPath(ctx, 0, 0, scaledWidth, scaledHeight, outerRadius)
+    drawRoundedRectPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: outerRadius,
+    })
 
     const innerWidth = scaledWidth - scaledThickness * 2
     const innerHeight = scaledHeight - scaledThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
       const innerRadius = Math.max(0, outerRadius - scaledThickness)
-      drawRoundedRectPath(ctx, 0, 0, innerWidth, innerHeight, innerRadius)
+      drawRoundedRectPath({
+        ctx,
+        cx: 0,
+        cy: 0,
+        width: innerWidth,
+        height: innerHeight,
+        radius: innerRadius,
+      })
     }
 
     ctx.fill("evenodd")
@@ -288,7 +342,7 @@ function drawNegativeMarginRingForPlatedHole(
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
-    drawPolygonPath(ctx, canvasPoints)
+    drawPolygonPath({ ctx, points: canvasPoints })
 
     // Draw inner polygon cutout
     const innerPoints = offsetPolygonPoints(padPoints, -thickness)
@@ -297,7 +351,7 @@ function drawNegativeMarginRingForPlatedHole(
         const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
         return { x, y }
       })
-      drawPolygonPath(ctx, innerCanvasPoints)
+      drawPolygonPath({ ctx, points: innerCanvasPoints })
     }
 
     ctx.fill("evenodd")

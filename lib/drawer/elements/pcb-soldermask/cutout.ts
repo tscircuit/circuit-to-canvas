@@ -2,21 +2,19 @@ import type { PcbCutout } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
-import {
-  drawPolygonPath,
-  drawRoundedRectPath,
-} from "../helper-functions/draw-paths"
-
+import { drawPolygonPath } from "../helper-functions/draw-polygon"
+import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 /**
  * Process soldermask for a board cutout.
  * Cutouts go through the entire board, so they cut through soldermask too.
  */
-export function processCutoutSoldermask(
-  ctx: CanvasContext,
-  cutout: PcbCutout,
-  realToCanvasMat: Matrix,
-  colorMap: PcbColorMap,
-): void {
+export function processCutoutSoldermask(params: {
+  ctx: CanvasContext
+  cutout: PcbCutout
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+}): void {
+  const { ctx, cutout, realToCanvasMat, colorMap } = params
   // Cutouts go through the entire board, so they cut through soldermask too
   // Use drill color to indicate the cutout
   ctx.fillStyle = colorMap.drill
@@ -38,7 +36,14 @@ export function processCutoutSoldermask(
     }
 
     ctx.beginPath()
-    drawRoundedRectPath(ctx, 0, 0, scaledWidth, scaledHeight, scaledRadius)
+    drawRoundedRectPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: scaledRadius,
+    })
     ctx.restore()
     ctx.fill()
   } else if (cutout.shape === "circle") {
@@ -63,7 +68,7 @@ export function processCutoutSoldermask(
     })
 
     ctx.beginPath()
-    drawPolygonPath(ctx, canvasPoints)
+    drawPolygonPath({ ctx, points: canvasPoints })
     ctx.fill()
   }
 }

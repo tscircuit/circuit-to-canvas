@@ -2,24 +2,29 @@ import type { PcbSmtPad } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
-import {
-  drawPillPath,
-  drawPolygonPath,
-  drawRoundedRectPath,
-} from "../helper-functions/draw-paths"
+import { drawPillPath } from "../helper-functions/draw-pill"
+import { drawPolygonPath } from "../helper-functions/draw-polygon"
+import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { offsetPolygonPoints } from "../soldermask-margin"
-
 /**
  * Process soldermask for an SMT pad.
  */
-export function processSmtPadSoldermask(
-  ctx: CanvasContext,
-  pad: PcbSmtPad,
-  realToCanvasMat: Matrix,
-  colorMap: PcbColorMap,
-  soldermaskOverCopperColor: string,
-  layer: "top" | "bottom",
-): void {
+export function processSmtPadSoldermask(params: {
+  ctx: CanvasContext
+  pad: PcbSmtPad
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+  soldermaskOverCopperColor: string
+  layer: "top" | "bottom"
+}): void {
+  const {
+    ctx,
+    pad,
+    realToCanvasMat,
+    colorMap,
+    soldermaskOverCopperColor,
+    layer,
+  } = params
   // Only process pads on the current layer
   if (pad.layer !== layer) return
 
@@ -46,15 +51,15 @@ export function processSmtPadSoldermask(
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire pad
     ctx.fillStyle = soldermaskOverCopperColor
-    drawPadShapePath(ctx, pad, realToCanvasMat, 0, 0, 0, 0)
+    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
     ctx.fill()
   } else if (ml < 0 || mr < 0 || mt < 0 || mb < 0) {
     // Negative margin: draw full copper pad, then light green ring
     ctx.fillStyle = copperColor
-    drawPadShapePath(ctx, pad, realToCanvasMat, 0, 0, 0, 0)
+    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
     ctx.fill()
     // Draw light green ring for negative margin
-    drawNegativeMarginRingForPad(
+    drawNegativeMarginRingForPad({
       ctx,
       pad,
       realToCanvasMat,
@@ -63,32 +68,33 @@ export function processSmtPadSoldermask(
       mr,
       mt,
       mb,
-    )
+    })
   } else if (ml > 0 || mr > 0 || mt > 0 || mb > 0) {
     // Positive margin: draw substrate for larger area, then copper for pad
     ctx.fillStyle = colorMap.substrate
-    drawPadShapePath(ctx, pad, realToCanvasMat, ml, mr, mt, mb)
+    drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
     ctx.fill()
     ctx.fillStyle = copperColor
-    drawPadShapePath(ctx, pad, realToCanvasMat, 0, 0, 0, 0)
+    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
     ctx.fill()
   } else {
     // Zero margin: just draw copper for the pad
     ctx.fillStyle = copperColor
-    drawPadShapePath(ctx, pad, realToCanvasMat, 0, 0, 0, 0)
+    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
     ctx.fill()
   }
 }
 
-function drawPadShapePath(
-  ctx: CanvasContext,
-  pad: PcbSmtPad,
-  realToCanvasMat: Matrix,
-  ml: number,
-  mr: number,
-  mt: number,
-  mb: number,
-): void {
+function drawPadShapePath(params: {
+  ctx: CanvasContext
+  pad: PcbSmtPad
+  realToCanvasMat: Matrix
+  ml: number
+  mr: number
+  mt: number
+  mb: number
+}): void {
+  const { ctx, pad, realToCanvasMat, ml, mr, mt, mb } = params
   const rotation =
     pad.shape === "rotated_rect" || pad.shape === "rotated_pill"
       ? (pad.ccw_rotation ?? 0)
@@ -117,7 +123,14 @@ function drawPadShapePath(
     }
 
     ctx.beginPath()
-    drawRoundedRectPath(ctx, 0, 0, scaledWidth, scaledHeight, scaledRadius)
+    drawRoundedRectPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: scaledRadius,
+    })
     ctx.restore()
   } else if (pad.shape === "circle") {
     const avgMargin = (ml + mr + mt + mb) / 4
@@ -142,7 +155,13 @@ function drawPadShapePath(
     }
 
     ctx.beginPath()
-    drawPillPath(ctx, 0, 0, scaledWidth, scaledHeight)
+    drawPillPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+    })
     ctx.restore()
   } else if (pad.shape === "polygon" && pad.points && pad.points.length >= 3) {
     const avgMargin = (ml + mr + mt + mb) / 4
@@ -154,20 +173,30 @@ function drawPadShapePath(
     })
 
     ctx.beginPath()
-    drawPolygonPath(ctx, canvasPoints)
+    drawPolygonPath({ ctx, points: canvasPoints })
   }
 }
 
-function drawNegativeMarginRingForPad(
-  ctx: CanvasContext,
-  pad: PcbSmtPad,
-  realToCanvasMat: Matrix,
-  soldermaskOverCopperColor: string,
-  ml: number,
-  mr: number,
-  mt: number,
-  mb: number,
-): void {
+function drawNegativeMarginRingForPad(params: {
+  ctx: CanvasContext
+  pad: PcbSmtPad
+  realToCanvasMat: Matrix
+  soldermaskOverCopperColor: string
+  ml: number
+  mr: number
+  mt: number
+  mb: number
+}): void {
+  const {
+    ctx,
+    pad,
+    realToCanvasMat,
+    soldermaskOverCopperColor,
+    ml,
+    mr,
+    mt,
+    mb,
+  } = params
   const rotation =
     pad.shape === "rotated_rect" || pad.shape === "rotated_pill"
       ? (pad.ccw_rotation ?? 0)
@@ -200,7 +229,14 @@ function drawNegativeMarginRingForPad(
 
     // Draw outer rectangle (full pad size)
     ctx.beginPath()
-    drawRoundedRectPath(ctx, 0, 0, scaledWidth, scaledHeight, scaledRadius)
+    drawRoundedRectPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: scaledRadius,
+    })
 
     // Create inner cutout
     const innerWidth = scaledWidth - scaledThicknessL - scaledThicknessR
@@ -218,14 +254,14 @@ function drawNegativeMarginRingForPad(
     )
 
     if (innerWidth > 0 && innerHeight > 0) {
-      drawRoundedRectPath(
+      drawRoundedRectPath({
         ctx,
-        innerOffsetX,
-        innerOffsetY,
-        innerWidth,
-        innerHeight,
-        innerRadius,
-      )
+        cx: innerOffsetX,
+        cy: innerOffsetY,
+        width: innerWidth,
+        height: innerHeight,
+        radius: innerRadius,
+      })
     }
 
     ctx.fill("evenodd")
@@ -260,13 +296,25 @@ function drawNegativeMarginRingForPad(
 
     // Draw outer pill
     ctx.beginPath()
-    drawPillPath(ctx, 0, 0, scaledWidth, scaledHeight)
+    drawPillPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+    })
 
     // Draw inner pill cutout
     const innerWidth = scaledWidth - scaledThickness * 2
     const innerHeight = scaledHeight - scaledThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
-      drawPillPath(ctx, 0, 0, innerWidth, innerHeight)
+      drawPillPath({
+        ctx,
+        cx: 0,
+        cy: 0,
+        width: innerWidth,
+        height: innerHeight,
+      })
     }
 
     ctx.fill("evenodd")
@@ -283,7 +331,7 @@ function drawNegativeMarginRingForPad(
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
-    drawPolygonPath(ctx, canvasPoints)
+    drawPolygonPath({ ctx, points: canvasPoints })
 
     // Draw inner polygon cutout
     const innerPoints = offsetPolygonPoints(pad.points, -thickness)
@@ -292,7 +340,7 @@ function drawNegativeMarginRingForPad(
         const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
         return { x, y }
       })
-      drawPolygonPath(ctx, innerCanvasPoints)
+      drawPolygonPath({ ctx, points: innerCanvasPoints })
     }
 
     ctx.fill("evenodd")

@@ -7,12 +7,13 @@ import type { CanvasContext, PcbColorMap } from "../../types"
  * Process soldermask for a via.
  * Vias typically have soldermask openings to expose the copper ring.
  */
-export function processViaSoldermask(
-  ctx: CanvasContext,
-  via: PcbVia,
-  realToCanvasMat: Matrix,
-  colorMap: PcbColorMap,
-): void {
+export function processViaSoldermask(params: {
+  ctx: CanvasContext
+  via: PcbVia
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+}): void {
+  const { ctx, via, realToCanvasMat, colorMap } = params
   // Vias typically have soldermask openings to expose the copper ring
   // Draw substrate color to simulate the cutout
   const [cx, cy] = applyToPoint(realToCanvasMat, [via.x, via.y])

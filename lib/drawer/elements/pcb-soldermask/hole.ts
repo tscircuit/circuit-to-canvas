@@ -2,50 +2,51 @@ import type { PcbHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
-import { drawPillPath } from "../helper-functions/draw-paths"
-
+import { drawPillPath } from "../helper-functions/draw-pill"
 /**
  * Process soldermask for a non-plated hole.
  */
-export function processHoleSoldermask(
-  ctx: CanvasContext,
-  hole: PcbHole,
-  realToCanvasMat: Matrix,
-  colorMap: PcbColorMap,
-  soldermaskOverCopperColor: string,
-): void {
+export function processHoleSoldermask(params: {
+  ctx: CanvasContext
+  hole: PcbHole
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+  soldermaskOverCopperColor: string
+}): void {
+  const { ctx, hole, realToCanvasMat, colorMap, soldermaskOverCopperColor } =
+    params
   const isCoveredWithSoldermask = hole.is_covered_with_solder_mask === true
   const margin = hole.soldermask_margin ?? 0
 
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire hole
     ctx.fillStyle = soldermaskOverCopperColor
-    drawHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   } else if (margin < 0) {
     // Negative margin: draw drill color for hole, then light green ring
     ctx.fillStyle = colorMap.drill
-    drawHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
-    drawNegativeMarginRingForHole(
+    drawNegativeMarginRingForHole({
       ctx,
       hole,
       realToCanvasMat,
       soldermaskOverCopperColor,
       margin,
-    )
+    })
   } else if (margin > 0) {
     // Positive margin: draw substrate for larger area, then drill for hole
     ctx.fillStyle = colorMap.substrate
-    drawHoleShapePath(ctx, hole, realToCanvasMat, margin)
+    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin })
     ctx.fill()
     ctx.fillStyle = colorMap.drill
-    drawHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   } else {
     // Zero margin: just draw drill color for the hole
     ctx.fillStyle = colorMap.drill
-    drawHoleShapePath(ctx, hole, realToCanvasMat, 0)
+    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   }
 }
@@ -57,12 +58,13 @@ function getHoleRotation(hole: PcbHole): number {
   return 0
 }
 
-function drawHoleShapePath(
-  ctx: CanvasContext,
-  hole: PcbHole,
-  realToCanvasMat: Matrix,
-  margin: number,
-): void {
+function drawHoleShapePath(params: {
+  ctx: CanvasContext
+  hole: PcbHole
+  realToCanvasMat: Matrix
+  margin: number
+}): void {
+  const { ctx, hole, realToCanvasMat, margin } = params
   const rotation = getHoleRotation(hole)
 
   if (hole.hole_shape === "circle") {
@@ -136,18 +138,26 @@ function drawHoleShapePath(
     }
 
     ctx.beginPath()
-    drawPillPath(ctx, 0, 0, scaledWidth, scaledHeight)
+    drawPillPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+    })
     ctx.restore()
   }
 }
 
-function drawNegativeMarginRingForHole(
-  ctx: CanvasContext,
-  hole: PcbHole,
-  realToCanvasMat: Matrix,
-  soldermaskOverCopperColor: string,
-  margin: number,
-): void {
+function drawNegativeMarginRingForHole(params: {
+  ctx: CanvasContext
+  hole: PcbHole
+  realToCanvasMat: Matrix
+  soldermaskOverCopperColor: string
+  margin: number
+}): void {
+  const { ctx, hole, realToCanvasMat, soldermaskOverCopperColor, margin } =
+    params
   const thickness = Math.abs(margin)
   const rotation = getHoleRotation(hole)
 
@@ -242,12 +252,24 @@ function drawNegativeMarginRingForHole(
     }
 
     ctx.beginPath()
-    drawPillPath(ctx, 0, 0, scaledWidth, scaledHeight)
+    drawPillPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+    })
 
     const innerWidth = scaledWidth - scaledThickness * 2
     const innerHeight = scaledHeight - scaledThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
-      drawPillPath(ctx, 0, 0, innerWidth, innerHeight)
+      drawPillPath({
+        ctx,
+        cx: 0,
+        cy: 0,
+        width: innerWidth,
+        height: innerHeight,
+      })
     }
 
     ctx.fill("evenodd")
