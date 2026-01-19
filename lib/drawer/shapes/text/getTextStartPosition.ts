@@ -14,7 +14,11 @@ export function getTextStartPosition(
   let y = 0
 
   // Horizontal alignment
-  if (alignment === "center") {
+  if (
+    alignment === "center" ||
+    alignment === "top_center" ||
+    alignment === "bottom_center"
+  ) {
     x = -totalWidth / 2
   } else if (
     alignment === "top_left" ||

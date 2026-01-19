@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
+import type { AnyCircuitElement } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
 test("draw smt pads with positive and negative soldermask margins", async () => {
@@ -10,13 +11,16 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, 800, 600)
 
-  const circuit: any = [
+  const circuit: AnyCircuitElement[] = [
     {
       type: "pcb_board",
       pcb_board_id: "board0",
       center: { x: 0, y: 0 },
       width: 14,
       height: 10,
+      thickness: 1.6,
+      num_layers: 2,
+      material: "fr4",
     },
     // Rectangle with positive margin (mask extends beyond pad)
     {
@@ -94,62 +98,74 @@ test("draw smt pads with positive and negative soldermask margins", async () => 
     {
       type: "pcb_silkscreen_text",
       pcb_silkscreen_text_id: "text_rect_pos",
+      pcb_component_id: "comp1",
       layer: "top",
       anchor_position: { x: -4, y: 3.2 },
       anchor_alignment: "center",
       text: "+0.2mm",
       font_size: 0.4,
+      font: "tscircuit2024",
     },
     {
       type: "pcb_silkscreen_text",
       pcb_silkscreen_text_id: "text_circle_pos",
+      pcb_component_id: "comp1",
       layer: "top",
       anchor_position: { x: 0, y: 3.2 },
       anchor_alignment: "center",
       text: "+0.15mm",
       font_size: 0.4,
+      font: "tscircuit2024",
     },
     {
       type: "pcb_silkscreen_text",
       pcb_silkscreen_text_id: "text_pill_pos",
+      pcb_component_id: "comp1",
       layer: "top",
       anchor_position: { x: 4, y: 3.2 },
       anchor_alignment: "center",
       text: "+0.1mm",
       font_size: 0.4,
+      font: "tscircuit2024",
     },
     // Silkscreen labels for negative margin pads (bottom row)
     {
       type: "pcb_silkscreen_text",
       pcb_silkscreen_text_id: "text_rect_neg",
+      pcb_component_id: "comp1",
       layer: "top",
       anchor_position: { x: -4, y: -3.2 },
       anchor_alignment: "center",
       text: "-0.15mm",
       font_size: 0.4,
+      font: "tscircuit2024",
     },
     {
       type: "pcb_silkscreen_text",
       pcb_silkscreen_text_id: "text_circle_neg",
+      pcb_component_id: "comp1",
       layer: "top",
       anchor_position: { x: 0, y: -3.2 },
       anchor_alignment: "center",
       text: "-0.2mm",
       font_size: 0.4,
+      font: "tscircuit2024",
     },
     {
       type: "pcb_silkscreen_text",
       pcb_silkscreen_text_id: "text_pill_neg",
+      pcb_component_id: "comp1",
       layer: "top",
       anchor_position: { x: 4, y: -3.2 },
       anchor_alignment: "center",
       text: "-0.12mm",
       font_size: 0.4,
+      font: "tscircuit2024",
     },
   ]
 
   drawer.setCameraBounds({ minX: -7, maxX: 7, minY: -5, maxY: 5 })
-  drawer.drawElements(circuit)
+  drawer.drawElements(circuit, { drawSoldermask: true })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

@@ -17,12 +17,28 @@ export function drawSoldermaskRingForRect(
   realToCanvasMat: Matrix,
   soldermaskColor: string,
   padColor: string,
+  asymmetricMargins?: {
+    left: number
+    right: number
+    top: number
+    bottom: number
+  },
 ): void {
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
   const scaledWidth = width * Math.abs(realToCanvasMat.a)
   const scaledHeight = height * Math.abs(realToCanvasMat.a)
-  const scaledMargin = Math.abs(margin) * Math.abs(realToCanvasMat.a)
   const scaledRadius = borderRadius * Math.abs(realToCanvasMat.a)
+
+  const ml = asymmetricMargins?.left ?? margin
+  const mr = asymmetricMargins?.right ?? margin
+  const mt = asymmetricMargins?.top ?? margin
+  const mb = asymmetricMargins?.bottom ?? margin
+
+  // Thickness of the soldermask ring (only if negative margin)
+  const scaledThicknessL = Math.max(0, -ml) * Math.abs(realToCanvasMat.a)
+  const scaledThicknessR = Math.max(0, -mr) * Math.abs(realToCanvasMat.a)
+  const scaledThicknessT = Math.max(0, -mt) * Math.abs(realToCanvasMat.a)
+  const scaledThicknessB = Math.max(0, -mb) * Math.abs(realToCanvasMat.a)
 
   ctx.save()
   ctx.translate(cx, cy)
@@ -76,16 +92,31 @@ export function drawSoldermaskRingForRect(
     ctx.globalCompositeOperation = prevCompositeOp || "source-over"
   }
 
-  // Restore pad color in inner rectangle (reduced by margin)
-  const innerWidth = scaledWidth - scaledMargin * 2
-  const innerHeight = scaledHeight - scaledMargin * 2
-  const innerRadius = Math.max(0, scaledRadius - scaledMargin)
+  // Restore pad color in inner rectangle (reduced by margins)
+  const innerWidth = Math.max(
+    0,
+    scaledWidth - (scaledThicknessL + scaledThicknessR),
+  )
+  const innerHeight = Math.max(
+    0,
+    scaledHeight - (scaledThicknessT + scaledThicknessB),
+  )
+  const innerRadius = Math.max(
+    0,
+    scaledRadius -
+      (scaledThicknessL +
+        scaledThicknessR +
+        scaledThicknessT +
+        scaledThicknessB) /
+        4,
+  )
 
   if (innerWidth > 0 && innerHeight > 0) {
     ctx.beginPath()
+    const x = -scaledWidth / 2 + scaledThicknessL
+    const y = -scaledHeight / 2 + scaledThicknessT
+
     if (innerRadius > 0) {
-      const x = -innerWidth / 2
-      const y = -innerHeight / 2
       const r = Math.min(innerRadius, innerWidth / 2, innerHeight / 2)
 
       ctx.moveTo(x + r, y)
@@ -104,7 +135,7 @@ export function drawSoldermaskRingForRect(
       ctx.lineTo(x, y + r)
       ctx.arcTo(x, y, x + r, y, r)
     } else {
-      ctx.rect(-innerWidth / 2, -innerHeight / 2, innerWidth, innerHeight)
+      ctx.rect(x, y, innerWidth, innerHeight)
     }
 
     ctx.fillStyle = padColor
