@@ -4,7 +4,7 @@ import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import type { NinePointAnchor } from "circuit-json"
 import { getAlphabetLayout, type AlphabetLayout } from "./getAlphabetLayout"
-import { getTextStartPosition } from "./getTextStartPosition"
+import { getTextStartPosition, getLineStartX } from "./getTextStartPosition"
 
 const getGlyphLines = (char: string) =>
   lineAlphabet[char] ?? lineAlphabet[char.toUpperCase()]
@@ -15,29 +15,37 @@ export interface StrokeAlphabetTextParams {
   fontSize: number
   startX: number
   startY: number
+  anchorAlignment?: NinePointAnchor
 }
 
-export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
-  const { ctx, text, fontSize, startX, startY } = params
-  const layout = getAlphabetLayout(text, fontSize)
-  const { glyphWidth, letterSpacing, spaceWidth, height, strokeWidth } = layout
+export interface StrokeAlphabetLineParams {
+  ctx: CanvasContext
+  line: string
+  fontSize: number
+  startX: number
+  startY: number
+  layout: AlphabetLayout
+}
+
+export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
+  const { ctx, line, fontSize, startX, startY, layout } = params
+  const { glyphWidth, letterSpacing, spaceWidth, strokeWidth } = layout
+  const height = fontSize
   const topY = startY
-  const characters = Array.from(text)
+  const characters = Array.from(line)
   let cursor = startX + strokeWidth / 2
 
   characters.forEach((char, index) => {
-    const lines = getGlyphLines(char)
+    const glyphLines = getGlyphLines(char)
     const advance = char === " " ? spaceWidth : glyphWidth
 
-    if (lines?.length) {
+    if (glyphLines?.length) {
       ctx.beginPath()
-      for (const line of lines) {
-        // Convert normalized y coordinates to canvas coordinates (inverted for canvas)
-        // In normalized coords: y=0 is bottom, y=1 is top
-        const x1 = cursor + line.x1 * glyphWidth
-        const y1 = topY + (1 - line.y1) * height
-        const x2 = cursor + line.x2 * glyphWidth
-        const y2 = topY + (1 - line.y2) * height
+      for (const glyph of glyphLines) {
+        const x1 = cursor + glyph.x1 * glyphWidth
+        const y1 = topY + (1 - glyph.y1) * height
+        const x2 = cursor + glyph.x2 * glyphWidth
+        const y2 = topY + (1 - glyph.y2) * height
         ctx.moveTo(x1, y1)
         ctx.lineTo(x2, y2)
       }
@@ -48,6 +56,40 @@ export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
     if (index < characters.length - 1) {
       cursor += letterSpacing
     }
+  })
+}
+
+export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
+  const {
+    ctx,
+    text,
+    fontSize,
+    startX,
+    startY,
+    anchorAlignment = "center",
+  } = params
+  const layout = getAlphabetLayout(text, fontSize)
+  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+  lines.forEach((line, lineIndex) => {
+    const lineStartX =
+      startX +
+      getLineStartX({
+        alignment: anchorAlignment,
+        lineWidth: lineWidths[lineIndex]!,
+        maxWidth: width,
+        strokeWidth,
+      })
+    const lineStartY = startY + lineIndex * lineHeight
+
+    strokeAlphabetLine({
+      ctx,
+      line,
+      fontSize,
+      startX: lineStartX,
+      startY: lineStartY,
+      layout,
+    })
   })
 }
 
@@ -96,12 +138,27 @@ export function drawText(params: DrawTextParams): void {
   ctx.lineJoin = "round"
   ctx.strokeStyle = color
 
-  strokeAlphabetText({
-    ctx,
-    text,
-    fontSize: scaledFontSize,
-    startX: startPos.x,
-    startY: startPos.y,
+  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+  lines.forEach((line, lineIndex) => {
+    const lineStartX =
+      startPos.x +
+      getLineStartX({
+        alignment: anchorAlignment,
+        lineWidth: lineWidths[lineIndex]!,
+        maxWidth: width,
+        strokeWidth,
+      })
+    const lineStartY = startPos.y + lineIndex * lineHeight
+
+    strokeAlphabetLine({
+      ctx,
+      line,
+      fontSize: scaledFontSize,
+      startX: lineStartX,
+      startY: lineStartY,
+      layout,
+    })
   })
 
   ctx.restore()

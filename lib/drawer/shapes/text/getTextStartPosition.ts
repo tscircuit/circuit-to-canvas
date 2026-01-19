@@ -32,6 +32,8 @@ export function getTextStartPosition(
     alignment === "center_right"
   ) {
     x = -totalWidth
+  } else if (alignment === "top_center" || alignment === "bottom_center") {
+    x = -totalWidth / 2
   }
 
   // Vertical alignment
@@ -56,4 +58,38 @@ export function getTextStartPosition(
   }
 
   return { x, y }
+}
+
+export interface GetLineStartXParams {
+  alignment: NinePointAnchor
+  lineWidth: number
+  maxWidth: number
+  strokeWidth: number
+}
+
+export function getLineStartX(params: GetLineStartXParams): number {
+  const { alignment, lineWidth, maxWidth, strokeWidth } = params
+  const totalLineWidth = lineWidth + strokeWidth
+  const totalMaxWidth = maxWidth + strokeWidth
+
+  // For left-aligned text, lines start at x=0 (relative to the start position)
+  if (
+    alignment === "top_left" ||
+    alignment === "bottom_left" ||
+    alignment === "center_left"
+  ) {
+    return 0
+  }
+
+  // For right-aligned text, lines end at the same position
+  if (
+    alignment === "top_right" ||
+    alignment === "bottom_right" ||
+    alignment === "center_right"
+  ) {
+    return totalMaxWidth - totalLineWidth
+  }
+
+  // For center-aligned text, center each line
+  return (totalMaxWidth - totalLineWidth) / 2
 }

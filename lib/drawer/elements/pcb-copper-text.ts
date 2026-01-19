@@ -83,6 +83,7 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     fontSize,
     startX: startPos.x,
     startY: startPos.y,
+    anchorAlignment: alignment,
   })
   ctx.restore()
 }

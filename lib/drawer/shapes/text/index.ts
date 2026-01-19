@@ -1,3 +1,7 @@
 export * from "./text"
 export * from "./getAlphabetLayout"
-export * from "./getTextStartPosition"
+export {
+  getTextStartPosition,
+  getLineStartX,
+  type AnchorAlignment,
+} from "./getTextStartPosition"

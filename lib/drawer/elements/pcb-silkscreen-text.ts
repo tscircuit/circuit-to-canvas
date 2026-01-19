@@ -4,8 +4,9 @@ import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import {
   getAlphabetLayout,
-  strokeAlphabetText,
   getTextStartPosition,
+  getLineStartX,
+  strokeAlphabetLine,
   type AnchorAlignment,
 } from "../shapes/text"
 
@@ -65,12 +66,27 @@ export function drawPcbSilkscreenText(
   ctx.lineJoin = "round"
   ctx.strokeStyle = color
 
-  strokeAlphabetText({
-    ctx,
-    text: content,
-    fontSize,
-    startX: startPos.x,
-    startY: startPos.y,
+  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+  lines.forEach((line, lineIndex) => {
+    const lineStartX =
+      startPos.x +
+      getLineStartX({
+        alignment,
+        lineWidth: lineWidths[lineIndex]!,
+        maxWidth: width,
+        strokeWidth,
+      })
+    const lineStartY = startPos.y + lineIndex * lineHeight
+
+    strokeAlphabetLine({
+      ctx,
+      line,
+      fontSize,
+      startX: lineStartX,
+      startY: lineStartY,
+      layout,
+    })
   })
 
   ctx.restore()
