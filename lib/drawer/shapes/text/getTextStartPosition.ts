@@ -14,7 +14,11 @@ export function getTextStartPosition(
   let y = 0
 
   // Horizontal alignment
-  if (alignment === "center") {
+  if (
+    alignment === "center" ||
+    alignment === "top_center" ||
+    alignment === "bottom_center"
+  ) {
     x = -totalWidth / 2
   } else if (
     alignment === "top_left" ||
@@ -31,7 +35,11 @@ export function getTextStartPosition(
   }
 
   // Vertical alignment
-  if (alignment === "center") {
+  if (
+    alignment === "center" ||
+    alignment === "center_left" ||
+    alignment === "center_right"
+  ) {
     y = -totalHeight / 2
   } else if (
     alignment === "top_left" ||
@@ -45,8 +53,6 @@ export function getTextStartPosition(
     alignment === "bottom_center"
   ) {
     y = -totalHeight
-  } else {
-    y = 0
   }
 
   return { x, y }
