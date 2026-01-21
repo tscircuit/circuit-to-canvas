@@ -15,6 +15,7 @@ import type {
   PcbNotePath,
   PcbNoteRect,
   PcbNoteText,
+  PcbPanel,
   PcbPlatedHole,
   PcbRenderLayer,
   PcbSilkscreenCircle,
@@ -171,7 +172,7 @@ export class CircuitToCanvasDrawer {
       | PcbBoard
       | undefined
     const panel = elements.find((el) => el.type === "pcb_panel") as
-      | any // PcbPanel - TODO: import from circuit-json when available
+      | PcbPanel
       | undefined
 
     // Drawing order:
