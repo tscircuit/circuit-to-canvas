@@ -19,6 +19,8 @@ export { drawPcbTrace, type DrawPcbTraceParams } from "./pcb-trace"
 
 export { drawPcbBoard, type DrawPcbBoardParams } from "./pcb-board"
 
+export { drawPcbPanelElement, type DrawPcbPanelParams } from "./pcb-panel"
+
 export {
   drawPcbSilkscreenText,
   type DrawPcbSilkscreenTextParams,

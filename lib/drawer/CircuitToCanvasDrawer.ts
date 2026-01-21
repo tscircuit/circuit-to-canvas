@@ -51,6 +51,7 @@ import { drawPcbNoteLine } from "./elements/pcb-note-line"
 import { drawPcbNotePath } from "./elements/pcb-note-path"
 import { drawPcbNoteRect } from "./elements/pcb-note-rect"
 import { drawPcbNoteText } from "./elements/pcb-note-text"
+import { drawPcbPanelElement } from "./elements/pcb-panel"
 import { drawPcbPlatedHole } from "./elements/pcb-plated-hole"
 import { drawPcbSilkscreenCircle } from "./elements/pcb-silkscreen-circle"
 import { drawPcbSilkscreenLine } from "./elements/pcb-silkscreen-line"
@@ -165,14 +166,18 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    // Find the board element
+    // Find the board or panel element
     const board = elements.find((el) => el.type === "pcb_board") as
       | PcbBoard
       | undefined
+    const panel = elements.find((el) => el.type === "pcb_panel") as
+      | any // PcbPanel - TODO: import from circuit-json when available
+      | undefined
 
     // Drawing order:
-    // 1. Board outline (just the outline stroke, no fill)
-    // 2. Copper elements underneath soldermask (pads, copper text)
+    // 1. Panel outline (outer boundary)
+    // 2. Board outline (inner board)
+    // 3. Copper elements underneath soldermask (pads, copper text)
     // 3. Soldermask (covers everything except openings)
     // 4. Silkscreen (on soldermask, under top copper layers)
     // 5. Copper pour and traces (drawn on top of soldermask and silkscreen)
@@ -180,7 +185,18 @@ export class CircuitToCanvasDrawer {
     // 7. Holes and cutouts (punch through everything)
     // 8. Other annotations
 
-    // Step 1: Draw board outline
+    // Step 1: Draw panel outline (outer boundary)
+    if (panel) {
+      drawPcbPanelElement({
+        ctx: this.ctx,
+        panel,
+        realToCanvasMat: this.realToCanvasMat,
+        colorMap: this.colorMap,
+        drawBoardMaterial: options.drawBoardMaterial ?? false,
+      })
+    }
+
+    // Step 2: Draw board outline (inner board, drawn after panel)
     if (board) {
       drawPcbBoard({
         ctx: this.ctx,
