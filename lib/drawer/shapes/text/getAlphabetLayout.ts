@@ -26,7 +26,7 @@ export function getAlphabetLayout(
   const strokeWidth = Math.max(fontSize * STROKE_WIDTH_RATIO, 0.35)
   const lineHeight = fontSize * LINE_HEIGHT_RATIO
 
-  const lines = text.split("\n")
+  const lines = text.replace(/\\n/g, "\n").split("\n")
   const lineWidths: number[] = []
 
   let maxWidth = 0
