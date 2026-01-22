@@ -28,7 +28,9 @@ export function drawPcbSilkscreenRect(
     center: rect.center,
     width: rect.width,
     height: rect.height,
-    fill: color,
+    fill: rect.is_filled ? color : "transparent",
+    stroke: color,
+    strokeWidth: rect.stroke_width,
     realToCanvasMat,
   })
 }
