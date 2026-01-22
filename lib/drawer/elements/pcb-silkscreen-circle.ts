@@ -27,7 +27,8 @@ export function drawPcbSilkscreenCircle(
     ctx,
     center: circle.center,
     radius: circle.radius,
-    fill: color,
+    stroke: color,
+    strokeWidth: circle.stroke_width,
     realToCanvasMat,
   })
 }
