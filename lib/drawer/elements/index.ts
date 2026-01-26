@@ -15,7 +15,7 @@ export {
   drawSoldermaskRingForOval,
 } from "./soldermask-margin"
 
-export { drawPcbTrace, type DrawPcbTraceParams } from "./pcb-trace"
+export { drawPcbTrace, type DrawPcbTraceParams } from "./pcb-trace/pcb-trace"
 
 export { drawPcbBoard, type DrawPcbBoardParams } from "./pcb-board"
 

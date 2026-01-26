@@ -63,7 +63,7 @@ import { drawPcbSilkscreenRect } from "./elements/pcb-silkscreen-rect"
 import { drawPcbSilkscreenText } from "./elements/pcb-silkscreen-text"
 import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
-import { drawPcbTrace } from "./elements/pcb-trace"
+import { drawPcbTrace } from "./elements/pcb-trace/pcb-trace"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
 import {
