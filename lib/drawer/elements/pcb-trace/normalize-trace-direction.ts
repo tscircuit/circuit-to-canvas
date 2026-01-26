@@ -1,4 +1,5 @@
-export function normalizeVector(
+// Returns a unit-length trace direction; used to keep offsets/join math consistent.
+export function normalizeTraceDirection(
   x: number,
   y: number,
 ): { x: number; y: number } {

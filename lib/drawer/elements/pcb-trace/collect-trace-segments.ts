@@ -1,5 +1,6 @@
 import type { LayerRef, PcbTrace, PcbTraceRoutePointWire } from "circuit-json"
 
+// Splits a trace route into contiguous wire segments by layer.
 export function collectTraceSegments(
   route: PcbTrace["route"],
 ): PcbTraceRoutePointWire[][] {

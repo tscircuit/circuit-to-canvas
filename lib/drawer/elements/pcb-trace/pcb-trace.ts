@@ -1,8 +1,8 @@
 import type { PcbTrace } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../../types"
 import { drawLine } from "../../shapes/line"
 import { drawPolygon } from "../../shapes/polygon"
+import type { CanvasContext, PcbColorMap } from "../../types"
 import { buildTracePolygon } from "./build-trace-polygon"
 import { collectTraceSegments } from "./collect-trace-segments"
 import { hasVariableWidth } from "./has-variable-width"
@@ -15,6 +15,7 @@ export interface DrawPcbTraceParams {
   colorMap: PcbColorMap
 }
 
+// Draws a PCB trace route as lines or a filled polygon when widths vary.
 export function drawPcbTrace(params: DrawPcbTraceParams): void {
   const { ctx, trace, realToCanvasMat, colorMap } = params
 

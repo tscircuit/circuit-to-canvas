@@ -1,7 +1,8 @@
 import type { PcbTraceRoutePointWire } from "circuit-json"
-import { getDirectionAt } from "./get-direction-at"
-import { normalizeVector } from "./normalize-vector"
+import { getTraceDirectionAt } from "./get-trace-direction-at"
+import { normalizeTraceDirection } from "./normalize-trace-direction"
 
+// Builds a filled polygon representing a variable-width trace segment.
 export function buildTracePolygon(
   points: PcbTraceRoutePointWire[],
 ): Array<{ x: number; y: number }> {
@@ -11,8 +12,8 @@ export function buildTracePolygon(
   for (let i = 0; i < points.length; i++) {
     const point = points[i]
     if (!point) continue
-    const dir = getDirectionAt(points, i)
-    const normal = normalizeVector(-dir.y, dir.x)
+    const dir = getTraceDirectionAt(points, i)
+    const normal = normalizeTraceDirection(-dir.y, dir.x)
     const offset = point.width / 2
 
     left.push({
