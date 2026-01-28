@@ -25,11 +25,6 @@ function getRotation(hole: PcbHole): number {
 export function drawPcbHole(params: DrawPcbHoleParams): void {
   const { ctx, hole, realToCanvasMat, colorMap, soldermaskMargin = 0 } = params
 
-  // Skip drawing if the hole is fully covered with soldermask
-  if (hole.is_covered_with_solder_mask === true) {
-    return
-  }
-
   // For negative margins, draw smaller hole (inset by margin amount)
   const holeInset = soldermaskMargin < 0 ? Math.abs(soldermaskMargin) : 0
 
