@@ -179,10 +179,10 @@ export class CircuitToCanvasDrawer {
     // 1. Panel outline (outer boundary)
     // 2. Board outline (inner board)
     // 3. Copper elements underneath soldermask (pads, copper text)
-    // 4. Holes (under soldermask so mask can cover them)
-    // 5. Soldermask (covers everything except openings)
-    // 6. Silkscreen (on soldermask, under top copper layers)
-    // 7. Copper pour and traces (drawn on top of soldermask and silkscreen)
+    // 4. Soldermask (covers everything except openings)
+    // 5. Silkscreen (on soldermask, under top copper layers)
+    // 6. Copper pour and traces (drawn on top of soldermask and silkscreen)
+    // 7. Holes (drill) on top of copper and soldermask
     // 8. Plated holes, vias (copper ring + drill hole on top of soldermask)
     // 9. Cutouts (punch through everything)
     // 10. Other annotations
@@ -233,23 +233,6 @@ export class CircuitToCanvasDrawer {
     }
 
     const drawSoldermask = options.drawSoldermask ?? false
-
-    // Step 3: Draw holes under soldermask
-    for (const element of elements) {
-      if (!shouldDrawElement(element, options)) continue
-
-      if (element.type === "pcb_hole") {
-        drawPcbHole({
-          ctx: this.ctx,
-          hole: element as PcbHole,
-          realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
-          soldermaskMargin: drawSoldermask
-            ? element.soldermask_margin
-            : undefined,
-        })
-      }
-    }
 
     // Step 4: Draw soldermask layer (only if showSoldermask is true)
     if (board) {
@@ -355,7 +338,25 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 7: Draw plated holes, vias (copper ring + drill hole on top of soldermask)
+    // Step 7: Draw holes (drill) on top of copper and soldermask
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_hole") {
+        drawPcbHole({
+          ctx: this.ctx,
+          hole: element as PcbHole,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+          soldermaskMargin: drawSoldermask
+            ? element.soldermask_margin
+            : undefined,
+          drawSoldermask,
+        })
+      }
+    }
+
+    // Step 8: Draw plated holes, vias (copper ring + drill hole on top of soldermask)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
@@ -382,7 +383,7 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 8: Draw cutouts (these punch through everything)
+    // Step 9: Draw cutouts (these punch through everything)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
@@ -396,7 +397,7 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 8: Draw other annotations
+    // Step 10: Draw other annotations
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 

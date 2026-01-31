@@ -12,6 +12,7 @@ export interface DrawPcbHoleParams {
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   soldermaskMargin?: number
+  drawSoldermask?: boolean
 }
 
 // Helper function to safely access ccw_rotation property
@@ -23,7 +24,18 @@ function getRotation(hole: PcbHole): number {
 }
 
 export function drawPcbHole(params: DrawPcbHoleParams): void {
-  const { ctx, hole, realToCanvasMat, colorMap, soldermaskMargin = 0 } = params
+  const {
+    ctx,
+    hole,
+    realToCanvasMat,
+    colorMap,
+    soldermaskMargin = 0,
+    drawSoldermask = false,
+  } = params
+
+  if (drawSoldermask && hole.is_covered_with_solder_mask === true) {
+    return
+  }
 
   // For negative margins, draw smaller hole (inset by margin amount)
   const holeInset = soldermaskMargin < 0 ? Math.abs(soldermaskMargin) : 0
