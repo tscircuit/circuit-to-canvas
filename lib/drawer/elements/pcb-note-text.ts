@@ -10,12 +10,10 @@ export interface DrawPcbNoteTextParams {
   colorMap: PcbColorMap
 }
 
-const DEFAULT_NOTE_TEXT_COLOR = "rgb(89, 148, 220)" // Same color as note rect
-
 export function drawPcbNoteText(params: DrawPcbNoteTextParams): void {
   const { ctx, text, realToCanvasMat, colorMap } = params
 
-  const defaultColor = DEFAULT_NOTE_TEXT_COLOR
+  const defaultColor = colorMap.pcbNote
   const color = text.color ?? defaultColor
   const fontSize = text.font_size ?? 1 // Default to 1mm if not provided
 
