@@ -15,7 +15,7 @@ export function drawPcbNotePath(params: DrawPcbNotePathParams): void {
 
   // Use the color from the path if provided, otherwise use a default color
   // Notes are typically shown in a distinct color
-  const defaultColor = "rgb(89, 148, 220)" // Blue color for notes
+  const defaultColor = colorMap.pcbNote // Blue color for notes
   const color = path.color ?? defaultColor
 
   if (!path.route || path.route.length < 2) return
