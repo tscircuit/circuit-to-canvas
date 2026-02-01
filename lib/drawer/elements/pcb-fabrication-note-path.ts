@@ -17,7 +17,7 @@ export function drawPcbFabricationNotePath(
 
   // Use the color from the path if provided, otherwise use a default color
   // Fabrication notes are typically shown in a distinct color
-  const defaultColor = "rgba(255,255,255,0.5)" // White color for fabrication notes
+  const defaultColor = colorMap.fabricationNote
   const color = path.color ?? defaultColor
 
   if (!path.route || path.route.length < 2) return

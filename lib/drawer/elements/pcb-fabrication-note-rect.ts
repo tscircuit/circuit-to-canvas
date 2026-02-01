@@ -17,7 +17,7 @@ export function drawPcbFabricationNoteRect(
 
   // Use the color from the rect if provided, otherwise use a default color
   // Fabrication notes are typically shown in a distinct color
-  const defaultColor = "rgba(255,255,255,0.5)" // White color for fabrication notes
+  const defaultColor = colorMap.fabricationNote
   const color = rect.color ?? defaultColor
 
   const isFilled = rect.is_filled ?? false

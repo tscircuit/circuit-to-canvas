@@ -10,12 +10,10 @@ export interface DrawPcbFabricationNoteTextParams {
   colorMap: PcbColorMap
 }
 
-const DEFAULT_FABRICATION_NOTE_COLOR = "rgba(255,255,255,0.5)"
-
 function layerToColor(layer: string, colorMap: PcbColorMap): string {
   // For fabrication notes, we use a default color
   // Could be extended to support per-layer colors in the future
-  return DEFAULT_FABRICATION_NOTE_COLOR
+  return colorMap.fabricationNote
 }
 
 export function drawPcbFabricationNoteText(
