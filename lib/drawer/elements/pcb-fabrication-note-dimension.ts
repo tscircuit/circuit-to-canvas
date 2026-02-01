@@ -10,15 +10,12 @@ export interface DrawPcbFabricationNoteDimensionParams {
   colorMap: PcbColorMap
 }
 
-const DEFAULT_FABRICATION_NOTE_COLOR = "rgba(255,255,255,0.5)"
-
 export function drawPcbFabricationNoteDimension(
   params: DrawPcbFabricationNoteDimensionParams,
 ): void {
-  const { ctx, pcbFabricationNoteDimension, realToCanvasMat } = params
+  const { ctx, pcbFabricationNoteDimension, realToCanvasMat, colorMap } = params
 
-  const color =
-    pcbFabricationNoteDimension.color ?? DEFAULT_FABRICATION_NOTE_COLOR
+  const color = pcbFabricationNoteDimension.color ?? colorMap.fabricationNote
 
   drawDimensionLine({
     ctx,
