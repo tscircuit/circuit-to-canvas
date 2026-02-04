@@ -10,6 +10,10 @@ export interface DrawPcbCourtyardRectParams {
   colorMap: PcbColorMap
 }
 
+function layerToCourtyardColor(layer: string, colorMap: PcbColorMap): string {
+  return layer === "bottom" ? colorMap.courtyard.bottom : colorMap.courtyard.top
+}
+
 export function drawPcbCourtyardRect(params: DrawPcbCourtyardRectParams): void {
   const { ctx, rect, realToCanvasMat, colorMap } = params
 
@@ -18,7 +22,7 @@ export function drawPcbCourtyardRect(params: DrawPcbCourtyardRectParams): void {
     center: rect.center,
     width: rect.width,
     height: rect.height,
-    stroke: colorMap.courtyard,
+    stroke: layerToCourtyardColor(rect.layer, colorMap),
     strokeWidth: 0.05, // Default thin line for courtyard info
     realToCanvasMat,
   })

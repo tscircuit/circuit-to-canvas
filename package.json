@@ -17,9 +17,9 @@
     "@tscircuit/math-utils": "^0.0.29",
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
-    "circuit-json": "^0.0.374",
+    "circuit-json": "^0.0.375",
     "circuit-json-to-connectivity-map": "^0.0.23",
-    "circuit-to-svg": "^0.0.323",
+    "circuit-to-svg": "^0.0.324",
     "looks-same": "^10.0.1",
     "schematic-symbols": "^0.0.202",
     "tsup": "^8.5.1"

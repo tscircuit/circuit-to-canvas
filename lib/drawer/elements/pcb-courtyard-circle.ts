@@ -10,6 +10,10 @@ export interface DrawPcbCourtyardCircleParams {
   colorMap: PcbColorMap
 }
 
+function layerToCourtyardColor(layer: string, colorMap: PcbColorMap): string {
+  return layer === "bottom" ? colorMap.courtyard.bottom : colorMap.courtyard.top
+}
+
 export function drawPcbCourtyardCircle(
   params: DrawPcbCourtyardCircleParams,
 ): void {
@@ -19,7 +23,7 @@ export function drawPcbCourtyardCircle(
     ctx,
     center: circle.center,
     radius: circle.radius,
-    stroke: colorMap.courtyard,
+    stroke: layerToCourtyardColor(circle.layer, colorMap),
     strokeWidth: 0.05, // Default thin line for courtyard info
     realToCanvasMat,
   })

@@ -91,7 +91,10 @@ export interface PcbColorMap {
     bottom: string
   }
   substrate: string
-  courtyard: string
+  courtyard: {
+    top: string
+    bottom: string
+  }
   keepout: string
   fabricationNote: string
 }
@@ -126,7 +129,10 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
     bottom: "#5da9e9",
   },
   boardOutline: "rgba(255, 255, 255, 0.5)",
-  courtyard: "#FF00FF",
+  courtyard: {
+    top: "#FF00FF",
+    bottom: "rgb(38, 233, 255)",
+  },
   keepout: "#FF6B6B", // Red color for keepout zones
   fabricationNote: "rgba(255, 255, 255, 0.5)",
 }
