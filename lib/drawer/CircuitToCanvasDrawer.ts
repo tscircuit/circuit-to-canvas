@@ -4,6 +4,7 @@ import type {
   PcbBoard,
   PcbCopperPour,
   PcbCopperText,
+  PcbCourtyardCircle,
   PcbCutout,
   PcbFabricationNoteDimension,
   PcbFabricationNotePath,
@@ -40,6 +41,7 @@ import {
 import { drawPcbBoard } from "./elements/pcb-board"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
+import { drawPcbCourtyardCircle } from "./elements/pcb-courtyard-circle"
 import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbFabricationNoteDimension } from "./elements/pcb-fabrication-note-dimension"
 import { drawPcbFabricationNotePath } from "./elements/pcb-fabrication-note-path"
@@ -486,6 +488,15 @@ export class CircuitToCanvasDrawer {
         drawPcbFabricationNoteDimension({
           ctx: this.ctx,
           pcbFabricationNoteDimension: element as PcbFabricationNoteDimension,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_courtyard_circle") {
+        drawPcbCourtyardCircle({
+          ctx: this.ctx,
+          circle: element as PcbCourtyardCircle,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
         })
