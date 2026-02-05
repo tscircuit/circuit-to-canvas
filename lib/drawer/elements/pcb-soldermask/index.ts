@@ -6,6 +6,7 @@ import { processCutoutSoldermask } from "./cutout"
 import { processHoleSoldermask } from "./hole"
 import { processPlatedHoleSoldermask } from "./plated-hole"
 import { processSmtPadSoldermask } from "./smt-pad"
+import { processTraceSoldermask } from "./trace"
 import { processViaSoldermask } from "./via"
 
 export interface DrawPcbSoldermaskParams {
@@ -56,7 +57,22 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     drawBoardSoldermask({ ctx, board, realToCanvasMat, soldermaskColor })
   }
 
-  // Step 2: Process each element - draw cutouts and light green areas as needed
+  // Step 2: Draw soldermask over traces first so pads can open over them.
+  if (drawSoldermask) {
+    for (const element of elements) {
+      if (element.type !== "pcb_trace") continue
+      processTraceSoldermask({
+        ctx,
+        trace: element,
+        realToCanvasMat,
+        soldermaskOverCopperColor,
+        layer,
+        drawSoldermask,
+      })
+    }
+  }
+
+  // Step 3: Process remaining elements - draw cutouts and openings as needed
   for (const element of elements) {
     processElementSoldermask({
       ctx,
@@ -136,5 +152,7 @@ function processElementSoldermask(params: {
       realToCanvasMat,
       colorMap,
     })
+  } else if (element.type === "pcb_trace") {
+    return
   }
 }

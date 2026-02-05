@@ -332,7 +332,7 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_trace") {
+      if (element.type === "pcb_trace" && (!drawSoldermask || !board)) {
         drawPcbTrace({
           ctx: this.ctx,
           trace: element as PcbTrace,
