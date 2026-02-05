@@ -84,6 +84,8 @@ export interface DrawElementsOptions {
   drawSoldermask?: boolean
   /** Whether to render the board material (substrate fill). Defaults to false. */
   drawBoardMaterial?: boolean
+  /** Minimum on-screen outline stroke width for pcb_board only. */
+  minBoardOutlineStrokePx?: number
 }
 
 interface CanvasLike {
@@ -210,6 +212,7 @@ export class CircuitToCanvasDrawer {
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         drawBoardMaterial: options.drawBoardMaterial ?? false,
+        minBoardOutlineStrokePx: options.minBoardOutlineStrokePx,
       })
     }
 

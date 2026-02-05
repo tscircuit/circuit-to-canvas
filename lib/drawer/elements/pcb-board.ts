@@ -10,10 +10,18 @@ export interface DrawPcbBoardParams {
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   drawBoardMaterial: boolean
+  minBoardOutlineStrokePx?: number
 }
 
 export function drawPcbBoard(params: DrawPcbBoardParams): void {
-  const { ctx, board, realToCanvasMat, colorMap, drawBoardMaterial } = params
+  const {
+    ctx,
+    board,
+    realToCanvasMat,
+    colorMap,
+    drawBoardMaterial,
+    minBoardOutlineStrokePx,
+  } = params
   const { width, height, center, outline } = board
 
   // If the board has a custom outline, draw substrate and outline
@@ -37,6 +45,7 @@ export function drawPcbBoard(params: DrawPcbBoardParams): void {
       strokeWidth: 0.1,
       realToCanvasMat,
       closePath: true,
+      minStrokePx: minBoardOutlineStrokePx,
     })
     return
   }
@@ -72,6 +81,7 @@ export function drawPcbBoard(params: DrawPcbBoardParams): void {
       strokeWidth: 0.1,
       realToCanvasMat,
       closePath: true,
+      minStrokePx: minBoardOutlineStrokePx,
     })
   }
 }

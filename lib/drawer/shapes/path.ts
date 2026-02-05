@@ -8,6 +8,7 @@ export interface DrawPathParams {
   fill?: string
   stroke?: string
   strokeWidth?: number
+  minStrokePx?: number
   realToCanvasMat: Matrix
   closePath?: boolean
 }
@@ -19,6 +20,7 @@ export function drawPath(params: DrawPathParams): void {
     fill,
     stroke,
     strokeWidth = 1,
+    minStrokePx,
     realToCanvasMat,
     closePath = false,
   } = params
@@ -54,8 +56,12 @@ export function drawPath(params: DrawPathParams): void {
 
   if (stroke) {
     const scaledStrokeWidth = strokeWidth * Math.abs(realToCanvasMat.a)
+    const clampedStrokeWidth =
+      minStrokePx === undefined
+        ? scaledStrokeWidth
+        : Math.max(scaledStrokeWidth, minStrokePx)
     ctx.strokeStyle = stroke
-    ctx.lineWidth = scaledStrokeWidth
+    ctx.lineWidth = clampedStrokeWidth
     ctx.stroke()
   }
 }
