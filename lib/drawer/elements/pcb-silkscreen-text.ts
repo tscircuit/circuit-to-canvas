@@ -17,6 +17,8 @@ export interface DrawPcbSilkscreenTextParams {
   colorMap: PcbColorMap
 }
 
+const DEFAULT_PADDING = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 }
+
 function layerToSilkscreenColor(layer: string, colorMap: PcbColorMap): string {
   return layer === "bottom"
     ? colorMap.silkscreen.bottom
@@ -44,8 +46,13 @@ export function drawPcbSilkscreenText(
   const scale = Math.abs(realToCanvasMat.a)
   const fontSize = (text.font_size ?? 1) * scale
   const rotation = text.ccw_rotation ?? 0
+  const padding = {
+    ...DEFAULT_PADDING,
+    ...text.knockout_padding,
+  }
 
   const layout = getAlphabetLayout(content, fontSize)
+  const totalWidth = layout.width + layout.strokeWidth
   const alignment = mapAnchorAlignment(text.anchor_alignment)
   const startPos = getTextStartPosition(alignment, layout)
 
@@ -64,7 +71,23 @@ export function drawPcbSilkscreenText(
   ctx.lineWidth = layout.strokeWidth
   ctx.lineCap = "round"
   ctx.lineJoin = "round"
-  ctx.strokeStyle = color
+
+  if (text.is_knockout) {
+    const paddingLeft = padding.left * scale
+    const paddingRight = padding.right * scale
+    const paddingTop = padding.top * scale
+    const paddingBottom = padding.bottom * scale
+    const rectX = startPos.x - paddingLeft * 4
+    const rectY = startPos.y - paddingTop * 4
+    const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
+    const rectHeight =
+      layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
+
+    ctx.fillStyle = color
+    ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
+  } else {
+    ctx.strokeStyle = color
+  }
 
   const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
 
