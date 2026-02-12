@@ -13,18 +13,9 @@ export function processTraceSoldermask(params: {
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
-  drawSoldermask: boolean
 }): void {
-  const {
-    ctx,
-    trace,
-    realToCanvasMat,
-    soldermaskOverCopperColor,
-    layer,
-    drawSoldermask,
-  } = params
-
-  if (!drawSoldermask) return
+  const { ctx, trace, realToCanvasMat, soldermaskOverCopperColor, layer } =
+    params
   if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2) {
     return
   }

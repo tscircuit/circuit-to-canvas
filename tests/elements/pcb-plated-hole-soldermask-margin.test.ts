@@ -217,7 +217,10 @@ test("draw plated holes with positive and negative soldermask margins", async ()
   ]
 
   drawer.setCameraBounds({ minX: -8, maxX: 8, minY: -6.5, maxY: 6.5 })
-  drawer.drawElements(circuit, { drawSoldermask: true })
+  drawer.drawElements(circuit, {
+    drawSoldermask: true,
+    drawBoardMaterial: true,
+  })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

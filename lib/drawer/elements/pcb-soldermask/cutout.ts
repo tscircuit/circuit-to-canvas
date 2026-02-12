@@ -4,6 +4,7 @@ import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
+import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
  * Process soldermask for a board cutout.
  * Cutouts go through the entire board, so they cut through soldermask too.
@@ -45,7 +46,7 @@ export function processCutoutSoldermask(params: {
       radius: scaledRadius,
     })
     ctx.restore()
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   } else if (cutout.shape === "circle") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [
       cutout.center?.x ?? 0,
@@ -56,7 +57,7 @@ export function processCutoutSoldermask(params: {
     ctx.beginPath()
     ctx.arc(cx, cy, scaledRadius, 0, Math.PI * 2)
     ctx.closePath()
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   } else if (
     cutout.shape === "polygon" &&
     cutout.points &&
@@ -69,6 +70,6 @@ export function processCutoutSoldermask(params: {
 
     ctx.beginPath()
     drawPolygonPath({ ctx, points: canvasPoints })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   }
 }

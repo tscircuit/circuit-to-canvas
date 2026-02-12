@@ -1,11 +1,12 @@
 import type { PcbPlatedHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
-import type { CanvasContext, PcbColorMap } from "../../types"
+import type { CanvasContext } from "../../types"
 import { drawPillPath } from "../helper-functions/draw-pill"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { offsetPolygonPoints } from "../soldermask-margin"
+import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
  * Process soldermask for a plated hole.
  */
@@ -13,29 +14,16 @@ export function processPlatedHoleSoldermask(params: {
   ctx: CanvasContext
   hole: PcbPlatedHole
   realToCanvasMat: Matrix
-  colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
-  drawSoldermask: boolean
 }): void {
-  const {
-    ctx,
-    hole,
-    realToCanvasMat,
-    colorMap,
-    soldermaskOverCopperColor,
-    layer,
-    drawSoldermask,
-  } = params
+  const { ctx, hole, realToCanvasMat, soldermaskOverCopperColor, layer } =
+    params
   // Check if this hole is on the current layer
   if (hole.layers && !hole.layers.includes(layer)) return
 
-  // When soldermask is disabled, treat all holes as not covered with soldermask
-  // and use zero margin (normal rendering)
-  const isCoveredWithSoldermask =
-    drawSoldermask && hole.is_covered_with_solder_mask === true
-  const margin = drawSoldermask ? (hole.soldermask_margin ?? 0) : 0
-  const copperColor = colorMap.copper.top
+  const isCoveredWithSoldermask = hole.is_covered_with_solder_mask === true
+  const margin = hole.soldermask_margin ?? 0
 
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire hole copper ring
@@ -43,10 +31,10 @@ export function processPlatedHoleSoldermask(params: {
     drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   } else if (margin < 0) {
-    // Negative margin: draw full copper, then light green ring
-    ctx.fillStyle = copperColor
-    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
+    // Negative margin: open the inner copper area, then draw mask-over-copper ring
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
+    cutPathFromSoldermask(ctx)
+
     drawNegativeMarginRingForPlatedHole({
       ctx,
       hole,
@@ -55,18 +43,13 @@ export function processPlatedHoleSoldermask(params: {
       margin,
     })
   } else if (margin > 0) {
-    // Positive margin: draw substrate for larger area, then copper for hole
-    ctx.fillStyle = colorMap.substrate
+    // Positive margin: cut larger opening from the soldermask.
     drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
-    ctx.fill()
-    ctx.fillStyle = copperColor
-    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   } else {
-    // Zero margin: just draw copper for the hole
-    ctx.fillStyle = copperColor
+    // Zero margin: cut pad opening from the soldermask.
     drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   }
 }
 
