@@ -4,7 +4,7 @@ type PatternRepetition = "repeat" | "repeat-x" | "repeat-y" | "no-repeat" | null
 
 interface PatternCapableContext extends CanvasContext {
   createPattern(
-    image: unknown,
+    image: CanvasImageSource,
     repetition: PatternRepetition,
   ): CanvasPattern | null
 }
@@ -29,7 +29,10 @@ export function mergeSoldermaskLayer(
 
   let pattern: CanvasPattern | null = null
   try {
-    pattern = baseCtx.createPattern(soldermaskCtx.canvas, "no-repeat")
+    pattern = baseCtx.createPattern(
+      soldermaskCtx.canvas as CanvasImageSource,
+      "no-repeat",
+    )
   } catch {
     return
   }
