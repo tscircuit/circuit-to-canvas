@@ -2,6 +2,8 @@ import type { AnyCircuitElement } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { drawBoardSoldermask } from "./board"
+import { mergeSoldermaskLayer } from "./merge-soldermask-layer"
+import { createSoldermaskLayerContext } from "./create-soldermask-layer-context"
 import { processCutoutSoldermask } from "./cutout"
 import { processHoleSoldermask } from "./hole"
 import { processPlatedHoleSoldermask } from "./plated-hole"
@@ -85,7 +87,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     })
   }
 
-  compositeSoldermaskLayer(ctx, soldermaskCtx)
+  mergeSoldermaskLayer(ctx, soldermaskCtx)
 }
 
 /**
@@ -148,66 +150,4 @@ function processElementSoldermask(params: {
   } else if (element.type === "pcb_trace") {
     return
   }
-}
-
-function createSoldermaskLayerContext(
-  baseCtx: CanvasContext,
-  width: number,
-  height: number,
-): CanvasContext | null {
-  if (width <= 0 || height <= 0) return null
-
-  const g = globalThis
-  let layerCanvas: HTMLCanvasElement | OffscreenCanvas | null = null
-
-  if (typeof g.OffscreenCanvas === "function") {
-    layerCanvas = new g.OffscreenCanvas(width, height)
-  } else if (typeof g.document?.createElement === "function") {
-    layerCanvas = g.document.createElement("canvas")
-    layerCanvas.width = width
-    layerCanvas.height = height
-  } else if (typeof (baseCtx.canvas as any)?.constructor === "function") {
-    try {
-      const CanvasCtor = (baseCtx.canvas as any).constructor
-      layerCanvas = new CanvasCtor(width, height)
-    } catch {
-      return null
-    }
-  }
-
-  const layerCtx = layerCanvas?.getContext?.("2d")
-  return layerCtx ?? null
-}
-
-function compositeSoldermaskLayer(
-  baseCtx: CanvasContext,
-  soldermaskCtx: CanvasContext,
-): void {
-  if (baseCtx === soldermaskCtx) return
-  if (soldermaskCtx.canvas.width <= 0 || soldermaskCtx.canvas.height <= 0)
-    return
-  const writeCtx = baseCtx as CanvasRenderingContext2D
-  if (typeof writeCtx.createPattern !== "function") {
-    return
-  }
-  let pattern: CanvasPattern | null = null
-  try {
-    pattern = writeCtx.createPattern(
-      soldermaskCtx.canvas as HTMLCanvasElement,
-      "no-repeat",
-    )
-  } catch {
-    return
-  }
-  if (!pattern) return
-  writeCtx.save()
-  writeCtx.globalCompositeOperation = "source-over"
-  writeCtx.fillStyle = pattern
-  writeCtx.fillRect(
-    0,
-    0,
-    soldermaskCtx.canvas.width,
-    soldermaskCtx.canvas.height,
-  )
-  writeCtx.restore()
 }
