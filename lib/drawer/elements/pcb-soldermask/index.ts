@@ -23,19 +23,13 @@ export interface DrawPcbSoldermaskParams {
  * Draws the soldermask layer for the PCB as a unified geometry.
  *
  * The soldermask is drawn as a single unified layer that covers the entire board.
- * Elements "cut through" the soldermask by drawing on top with appropriate colors:
+ * Elements "cut through" the soldermask using destination-out openings and selective overlays:
  *
  * 1. Draw full soldermask covering the board (dark green)
- * 2. For each element that needs a soldermask opening:
- *    - If positive margin: draw substrate color for the larger area, then copper color for pad
- *    - If zero margin: draw copper color for the pad area
- *    - If negative margin: draw copper color for the pad, then light green ring for margin
- * 3. For elements with is_covered_with_soldermask: draw light green soldermask over them
- *
- * Note: This approach draws colors ON TOP of the soldermask rather than using
- * destination-out compositing. This is necessary because some elements (plated holes,
- * vias, non-plated holes) are drawn AFTER the soldermask layer, so cutting through
- * the soldermask wouldn't reveal anything useful underneath.
+ * 2. For each element that needs an opening:
+ *    - If positive/zero margin: subtract opening shape from soldermask
+ *    - If negative margin: subtract inner opening and draw soldermask-over-copper ring
+ * 3. For elements with is_covered_with_soldermask: draw soldermask-over-copper on top
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   const {
@@ -48,47 +42,55 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     drawSoldermask,
   } = params
 
+  if (!drawSoldermask) return
+  if (ctx.canvas.width <= 0 || ctx.canvas.height <= 0) return
+
   const soldermaskColor = colorMap.soldermask[layer] ?? colorMap.soldermask.top
   const soldermaskOverCopperColor =
     colorMap.soldermaskOverCopper[layer] ?? colorMap.soldermaskOverCopper.top
 
-  // Step 1: Draw the full soldermask covering the board (only if enabled)
-  if (drawSoldermask) {
-    drawBoardSoldermask({ ctx, board, realToCanvasMat, soldermaskColor })
-  }
+  const soldermaskCtx =
+    createSoldermaskLayerContext(ctx, ctx.canvas.width, ctx.canvas.height) ??
+    ctx
+
+  // Step 1: Draw the full soldermask covering the board
+  drawBoardSoldermask({
+    ctx: soldermaskCtx,
+    board,
+    realToCanvasMat,
+    soldermaskColor,
+  })
 
   // Step 2: Draw soldermask over traces first so pads can open over them.
-  if (drawSoldermask) {
-    for (const element of elements) {
-      if (element.type !== "pcb_trace") continue
-      processTraceSoldermask({
-        ctx,
-        trace: element,
-        realToCanvasMat,
-        soldermaskOverCopperColor,
-        layer,
-        drawSoldermask,
-      })
-    }
+  for (const element of elements) {
+    if (element.type !== "pcb_trace") continue
+    processTraceSoldermask({
+      ctx: soldermaskCtx,
+      trace: element,
+      realToCanvasMat,
+      soldermaskOverCopperColor,
+      layer,
+    })
   }
 
   // Step 3: Process remaining elements - draw cutouts and openings as needed
   for (const element of elements) {
     processElementSoldermask({
-      ctx,
+      ctx: soldermaskCtx,
       element,
       realToCanvasMat,
-      colorMap,
       soldermaskOverCopperColor,
       layer,
-      drawSoldermask,
+      colorMap,
     })
   }
+
+  compositeSoldermaskLayer(ctx, soldermaskCtx)
 }
 
 /**
  * Process soldermask for an element by drawing on top of the soldermask layer.
- * This simulates cutouts by drawing substrate/copper colors over the soldermask.
+ * This subtracts openings from the soldermask layer and draws selective mask overlays.
  */
 function processElementSoldermask(params: {
   ctx: CanvasContext
@@ -97,7 +99,6 @@ function processElementSoldermask(params: {
   colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
-  drawSoldermask: boolean
 }): void {
   const {
     ctx,
@@ -106,7 +107,6 @@ function processElementSoldermask(params: {
     colorMap,
     soldermaskOverCopperColor,
     layer,
-    drawSoldermask,
   } = params
 
   if (element.type === "pcb_smtpad") {
@@ -114,36 +114,29 @@ function processElementSoldermask(params: {
       ctx,
       pad: element,
       realToCanvasMat,
-      colorMap,
       soldermaskOverCopperColor,
       layer,
-      drawSoldermask,
     })
   } else if (element.type === "pcb_plated_hole") {
     processPlatedHoleSoldermask({
       ctx,
       hole: element,
       realToCanvasMat,
-      colorMap,
       soldermaskOverCopperColor,
       layer,
-      drawSoldermask,
     })
   } else if (element.type === "pcb_hole") {
     processHoleSoldermask({
       ctx,
       hole: element,
       realToCanvasMat,
-      colorMap,
       soldermaskOverCopperColor,
-      drawSoldermask,
     })
   } else if (element.type === "pcb_via") {
     processViaSoldermask({
       ctx,
       via: element,
       realToCanvasMat,
-      colorMap,
     })
   } else if (element.type === "pcb_cutout") {
     processCutoutSoldermask({
@@ -155,4 +148,66 @@ function processElementSoldermask(params: {
   } else if (element.type === "pcb_trace") {
     return
   }
+}
+
+function createSoldermaskLayerContext(
+  baseCtx: CanvasContext,
+  width: number,
+  height: number,
+): CanvasContext | null {
+  if (width <= 0 || height <= 0) return null
+
+  const g = globalThis
+  let layerCanvas: HTMLCanvasElement | OffscreenCanvas | null = null
+
+  if (typeof g.OffscreenCanvas === "function") {
+    layerCanvas = new g.OffscreenCanvas(width, height)
+  } else if (typeof g.document?.createElement === "function") {
+    layerCanvas = g.document.createElement("canvas")
+    layerCanvas.width = width
+    layerCanvas.height = height
+  } else if (typeof (baseCtx.canvas as any)?.constructor === "function") {
+    try {
+      const CanvasCtor = (baseCtx.canvas as any).constructor
+      layerCanvas = new CanvasCtor(width, height)
+    } catch {
+      return null
+    }
+  }
+
+  const layerCtx = layerCanvas?.getContext?.("2d")
+  return layerCtx ?? null
+}
+
+function compositeSoldermaskLayer(
+  baseCtx: CanvasContext,
+  soldermaskCtx: CanvasContext,
+): void {
+  if (baseCtx === soldermaskCtx) return
+  if (soldermaskCtx.canvas.width <= 0 || soldermaskCtx.canvas.height <= 0)
+    return
+  const writeCtx = baseCtx as CanvasRenderingContext2D
+  if (typeof writeCtx.createPattern !== "function") {
+    return
+  }
+  let pattern: CanvasPattern | null = null
+  try {
+    pattern = writeCtx.createPattern(
+      soldermaskCtx.canvas as HTMLCanvasElement,
+      "no-repeat",
+    )
+  } catch {
+    return
+  }
+  if (!pattern) return
+  writeCtx.save()
+  writeCtx.globalCompositeOperation = "source-over"
+  writeCtx.fillStyle = pattern
+  writeCtx.fillRect(
+    0,
+    0,
+    soldermaskCtx.canvas.width,
+    soldermaskCtx.canvas.height,
+  )
+  writeCtx.restore()
 }

@@ -1,11 +1,12 @@
 import type { PcbSmtPad } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
-import type { CanvasContext, PcbColorMap } from "../../types"
+import type { CanvasContext } from "../../types"
 import { drawPillPath } from "../helper-functions/draw-pill"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { offsetPolygonPoints } from "../soldermask-margin"
+import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
  * Process soldermask for an SMT pad.
  */
@@ -13,28 +14,15 @@ export function processSmtPadSoldermask(params: {
   ctx: CanvasContext
   pad: PcbSmtPad
   realToCanvasMat: Matrix
-  colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
-  drawSoldermask: boolean
 }): void {
-  const {
-    ctx,
-    pad,
-    realToCanvasMat,
-    colorMap,
-    soldermaskOverCopperColor,
-    layer,
-    drawSoldermask,
-  } = params
+  const { ctx, pad, realToCanvasMat, soldermaskOverCopperColor, layer } = params
   // Only process pads on the current layer
   if (pad.layer !== layer) return
 
-  // When soldermask is disabled, treat all pads as not covered with soldermask
-  // and use zero margin (normal rendering)
-  const isCoveredWithSoldermask =
-    drawSoldermask && pad.is_covered_with_solder_mask === true
-  const margin = drawSoldermask ? (pad.soldermask_margin ?? 0) : 0
+  const isCoveredWithSoldermask = pad.is_covered_with_solder_mask === true
+  const margin = pad.soldermask_margin ?? 0
 
   // Get asymmetric margins for rect shapes
   let ml = margin
@@ -49,20 +37,16 @@ export function processSmtPadSoldermask(params: {
     mb = pad.soldermask_margin_bottom ?? margin
   }
 
-  const copperColor =
-    colorMap.copper[pad.layer as keyof typeof colorMap.copper] ||
-    colorMap.copper.top
-
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire pad
     ctx.fillStyle = soldermaskOverCopperColor
     drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
     ctx.fill()
   } else if (ml < 0 || mr < 0 || mt < 0 || mb < 0) {
-    // Negative margin: draw full copper pad, then light green ring
-    ctx.fillStyle = copperColor
-    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
-    ctx.fill()
+    // Negative margin: open the inner copper area, then draw mask-over-copper ring
+    drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
+    cutPathFromSoldermask(ctx)
+
     // Draw light green ring for negative margin
     drawNegativeMarginRingForPad({
       ctx,
@@ -75,18 +59,13 @@ export function processSmtPadSoldermask(params: {
       mb,
     })
   } else if (ml > 0 || mr > 0 || mt > 0 || mb > 0) {
-    // Positive margin: draw substrate for larger area, then copper for pad
-    ctx.fillStyle = colorMap.substrate
+    // Positive margin: cut a larger opening from the soldermask.
     drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
-    ctx.fill()
-    ctx.fillStyle = copperColor
-    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   } else {
-    // Zero margin: just draw copper for the pad
-    ctx.fillStyle = copperColor
+    // Zero margin: cut pad opening from the soldermask.
     drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   }
 }
 

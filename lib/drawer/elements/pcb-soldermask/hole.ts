@@ -1,7 +1,7 @@
 import type { PcbHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
-import type { CanvasContext, PcbColorMap } from "../../types"
+import type { CanvasContext } from "../../types"
 import { drawPillPath } from "../helper-functions/draw-pill"
 /**
  * Process soldermask for a non-plated hole.
@@ -10,23 +10,12 @@ export function processHoleSoldermask(params: {
   ctx: CanvasContext
   hole: PcbHole
   realToCanvasMat: Matrix
-  colorMap: PcbColorMap
   soldermaskOverCopperColor: string
-  drawSoldermask: boolean
 }): void {
-  const {
-    ctx,
-    hole,
-    realToCanvasMat,
-    colorMap,
-    soldermaskOverCopperColor,
-    drawSoldermask,
-  } = params
-  // When soldermask is disabled, treat all holes as not covered with soldermask
-  // and use zero margin (normal rendering)
-  const isCoveredWithSoldermask =
-    drawSoldermask && hole.is_covered_with_solder_mask === true
-  const margin = drawSoldermask ? (hole.soldermask_margin ?? 0) : 0
+  const { ctx, hole, realToCanvasMat, soldermaskOverCopperColor } = params
+
+  const isCoveredWithSoldermask = hole.is_covered_with_solder_mask === true
+  const margin = hole.soldermask_margin ?? 0
 
   if (isCoveredWithSoldermask) {
     // Draw light green over the entire hole
@@ -34,10 +23,9 @@ export function processHoleSoldermask(params: {
     drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     ctx.fill()
   } else if (margin < 0) {
-    // Negative margin: draw drill color for hole, then light green ring
-    ctx.fillStyle = colorMap.drill
-    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
+    // Negative margin: cut a smaller opening, then draw light green ring.
+    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin })
+    cutPathFromSoldermask(ctx)
     drawNegativeMarginRingForHole({
       ctx,
       hole,
@@ -46,19 +34,21 @@ export function processHoleSoldermask(params: {
       margin,
     })
   } else if (margin > 0) {
-    // Positive margin: draw substrate for larger area, then drill for hole
-    ctx.fillStyle = colorMap.substrate
+    // Positive margin: cut larger opening from soldermask.
     drawHoleShapePath({ ctx, hole, realToCanvasMat, margin })
-    ctx.fill()
-    ctx.fillStyle = colorMap.drill
-    drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   } else {
-    // Zero margin: just draw drill color for the hole
-    ctx.fillStyle = colorMap.drill
+    // Zero margin: cut hole opening from soldermask.
     drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
+    cutPathFromSoldermask(ctx)
   }
+}
+
+function cutPathFromSoldermask(ctx: CanvasContext): void {
+  ctx.save()
+  ctx.globalCompositeOperation = "destination-out"
+  ctx.fill()
+  ctx.restore()
 }
 
 function getHoleRotation(hole: PcbHole): number {
