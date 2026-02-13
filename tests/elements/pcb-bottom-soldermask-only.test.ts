@@ -99,9 +99,9 @@ test("render bottom soldermask layer with openings", async () => {
   drawer.setCameraBounds({ minX: -9, maxX: 9, minY: -5, maxY: 5 })
   drawer.drawElements(circuit, {
     drawSoldermask: true,
-    drawSoldernasktop: false,
-    drawSoldernaskbottom: true,
-    drawBoardMaterial: false,
+    drawSoldernaskTop: false,
+    drawSoldernaskBottom: true,
+    drawBoardMaterial: true,
   })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(

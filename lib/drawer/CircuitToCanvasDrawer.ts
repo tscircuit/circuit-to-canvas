@@ -83,9 +83,9 @@ export interface DrawElementsOptions {
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
   /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
-  drawSoldernasktop?: boolean
+  drawSoldernaskTop?: boolean
   /** Render bottom soldermask layer when drawSoldermask is enabled. */
-  drawSoldernaskbottom?: boolean
+  drawSoldernaskBottom?: boolean
   /** Whether to render the board material (substrate fill). Defaults to false. */
   drawBoardMaterial?: boolean
   /** Minimum on-screen outline stroke width for pcb_board only. */
@@ -211,28 +211,15 @@ export class CircuitToCanvasDrawer {
     const drawBoardMaterial = options.drawBoardMaterial ?? false
     const drawSoldermask = (options.drawSoldermask ?? false) && !!board
     const hasExplicitSoldermaskLayers =
-      options.drawSoldernasktop !== undefined ||
-      options.drawSoldernaskbottom !== undefined
+      options.drawSoldernaskTop !== undefined ||
+      options.drawSoldernaskBottom !== undefined
     const renderTopSoldermask =
       drawSoldermask &&
-      (options.drawSoldernasktop ?? !hasExplicitSoldermaskLayers)
+      (options.drawSoldernaskTop ?? !hasExplicitSoldermaskLayers)
     const renderBottomSoldermask =
-      drawSoldermask && (options.drawSoldernaskbottom ?? false)
+      drawSoldermask && (options.drawSoldernaskBottom ?? false)
 
-    // Render bottom soldermask under the board material in normal mode.
-    if (renderBottomSoldermask && drawBoardMaterial && board) {
-      drawPcbSoldermask({
-        ctx: this.ctx,
-        board,
-        elements,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-        layer: "bottom",
-        drawSoldermask: true,
-      })
-    }
-
-    // Step 2: Draw board outline/material (inner board, drawn after panel and bottom soldermask)
+    // Step 2: Draw board outline/material (inner board)
     if (board) {
       drawPcbBoard({
         ctx: this.ctx,
@@ -454,9 +441,8 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // For bottom-layer inspection (no board material), draw bottom soldermask after copper
-    // so covered/negative-margin mask-over-copper details remain visible.
-    if (renderBottomSoldermask && !drawBoardMaterial && board) {
+    // Draw bottom soldermask after copper so board material stays underneath mask.
+    if (renderBottomSoldermask && board) {
       drawPcbSoldermask({
         ctx: this.ctx,
         board,
