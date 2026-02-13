@@ -83,9 +83,9 @@ export interface DrawElementsOptions {
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
   /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
-  drawSoldernaskTop?: boolean
+  drawSoldermaskTop?: boolean
   /** Render bottom soldermask layer when drawSoldermask is enabled. */
-  drawSoldernaskBottom?: boolean
+  drawSoldermaskBottom?: boolean
   /** Whether to render the board material (substrate fill). Defaults to false. */
   drawBoardMaterial?: boolean
   /** Minimum on-screen outline stroke width for pcb_board only. */
@@ -211,13 +211,13 @@ export class CircuitToCanvasDrawer {
     const drawBoardMaterial = options.drawBoardMaterial ?? false
     const drawSoldermask = (options.drawSoldermask ?? false) && !!board
     const hasExplicitSoldermaskLayers =
-      options.drawSoldernaskTop !== undefined ||
-      options.drawSoldernaskBottom !== undefined
+      options.drawSoldermaskTop !== undefined ||
+      options.drawSoldermaskBottom !== undefined
     const renderTopSoldermask =
       drawSoldermask &&
-      (options.drawSoldernaskTop ?? !hasExplicitSoldermaskLayers)
+      (options.drawSoldermaskTop ?? !hasExplicitSoldermaskLayers)
     const renderBottomSoldermask =
-      drawSoldermask && (options.drawSoldernaskBottom ?? false)
+      drawSoldermask && (options.drawSoldermaskBottom ?? false)
 
     // Step 2: Draw board outline/material (inner board)
     if (board) {
