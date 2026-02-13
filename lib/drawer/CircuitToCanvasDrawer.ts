@@ -82,6 +82,10 @@ export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
+  /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
+  drawSoldernaskTop?: boolean
+  /** Render bottom soldermask layer when drawSoldermask is enabled. */
+  drawSoldernaskBottom?: boolean
   /** Whether to render the board material (substrate fill). Defaults to false. */
   drawBoardMaterial?: boolean
   /** Minimum on-screen outline stroke width for pcb_board only. */
@@ -204,14 +208,25 @@ export class CircuitToCanvasDrawer {
       })
     }
 
-    // Step 2: Draw board outline (inner board, drawn after panel)
+    const drawBoardMaterial = options.drawBoardMaterial ?? false
+    const drawSoldermask = (options.drawSoldermask ?? false) && !!board
+    const hasExplicitSoldermaskLayers =
+      options.drawSoldernaskTop !== undefined ||
+      options.drawSoldernaskBottom !== undefined
+    const renderTopSoldermask =
+      drawSoldermask &&
+      (options.drawSoldernaskTop ?? !hasExplicitSoldermaskLayers)
+    const renderBottomSoldermask =
+      drawSoldermask && (options.drawSoldernaskBottom ?? false)
+
+    // Step 2: Draw board outline/material (inner board)
     if (board) {
       drawPcbBoard({
         ctx: this.ctx,
         board,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
-        drawBoardMaterial: options.drawBoardMaterial ?? false,
+        drawBoardMaterial,
         minBoardOutlineStrokePx: options.minBoardOutlineStrokePx,
       })
     }
@@ -239,11 +254,8 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    const drawSoldermask = options.drawSoldermask ?? false
-    const hasMaskLayer = drawSoldermask && board
-
     // Draw holes/plated holes/vias before soldermask so mask is rendered on top.
-    if (hasMaskLayer) {
+    if (renderTopSoldermask) {
       for (const element of elements) {
         if (!shouldDrawElement(element, options)) continue
 
@@ -254,7 +266,7 @@ export class CircuitToCanvasDrawer {
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
             soldermaskMargin: element.soldermask_margin,
-            drawSoldermask: true,
+            drawSoldermask: renderTopSoldermask,
           })
         }
 
@@ -265,7 +277,7 @@ export class CircuitToCanvasDrawer {
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
             soldermaskMargin: (element as PcbPlatedHole).soldermask_margin,
-            drawSoldermask: true,
+            drawSoldermask: renderTopSoldermask,
           })
         }
 
@@ -281,7 +293,7 @@ export class CircuitToCanvasDrawer {
     }
 
     // Step 4: Draw soldermask layer (only if showSoldermask is true)
-    if (board && drawSoldermask) {
+    if (board && renderTopSoldermask) {
       drawPcbSoldermask({
         ctx: this.ctx,
         board,
@@ -289,7 +301,7 @@ export class CircuitToCanvasDrawer {
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "top",
-        drawSoldermask,
+        drawSoldermask: true,
       })
     }
 
@@ -374,7 +386,7 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_trace" && !hasMaskLayer) {
+      if (element.type === "pcb_trace" && !renderTopSoldermask) {
         drawPcbTrace({
           ctx: this.ctx,
           trace: element as PcbTrace,
@@ -388,16 +400,16 @@ export class CircuitToCanvasDrawer {
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
-      if (element.type === "pcb_hole" && !hasMaskLayer) {
+      if (element.type === "pcb_hole" && !renderTopSoldermask) {
         drawPcbHole({
           ctx: this.ctx,
           hole: element as PcbHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: hasMaskLayer
+          soldermaskMargin: renderTopSoldermask
             ? element.soldermask_margin
             : undefined,
-          drawSoldermask: hasMaskLayer,
+          drawSoldermask: renderTopSoldermask,
         })
       }
     }
@@ -406,20 +418,20 @@ export class CircuitToCanvasDrawer {
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
-      if (element.type === "pcb_plated_hole" && !hasMaskLayer) {
+      if (element.type === "pcb_plated_hole" && !renderTopSoldermask) {
         drawPcbPlatedHole({
           ctx: this.ctx,
           hole: element as PcbPlatedHole,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          soldermaskMargin: hasMaskLayer
+          soldermaskMargin: renderTopSoldermask
             ? (element as PcbPlatedHole).soldermask_margin
             : undefined,
-          drawSoldermask: hasMaskLayer,
+          drawSoldermask: renderTopSoldermask,
         })
       }
 
-      if (element.type === "pcb_via" && !hasMaskLayer) {
+      if (element.type === "pcb_via" && !renderTopSoldermask) {
         drawPcbVia({
           ctx: this.ctx,
           via: element as PcbVia,
@@ -427,6 +439,19 @@ export class CircuitToCanvasDrawer {
           colorMap: this.colorMap,
         })
       }
+    }
+
+    // Draw bottom soldermask after copper so board material stays underneath mask.
+    if (renderBottomSoldermask && board) {
+      drawPcbSoldermask({
+        ctx: this.ctx,
+        board,
+        elements,
+        realToCanvasMat: this.realToCanvasMat,
+        colorMap: this.colorMap,
+        layer: "bottom",
+        drawSoldermask: true,
+      })
     }
 
     // Step 9: Draw cutouts (these punch through everything)
