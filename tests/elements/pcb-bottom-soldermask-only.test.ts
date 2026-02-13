@@ -99,7 +99,8 @@ test("render bottom soldermask layer with openings", async () => {
   drawer.setCameraBounds({ minX: -9, maxX: 9, minY: -5, maxY: 5 })
   drawer.drawElements(circuit, {
     drawSoldermask: true,
-    soldermaskLayers: "bottom",
+    drawSoldernasktop: false,
+    drawSoldernaskbottom: true,
     drawBoardMaterial: false,
   })
 
