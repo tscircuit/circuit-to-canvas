@@ -43,6 +43,7 @@ import { drawPcbBoard } from "./elements/pcb-board"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
 import { drawPcbCourtyardCircle } from "./elements/pcb-courtyard-circle"
+import { drawPcbCourtyardOutline } from "./elements/pcb-courtyard-outline"
 import { drawPcbCourtyardRect } from "./elements/pcb-courtyard-rect"
 import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbFabricationNoteDimension } from "./elements/pcb-fabrication-note-dimension"
@@ -550,6 +551,15 @@ export class CircuitToCanvasDrawer {
         drawPcbCourtyardRect({
           ctx: this.ctx,
           rect: element as PcbCourtyardRect,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_courtyard_outline") {
+        drawPcbCourtyardOutline({
+          ctx: this.ctx,
+          outline: element as any,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
         })
