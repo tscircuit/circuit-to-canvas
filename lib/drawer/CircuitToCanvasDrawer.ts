@@ -379,6 +379,12 @@ export class CircuitToCanvasDrawer {
       if (!shouldDrawElement(element, options)) continue
 
       if (element.type === "pcb_copper_pour") {
+        const pourLayer = (element as PcbCopperPour).layer
+        const coveredByRenderedSoldermask =
+          (pourLayer === "top" && renderTopSoldermask) ||
+          (pourLayer === "bottom" && renderBottomSoldermask)
+        if (coveredByRenderedSoldermask) continue
+
         drawPcbCopperPour({
           ctx: this.ctx,
           pour: element as PcbCopperPour,
