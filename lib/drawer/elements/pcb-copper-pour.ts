@@ -20,6 +20,12 @@ function layerToColor(layer: string, colorMap: PcbColorMap): string {
   )
 }
 
+function layerToPourColor(layer: string, colorMap: PcbColorMap): string {
+  if (layer === "top") return colorMap.copperPour.top
+  if (layer === "bottom") return colorMap.copperPour.bottom
+  return layerToColor(layer, colorMap)
+}
+
 /**
  * Compute arc center and radius from two points and a bulge value.
  * Bulge is the tangent of 1/4 of the included angle.
@@ -236,13 +242,13 @@ function drawRing(
 export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   const { ctx, pour, realToCanvasMat, colorMap } = params
 
-  const color = layerToColor(pour.layer, colorMap)
+  const color = layerToPourColor(pour.layer, colorMap)
 
   // Save context to apply opacity
   ctx.save()
 
   if (pour.shape === "rect") {
-    // Draw the copper pour rectangle with 50% opacity
+    // Draw the copper pour rectangle
     const [cx, cy] = applyToPoint(realToCanvasMat, [
       pour.center.x,
       pour.center.y,
@@ -259,7 +265,6 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
     ctx.beginPath()
     ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
     ctx.fillStyle = color
-    ctx.globalAlpha = 0.5
     ctx.fill()
     ctx.restore()
     return
@@ -290,7 +295,6 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
 
       ctx.closePath()
       ctx.fillStyle = color
-      ctx.globalAlpha = 0.5
       ctx.fill()
     }
     ctx.restore()
@@ -310,7 +314,6 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
     }
 
     ctx.fillStyle = color
-    ctx.globalAlpha = 0.5
     ctx.fill("evenodd")
     ctx.restore()
     return

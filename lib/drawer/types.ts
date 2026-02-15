@@ -72,6 +72,10 @@ export type CopperColorMap = Record<CopperLayerName, string> & {
 
 export interface PcbColorMap {
   copper: CopperColorMap
+  copperPour: {
+    top: string
+    bottom: string
+  }
   drill: string
   silkscreen: {
     top: string
@@ -109,6 +113,10 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
     inner5: "rgb(138, 43, 226)",
     inner6: "rgb(255, 105, 180)",
     bottom: "rgb(77, 127, 196)",
+  },
+  copperPour: {
+    top: "rgb(230, 95, 95)",
+    bottom: "rgb(122, 162, 222)",
   },
   soldermaskWithCopperUnderneath: {
     top: "rgb(18, 82, 50)",

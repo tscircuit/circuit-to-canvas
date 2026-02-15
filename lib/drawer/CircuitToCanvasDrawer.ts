@@ -130,6 +130,10 @@ export class CircuitToCanvasDrawer {
           ...this.colorMap.copper,
           ...config.colorOverrides.copper,
         },
+        copperPour: {
+          ...this.colorMap.copperPour,
+          ...config.colorOverrides.copperPour,
+        },
         silkscreen: {
           ...this.colorMap.silkscreen,
           ...config.colorOverrides.silkscreen,
@@ -249,6 +253,15 @@ export class CircuitToCanvasDrawer {
         drawPcbCopperText({
           ctx: this.ctx,
           text: element as PcbCopperText,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_copper_pour") {
+        drawPcbCopperPour({
+          ctx: this.ctx,
+          pour: element as PcbCopperPour,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
         })
@@ -378,20 +391,20 @@ export class CircuitToCanvasDrawer {
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
-      if (element.type === "pcb_copper_pour") {
-        const pourLayer = (element as PcbCopperPour).layer
-        const coveredByRenderedSoldermask =
-          (pourLayer === "top" && renderTopSoldermask) ||
-          (pourLayer === "bottom" && renderBottomSoldermask)
-        if (coveredByRenderedSoldermask) continue
+      // if (element.type === "pcb_copper_pour") {
+      //   const pourLayer = (element as PcbCopperPour).layer
+      //   const coveredByRenderedSoldermask =
+      //     (pourLayer === "top" && renderTopSoldermask) ||
+      //     (pourLayer === "bottom" && renderBottomSoldermask)
+      //   if (coveredByRenderedSoldermask) continue
 
-        drawPcbCopperPour({
-          ctx: this.ctx,
-          pour: element as PcbCopperPour,
-          realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
-        })
-      }
+      //   drawPcbCopperPour({
+      //     ctx: this.ctx,
+      //     pour: element as PcbCopperPour,
+      //     realToCanvasMat: this.realToCanvasMat,
+      //     colorMap: this.colorMap,
+      //   })
+      // }
 
       if (element.type === "pcb_trace" && !renderTopSoldermask) {
         drawPcbTrace({
