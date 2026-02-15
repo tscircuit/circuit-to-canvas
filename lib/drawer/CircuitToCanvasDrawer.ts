@@ -236,7 +236,21 @@ export class CircuitToCanvasDrawer {
       })
     }
 
-    // Step 2: Draw copper elements underneath soldermask (pads, copper text)
+    // Step 2: Draw copper pours first so pads render on top of pours.
+    for (const element of elements) {
+      if (!shouldDrawElement(element, options)) continue
+
+      if (element.type === "pcb_copper_pour") {
+        drawPcbCopperPour({
+          ctx: this.ctx,
+          pour: element as PcbCopperPour,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+    }
+
+    // Step 3: Draw copper elements underneath soldermask (pads, copper text)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
@@ -253,15 +267,6 @@ export class CircuitToCanvasDrawer {
         drawPcbCopperText({
           ctx: this.ctx,
           text: element as PcbCopperText,
-          realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
-        })
-      }
-
-      if (element.type === "pcb_copper_pour") {
-        drawPcbCopperPour({
-          ctx: this.ctx,
-          pour: element as PcbCopperPour,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
         })
