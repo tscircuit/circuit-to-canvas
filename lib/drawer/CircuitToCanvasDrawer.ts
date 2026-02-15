@@ -273,8 +273,21 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Draw holes/plated holes/vias before soldermask so mask is rendered on top.
+    // Draw traces before drills, then drills before soldermask so mask is rendered on top.
     if (renderTopSoldermask) {
+      for (const element of elements) {
+        if (!shouldDrawElement(element, options)) continue
+
+        if (element.type === "pcb_trace") {
+          drawPcbTrace({
+            ctx: this.ctx,
+            trace: element as PcbTrace,
+            realToCanvasMat: this.realToCanvasMat,
+            colorMap: this.colorMap,
+          })
+        }
+      }
+
       for (const element of elements) {
         if (!shouldDrawElement(element, options)) continue
 
@@ -395,21 +408,6 @@ export class CircuitToCanvasDrawer {
     // Step 6: Draw copper pour and traces (on top of soldermask and silkscreen)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
-
-      // if (element.type === "pcb_copper_pour") {
-      //   const pourLayer = (element as PcbCopperPour).layer
-      //   const coveredByRenderedSoldermask =
-      //     (pourLayer === "top" && renderTopSoldermask) ||
-      //     (pourLayer === "bottom" && renderBottomSoldermask)
-      //   if (coveredByRenderedSoldermask) continue
-
-      //   drawPcbCopperPour({
-      //     ctx: this.ctx,
-      //     pour: element as PcbCopperPour,
-      //     realToCanvasMat: this.realToCanvasMat,
-      //     colorMap: this.colorMap,
-      //   })
-      // }
 
       if (element.type === "pcb_trace" && !renderTopSoldermask) {
         drawPcbTrace({
