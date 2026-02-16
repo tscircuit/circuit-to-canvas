@@ -118,7 +118,6 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       realToCanvasMat,
       soldermaskOverCopperColor,
       layer,
-      colorMap,
     })
   }
 
@@ -133,18 +132,11 @@ function processElementSoldermask(params: {
   ctx: CanvasContext
   element: AnyCircuitElement
   realToCanvasMat: Matrix
-  colorMap: PcbColorMap
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
 }): void {
-  const {
-    ctx,
-    element,
-    realToCanvasMat,
-    colorMap,
-    soldermaskOverCopperColor,
-    layer,
-  } = params
+  const { ctx, element, realToCanvasMat, soldermaskOverCopperColor, layer } =
+    params
 
   if (element.type === "pcb_smtpad") {
     processSmtPadSoldermask({
@@ -180,7 +172,6 @@ function processElementSoldermask(params: {
       ctx,
       cutout: element,
       realToCanvasMat,
-      colorMap,
     })
   } else if (element.type === "pcb_copper_pour") {
     return
