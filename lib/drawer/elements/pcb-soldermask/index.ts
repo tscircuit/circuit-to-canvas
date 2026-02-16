@@ -1,9 +1,10 @@
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, PcbBoard, PcbPanel } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { drawBoardSoldermask } from "./board"
 import { mergeSoldermaskLayer } from "./merge-soldermask-layer"
 import { createSoldermaskLayerContext } from "./create-soldermask-layer-context"
+import { drawPanelSoldermask } from "./panel"
 import { processCutoutSoldermask } from "./cutout"
 import { processCopperPourSoldermask } from "./copper-pour"
 import { processHoleSoldermask } from "./hole"
@@ -14,7 +15,6 @@ import { processViaSoldermask } from "./via"
 
 export interface DrawPcbSoldermaskParams {
   ctx: CanvasContext
-  board: import("circuit-json").PcbBoard
   elements: AnyCircuitElement[]
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
@@ -35,18 +35,17 @@ export interface DrawPcbSoldermaskParams {
  * 3. For elements with is_covered_with_soldermask: draw soldermask-over-copper on top
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
-  const {
-    ctx,
-    board,
-    elements,
-    realToCanvasMat,
-    colorMap,
-    layer,
-    drawSoldermask,
-  } = params
+  const { ctx, elements, realToCanvasMat, colorMap, layer, drawSoldermask } =
+    params
 
   if (!drawSoldermask) return
   if (ctx.canvas.width <= 0 || ctx.canvas.height <= 0) return
+
+  const boards = elements.filter(
+    (el): el is PcbBoard => el.type === "pcb_board",
+  )
+  const panel = elements.find((el): el is PcbPanel => el.type === "pcb_panel")
+  if (boards.length === 0 && !panel) return
 
   const soldermaskColor = colorMap.soldermask[layer] ?? colorMap.soldermask.top
   const soldermaskOverCopperColor =
@@ -56,13 +55,39 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     createSoldermaskLayerContext(ctx, ctx.canvas.width, ctx.canvas.height) ??
     ctx
 
-  // Step 1: Draw the full soldermask covering the board
-  drawBoardSoldermask({
-    ctx: soldermaskCtx,
-    board,
-    realToCanvasMat,
-    soldermaskColor,
-  })
+  // Step 1: Draw base soldermask surfaces (panel and boards).
+  if (panel) {
+    drawPanelSoldermask({
+      ctx: soldermaskCtx,
+      panel,
+      realToCanvasMat,
+      soldermaskColor,
+    })
+  }
+
+  // Keep panel soldermask only on panel rails when boards are present.
+  if (panel && boards.length > 0) {
+    soldermaskCtx.save()
+    soldermaskCtx.globalCompositeOperation = "destination-out"
+    for (const board of boards) {
+      drawBoardSoldermask({
+        ctx: soldermaskCtx,
+        board,
+        realToCanvasMat,
+        soldermaskColor: "#000",
+      })
+    }
+    soldermaskCtx.restore()
+  }
+
+  for (const board of boards) {
+    drawBoardSoldermask({
+      ctx: soldermaskCtx,
+      board,
+      realToCanvasMat,
+      soldermaskColor,
+    })
+  }
 
   // Step 2: Draw soldermask over traces and pours first so pads can open over them.
   for (const element of elements) {

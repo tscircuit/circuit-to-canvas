@@ -50,3 +50,24 @@ export function drawPcbPanelElement(params: DrawPcbPanelParams): void {
     })
   }
 }
+
+export function drawPcbPanelSoldermask(params: {
+  ctx: CanvasContext
+  panel: PcbPanel
+  realToCanvasMat: Matrix
+  colorMap: PcbColorMap
+  layer: "top" | "bottom"
+}): void {
+  const { ctx, panel, realToCanvasMat, colorMap, layer } = params
+  const { width, height, center } = panel
+  if (width === undefined || height === undefined || !center) return
+
+  drawRect({
+    ctx,
+    center,
+    width,
+    height,
+    fill: colorMap.soldermask[layer],
+    realToCanvasMat,
+  })
+}

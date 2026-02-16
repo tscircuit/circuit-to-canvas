@@ -107,7 +107,11 @@ test("drawPcbPanel with board and components", async () => {
     maxY: bounds.maxY,
   })
 
-  drawer.drawElements(elements, { drawBoardMaterial: false })
+  drawer.drawElements(elements, {
+    drawBoardMaterial: false,
+    drawSoldermask: true,
+    drawSoldermaskTop: true,
+  })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,

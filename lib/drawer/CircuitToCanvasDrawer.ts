@@ -214,15 +214,18 @@ export class CircuitToCanvasDrawer {
     }
 
     const drawBoardMaterial = options.drawBoardMaterial ?? false
-    const drawSoldermask = (options.drawSoldermask ?? false) && !!board
+    const drawSoldermask = options.drawSoldermask ?? false
     const hasExplicitSoldermaskLayers =
       options.drawSoldermaskTop !== undefined ||
       options.drawSoldermaskBottom !== undefined
     const renderTopSoldermask =
       drawSoldermask &&
+      (board !== undefined || panel !== undefined) &&
       (options.drawSoldermaskTop ?? !hasExplicitSoldermaskLayers)
     const renderBottomSoldermask =
-      drawSoldermask && (options.drawSoldermaskBottom ?? false)
+      drawSoldermask &&
+      (board !== undefined || panel !== undefined) &&
+      (options.drawSoldermaskBottom ?? false)
 
     // Step 2: Draw board outline/material (inner board)
     if (board) {
@@ -325,10 +328,9 @@ export class CircuitToCanvasDrawer {
     }
 
     // Step 4: Draw soldermask layer (only if showSoldermask is true)
-    if (board && renderTopSoldermask) {
+    if (renderTopSoldermask) {
       drawPcbSoldermask({
         ctx: this.ctx,
-        board,
         elements,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
@@ -465,10 +467,9 @@ export class CircuitToCanvasDrawer {
     }
 
     // Draw bottom soldermask after copper so board material stays underneath mask.
-    if (renderBottomSoldermask && board) {
+    if (renderBottomSoldermask) {
       drawPcbSoldermask({
         ctx: this.ctx,
-        board,
         elements,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
