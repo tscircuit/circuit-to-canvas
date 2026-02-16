@@ -3,6 +3,7 @@ import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import { drawPillPath } from "../helper-functions/draw-pill"
+import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
  * Process soldermask for a non-plated hole.
  */
@@ -42,13 +43,6 @@ export function processHoleSoldermask(params: {
     drawHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     cutPathFromSoldermask(ctx)
   }
-}
-
-function cutPathFromSoldermask(ctx: CanvasContext): void {
-  ctx.save()
-  ctx.globalCompositeOperation = "destination-out"
-  ctx.fill()
-  ctx.restore()
 }
 
 function getHoleRotation(hole: PcbHole): number {

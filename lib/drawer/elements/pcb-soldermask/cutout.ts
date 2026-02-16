@@ -1,7 +1,7 @@
 import type { PcbCutout } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
-import type { CanvasContext, PcbColorMap } from "../../types"
+import type { CanvasContext } from "../../types"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
@@ -13,12 +13,9 @@ export function processCutoutSoldermask(params: {
   ctx: CanvasContext
   cutout: PcbCutout
   realToCanvasMat: Matrix
-  colorMap: PcbColorMap
 }): void {
-  const { ctx, cutout, realToCanvasMat, colorMap } = params
+  const { ctx, cutout, realToCanvasMat } = params
   // Cutouts go through the entire board, so they cut through soldermask too
-  // Use drill color to indicate the cutout
-  ctx.fillStyle = colorMap.drill
 
   if (cutout.shape === "rect") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [
