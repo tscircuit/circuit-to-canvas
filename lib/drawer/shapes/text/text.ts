@@ -93,6 +93,13 @@ export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
   })
 }
 
+const DEFAULT_KNOCKOUT_PADDING = {
+  left: 0.2,
+  right: 0.2,
+  top: 0.2,
+  bottom: 0.2,
+}
+
 export interface DrawTextParams {
   ctx: CanvasContext
   text: string
@@ -103,6 +110,14 @@ export interface DrawTextParams {
   realToCanvasMat: Matrix
   anchorAlignment: NinePointAnchor
   rotation?: number
+  mirrorX?: boolean
+  knockout?: boolean
+  knockoutPadding?: {
+    top?: number
+    bottom?: number
+    left?: number
+    right?: number
+  }
 }
 
 export function drawText(params: DrawTextParams): void {
@@ -116,6 +131,9 @@ export function drawText(params: DrawTextParams): void {
     realToCanvasMat,
     anchorAlignment,
     rotation = 0,
+    mirrorX = false,
+    knockout = false,
+    knockoutPadding = {},
   } = params
 
   if (!text) return
@@ -133,10 +151,38 @@ export function drawText(params: DrawTextParams): void {
     ctx.rotate(-rotation * (Math.PI / 180))
   }
 
+  // Apply mirroring if needed (e.g. for bottom layer)
+  if (mirrorX) {
+    ctx.scale(-1, 1)
+  }
+
+  // Handle Knockout Background
+  if (knockout) {
+    const padding = { ...DEFAULT_KNOCKOUT_PADDING, ...knockoutPadding }
+    const paddingLeft = padding.left * scale
+    const paddingRight = padding.right * scale
+    const paddingTop = padding.top * scale
+    const paddingBottom = padding.bottom * scale
+    const totalWidth = layout.width + layout.strokeWidth
+
+    // Logic copied from pcb-silkscreen-text.ts/pcb-copper-text.ts
+    // Note: The multiplier *4 for left/top seems specific to the existing implementation
+    const rectX = startPos.x - paddingLeft * 4
+    const rectY = startPos.y - paddingTop * 4
+    const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
+    const rectHeight =
+      layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
+
+    ctx.fillStyle = color
+    ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
+  } else {
+    // Only set strokeStyle if NOT knockout, matching existing behavior
+    ctx.strokeStyle = color
+  }
+
   ctx.lineWidth = layout.strokeWidth
   ctx.lineCap = "round"
   ctx.lineJoin = "round"
-  ctx.strokeStyle = color
 
   const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
 
