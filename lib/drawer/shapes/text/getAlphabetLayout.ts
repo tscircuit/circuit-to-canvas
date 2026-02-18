@@ -1,5 +1,5 @@
 export const GLYPH_WIDTH_RATIO = 0.62
-export const LETTER_SPACING_RATIO = 0.3 // Letter spacing between characters (25% of glyph width)
+export const LETTER_SPACING_RATIO = 0 // Letter spacing between characters (25% of glyph width)
 export const SPACE_WIDTH_RATIO = 1
 export const STROKE_WIDTH_RATIO = 0.13
 export const LINE_HEIGHT_RATIO = 1.2 // Line height as a ratio of font size

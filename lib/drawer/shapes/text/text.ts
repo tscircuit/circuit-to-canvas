@@ -6,8 +6,7 @@ import type { NinePointAnchor } from "circuit-json"
 import { getAlphabetLayout, type AlphabetLayout } from "./getAlphabetLayout"
 import { getTextStartPosition, getLineStartX } from "./getTextStartPosition"
 
-const getGlyphLines = (char: string) =>
-  lineAlphabet[char] ?? lineAlphabet[char.toUpperCase()]
+const getGlyphLines = (char: string) => lineAlphabet[char]
 
 export interface StrokeAlphabetTextParams {
   ctx: CanvasContext
