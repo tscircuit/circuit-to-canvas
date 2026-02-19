@@ -1,12 +1,16 @@
-import { lineAlphabet } from "@tscircuit/alphabet"
+import { glyphLineAlphabet } from "@tscircuit/alphabet"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import type { NinePointAnchor } from "circuit-json"
-import { getAlphabetLayout, type AlphabetLayout } from "./getAlphabetLayout"
+import {
+  getAlphabetAdvanceWidth,
+  getAlphabetLayout,
+  type AlphabetLayout,
+} from "./getAlphabetLayout"
 import { getTextStartPosition, getLineStartX } from "./getTextStartPosition"
 
-const getGlyphLines = (char: string) => lineAlphabet[char]
+const getGlyphLines = (char: string) => glyphLineAlphabet[char]
 
 export interface StrokeAlphabetTextParams {
   ctx: CanvasContext
@@ -28,22 +32,22 @@ export interface StrokeAlphabetLineParams {
 
 export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
   const { ctx, line, fontSize, startX, startY, layout } = params
-  const { glyphWidth, letterSpacing, spaceWidth, strokeWidth } = layout
+  const { strokeWidth } = layout
   const height = fontSize
+  const glyphScaleX = fontSize
   const topY = startY
   const characters = Array.from(line)
   let cursor = startX + strokeWidth / 2
 
   characters.forEach((char, index) => {
     const glyphLines = getGlyphLines(char)
-    const advance = char === " " ? spaceWidth : glyphWidth
 
     if (glyphLines?.length) {
       ctx.beginPath()
       for (const glyph of glyphLines) {
-        const x1 = cursor + glyph.x1 * glyphWidth
+        const x1 = cursor + glyph.x1 * glyphScaleX
         const y1 = topY + (1 - glyph.y1) * height
-        const x2 = cursor + glyph.x2 * glyphWidth
+        const x2 = cursor + glyph.x2 * glyphScaleX
         const y2 = topY + (1 - glyph.y2) * height
         ctx.moveTo(x1, y1)
         ctx.lineTo(x2, y2)
@@ -51,10 +55,7 @@ export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
       ctx.stroke()
     }
 
-    cursor += advance
-    if (index < characters.length - 1) {
-      cursor += letterSpacing
-    }
+    cursor += getAlphabetAdvanceWidth(char, characters[index + 1], fontSize)
   })
 }
 

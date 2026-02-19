@@ -1,8 +1,8 @@
-export const GLYPH_WIDTH_RATIO = 0.62
-export const LETTER_SPACING_RATIO = 0 // Letter spacing between characters (25% of glyph width)
-export const SPACE_WIDTH_RATIO = 1
-export const STROKE_WIDTH_RATIO = 0.13
-export const LINE_HEIGHT_RATIO = 1.2 // Line height as a ratio of font size
+import {
+  glyphAdvanceRatio,
+  kerningRatio,
+  textMetrics,
+} from "@tscircuit/alphabet"
 
 export type AlphabetLayout = {
   width: number
@@ -16,38 +16,55 @@ export type AlphabetLayout = {
   lineWidths: number[]
 }
 
+const getAdvanceRatio = (char: string): number =>
+  glyphAdvanceRatio[char] ??
+  (char === " " ? textMetrics.spaceWidthRatio : textMetrics.glyphWidthRatio)
+
+export function getAlphabetAdvanceWidth(
+  char: string,
+  nextChar: string | undefined,
+  fontSize: number,
+): number {
+  const advanceRatio = getAdvanceRatio(char)
+  const letterSpacingRatio = nextChar ? textMetrics.letterSpacingRatio : 0
+  const kerningAdjustmentRatio = nextChar
+    ? (kerningRatio[char]?.[nextChar] ?? 0)
+    : 0
+
+  return fontSize * (advanceRatio + letterSpacingRatio + kerningAdjustmentRatio)
+}
+
 export function getAlphabetLayout(
   text: string,
   fontSize: number,
 ): AlphabetLayout {
-  const glyphWidth = fontSize * GLYPH_WIDTH_RATIO
-  const letterSpacing = glyphWidth * LETTER_SPACING_RATIO
-  const spaceWidth = glyphWidth * SPACE_WIDTH_RATIO
-  const strokeWidth = Math.max(fontSize * STROKE_WIDTH_RATIO, 0.35)
-  const lineHeight = fontSize * LINE_HEIGHT_RATIO
+  const glyphWidth = fontSize * textMetrics.glyphWidthRatio
+  const letterSpacing = fontSize * textMetrics.letterSpacingRatio
+  const spaceWidth = fontSize * textMetrics.spaceWidthRatio
+  const strokeWidth = fontSize * textMetrics.strokeWidthRatio
+  const lineHeight = fontSize * textMetrics.lineHeightRatio
 
   const lines = text.replace(/\\n/g, "\n").split("\n")
-  const lineWidths: number[] = []
-
-  let maxWidth = 0
-  for (const line of lines) {
+  const lineWidths = lines.map((line) => {
     const characters = Array.from(line)
-    let lineWidth = 0
-    characters.forEach((char, index) => {
-      const advance = char === " " ? spaceWidth : glyphWidth
-      lineWidth += advance
-      if (index < characters.length - 1) lineWidth += letterSpacing
-    })
-    lineWidths.push(lineWidth)
-    if (lineWidth > maxWidth) maxWidth = lineWidth
-  }
+    return characters.reduce(
+      (sum, char, index) =>
+        sum + getAlphabetAdvanceWidth(char, characters[index + 1], fontSize),
+      0,
+    )
+  })
 
-  const totalHeight =
+  const width = lineWidths.reduce(
+    (maxWidth, lineWidth) => Math.max(maxWidth, lineWidth),
+    0,
+  )
+
+  const height =
     lines.length > 1 ? fontSize + (lines.length - 1) * lineHeight : fontSize
 
   return {
-    width: maxWidth,
-    height: totalHeight,
+    width,
+    height,
     glyphWidth,
     letterSpacing,
     spaceWidth,

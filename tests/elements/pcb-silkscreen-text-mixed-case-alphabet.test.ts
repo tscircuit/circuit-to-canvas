@@ -13,18 +13,12 @@ test("draw silkscreen mixed-case alphabet pairs", async () => {
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, canvas.width / SCALE, canvas.height / SCALE)
 
-  const alphabetPairs = Array.from({ length: 26 }, (_, i) => {
-    const upper = String.fromCharCode(65 + i)
-    const lower = String.fromCharCode(97 + i)
-    return `${upper}${lower}`
-  }).join(" ")
-
   const text: PcbSilkscreenText = {
     type: "pcb_silkscreen_text",
     pcb_silkscreen_text_id: "silkscreen-mixed-case-alphabet",
     pcb_component_id: "component1",
     layer: "top",
-    text: alphabetPairs,
+    text: "Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz",
     anchor_position: { x: 550, y: 70 },
     anchor_alignment: "center",
     font: "tscircuit2024",
