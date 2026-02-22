@@ -150,10 +150,6 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       borderRadius: hole.rect_border_radius
         ? Math.max(0, hole.rect_border_radius - copperInset)
         : 0,
-      rotation:
-        "rect_ccw_rotation" in hole && hole.rect_ccw_rotation
-          ? (-hole.rect_ccw_rotation as number)
-          : undefined,
     })
 
     // Draw pill drill hole (with offset)
