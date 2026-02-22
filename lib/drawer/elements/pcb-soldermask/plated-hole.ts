@@ -107,10 +107,32 @@ function drawPlatedHoleShapePath(params: {
       height: scaledHeight,
     })
     ctx.restore()
-  } else if (
-    hole.shape === "circular_hole_with_rect_pad" ||
-    hole.shape === "pill_hole_with_rect_pad"
-  ) {
+  } else if (hole.shape === "circular_hole_with_rect_pad") {
+    const [cx, cy] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
+    const scaledWidth =
+      (hole.rect_pad_width + margin * 2) * Math.abs(realToCanvasMat.a)
+    const scaledHeight =
+      (hole.rect_pad_height + margin * 2) * Math.abs(realToCanvasMat.a)
+    const scaledRadius =
+      (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
+
+    ctx.save()
+    ctx.translate(cx, cy)
+    if (hole.rect_ccw_rotation && hole.rect_ccw_rotation !== 0) {
+      ctx.rotate(-(hole.rect_ccw_rotation * Math.PI) / 180)
+    }
+
+    ctx.beginPath()
+    drawRoundedRectPath({
+      ctx,
+      cx: 0,
+      cy: 0,
+      width: scaledWidth,
+      height: scaledHeight,
+      radius: scaledRadius,
+    })
+    ctx.restore()
+  } else if (hole.shape === "pill_hole_with_rect_pad") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth =
       (hole.rect_pad_width + margin * 2) * Math.abs(realToCanvasMat.a)
@@ -122,12 +144,13 @@ function drawPlatedHoleShapePath(params: {
     ctx.beginPath()
     drawRoundedRectPath({
       ctx,
-      cx,
-      cy,
+      cx: 0,
+      cy: 0,
       width: scaledWidth,
       height: scaledHeight,
       radius: scaledRadius,
     })
+    ctx.restore()
   } else if (hole.shape === "rotated_pill_hole_with_rect_pad") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth =
