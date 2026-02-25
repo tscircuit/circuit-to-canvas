@@ -20,10 +20,9 @@ function layerToColor(layer: string, colorMap: PcbColorMap): string {
   )
 }
 
-function layerToPourColor(layer: string, colorMap: PcbColorMap): string {
-  if (layer === "top") return colorMap.copperPour.top
-  if (layer === "bottom") return colorMap.copperPour.bottom
-  return layerToColor(layer, colorMap)
+function layerToPourOpacity(layer: string): number {
+  if (layer === "top" || layer === "bottom") return 0.5
+  return 1
 }
 
 /**
@@ -242,10 +241,12 @@ function drawRing(
 export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   const { ctx, pour, realToCanvasMat, colorMap } = params
 
-  const color = layerToPourColor(pour.layer, colorMap)
+  const color = layerToColor(pour.layer, colorMap)
+  const opacity = layerToPourOpacity(pour.layer)
 
   // Save context to apply opacity
   ctx.save()
+  ctx.globalAlpha = opacity
 
   if (pour.shape === "rect") {
     // Draw the copper pour rectangle
