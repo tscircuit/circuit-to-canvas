@@ -106,6 +106,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
         realToCanvasMat,
         soldermaskOverCopperColor,
         layer,
+        elements,
       })
     }
   }
