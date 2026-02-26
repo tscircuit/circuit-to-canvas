@@ -101,7 +101,7 @@ function drawPlatedHoleShapePath(params: {
       cy,
       width: scaledWidth,
       height: scaledHeight,
-      rotation: hole.ccw_rotation,
+      ccwRotationDegrees: hole.ccw_rotation,
     })
   } else if (
     hole.shape === "circular_hole_with_rect_pad" ||
@@ -141,7 +141,7 @@ function drawPlatedHoleShapePath(params: {
       width: scaledWidth,
       height: scaledHeight,
       radius: scaledRadius,
-      rotation: hole.rect_ccw_rotation,
+      ccwRotationDegrees: hole.rect_ccw_rotation,
     })
   } else if (
     hole.shape === "hole_with_polygon_pad" &&
@@ -225,7 +225,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
       cy,
       width: scaledWidth,
       height: scaledHeight,
-      rotation: hole.ccw_rotation,
+      ccwRotationDegrees: hole.ccw_rotation,
     })
 
     const innerWidth = scaledWidth - scaledThickness * 2
@@ -237,7 +237,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
         cy,
         width: innerWidth,
         height: innerHeight,
-        rotation: hole.ccw_rotation,
+        ccwRotationDegrees: hole.ccw_rotation,
       })
     }
 
@@ -261,7 +261,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
       width: scaledWidth,
       height: scaledHeight,
       radius: outerRadius,
-      rotation,
+      ccwRotationDegrees: rotation,
     })
 
     const innerWidth = scaledWidth - scaledThickness * 2
@@ -275,7 +275,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
         width: innerWidth,
         height: innerHeight,
         radius: innerRadius,
-        rotation,
+        ccwRotationDegrees: rotation,
       })
     }
     ctx.fill("evenodd")
@@ -332,7 +332,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
       width: scaledWidth,
       height: scaledHeight,
       radius: outerRadius,
-      rotation,
+      ccwRotationDegrees: rotation,
     })
 
     const innerWidth = scaledWidth - scaledThickness * 2
@@ -346,7 +346,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
         width: innerWidth,
         height: innerHeight,
         radius: innerRadius,
-        rotation,
+        ccwRotationDegrees: rotation,
       })
     }
     ctx.fill("evenodd")

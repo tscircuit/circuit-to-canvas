@@ -12,10 +12,10 @@ export function drawPillPath(params: {
   cy: number
   width: number
   height: number
-  rotation?: number // CCW degrees
+  ccwRotationDegrees?: number // CCW degrees
 }): void {
-  const { ctx, cx, cy, width, height, rotation = 0 } = params
-  const rad = -(rotation * Math.PI) / 180
+  const { ctx, cx, cy, width, height, ccwRotationDegrees = 0 } = params
+  const rad = -(ccwRotationDegrees * Math.PI) / 180
   const mat = compose(translate(cx, cy), rotate(rad))
   const p = (dx: number, dy: number) => applyToPoint(mat, { x: dx, y: dy })
 

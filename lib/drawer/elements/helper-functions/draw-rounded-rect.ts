@@ -12,10 +12,13 @@ export function drawRoundedRectPath(params: {
   width: number
   height: number
   radius: number
-  rotation?: number // CCW degrees
+  ccwRotationDegrees?: number // CCW degrees
 }): void {
-  const { ctx, cx, cy, width, height, radius, rotation = 0 } = params
-  const mat = compose(translate(cx, cy), rotate(-(rotation * Math.PI) / 180))
+  const { ctx, cx, cy, width, height, radius, ccwRotationDegrees = 0 } = params
+  const mat = compose(
+    translate(cx, cy),
+    rotate(-(ccwRotationDegrees * Math.PI) / 180),
+  )
   const p = (dx: number, dy: number) => applyToPoint(mat, { x: dx, y: dy })
 
   const x = -width / 2
