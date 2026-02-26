@@ -103,7 +103,6 @@ function drawPlatedHoleShapePath(params: {
       height: scaledHeight,
       rotation: hole.ccw_rotation,
     })
-    ctx.restore()
   } else if (
     hole.shape === "circular_hole_with_rect_pad" ||
     hole.shape === "pill_hole_with_rect_pad"
@@ -366,7 +365,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
     ctx.beginPath()
 
     // Draw outer polygon
-    const canvasPoints = padPoints.map((p: { x: number; y: number }) => {
+    const canvasPoints = padPoints.map((p) => {
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
@@ -375,12 +374,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
     // Draw inner polygon cutout
     const innerPoints = offsetPolygonPoints(padPoints, -thickness)
     if (innerPoints.length >= 3) {
-      const innerCanvasPoints = innerPoints.map(
-        (p: { x: number; y: number }) => {
-          const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
-          return { x, y }
-        },
-      )
+      const innerCanvasPoints = innerPoints.map((p) => {
+        const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
+        return { x, y }
+      })
       drawPolygonPath({ ctx, points: innerCanvasPoints })
     }
 
