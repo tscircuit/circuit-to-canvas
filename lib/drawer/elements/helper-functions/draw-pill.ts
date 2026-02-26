@@ -1,3 +1,4 @@
+import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 
 /**
@@ -11,8 +12,13 @@ export function drawPillPath(params: {
   cy: number
   width: number
   height: number
+  rotation?: number // CCW degrees
 }): void {
-  const { ctx, cx, cy, width, height } = params
+  const { ctx, cx, cy, width, height, rotation = 0 } = params
+  const rad = -(rotation * Math.PI) / 180
+  const mat = compose(translate(cx, cy), rotate(rad))
+  const p = (dx: number, dy: number) => applyToPoint(mat, { x: dx, y: dy })
+
   if (width > height) {
     // Horizontal pill
     const radius = height / 2
@@ -26,11 +32,20 @@ export function drawPillPath(params: {
     // Vertical pill
     const radius = width / 2
     const straightLength = height - width
-    ctx.moveTo(cx + radius, cy - straightLength / 2)
-    ctx.lineTo(cx + radius, cy + straightLength / 2)
-    ctx.arc(cx, cy + straightLength / 2, radius, 0, Math.PI)
-    ctx.lineTo(cx - radius, cy - straightLength / 2)
-    ctx.arc(cx, cy - straightLength / 2, radius, Math.PI, 0)
+
+    const p1 = p(radius, -straightLength / 2)
+    ctx.moveTo(p1.x, p1.y)
+    const p2 = p(radius, straightLength / 2)
+    ctx.lineTo(p2.x, p2.y)
+
+    const c1 = p(0, straightLength / 2)
+    ctx.arc(c1.x, c1.y, radius, 0 + rad, Math.PI + rad)
+
+    const p3 = p(-radius, -straightLength / 2)
+    ctx.lineTo(p3.x, p3.y)
+
+    const c2 = p(0, -straightLength / 2)
+    ctx.arc(c2.x, c2.y, radius, Math.PI + rad, 0 + rad)
   } else {
     // Square dimensions = circle
     ctx.arc(cx, cy, width / 2, 0, Math.PI * 2)
