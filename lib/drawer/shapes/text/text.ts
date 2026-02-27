@@ -160,7 +160,7 @@ export function drawText(params: DrawTextParams): void {
   if (knockout) {
     // Save state before knockout rendering
     ctx.save()
-    
+
     const padding = { ...DEFAULT_KNOCKOUT_PADDING, ...knockoutPadding }
     const paddingLeft = padding.left * scaledFontSize
     const paddingRight = padding.right * scaledFontSize
