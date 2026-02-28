@@ -14,63 +14,79 @@ export function drawRoundedRectPath(params: {
   radius: number
   ccwRotationDegrees?: number
 }): void {
-  const { ctx, cx, cy, width, height, radius, ccwRotationDegrees = 0 } = params
+  const {
+    ctx,
+    cx: centerX,
+    cy: centerY,
+    width,
+    height,
+    radius,
+    ccwRotationDegrees = 0,
+  } = params
 
-  const rotationRad = (-ccwRotationDegrees * Math.PI) / 180
-  const transformMatrix = compose(translate(cx, cy), rotate(rotationRad))
+  const rotationRadians = (-ccwRotationDegrees * Math.PI) / 180
+  const transformMatrix = compose(
+    translate(centerX, centerY),
+    rotate(rotationRadians),
+  )
 
   const halfWidth = width / 2
   const halfHeight = height / 2
-  const roundedRadius = Math.min(radius, halfWidth, halfHeight)
+  const rectCornerRadius = Math.min(radius, halfWidth, halfHeight)
 
-  if (roundedRadius > 0) {
-    const topLeftVertex = applyToPoint(transformMatrix, {
+  if (rectCornerRadius > 0) {
+    const topLeftCornerVertex = applyToPoint(transformMatrix, {
       x: -halfWidth,
       y: -halfHeight,
     })
-    const topRightVertex = applyToPoint(transformMatrix, {
+    const topRightCornerVertex = applyToPoint(transformMatrix, {
       x: halfWidth,
       y: -halfHeight,
     })
-    const bottomRightVertex = applyToPoint(transformMatrix, {
+    const bottomRightCornerVertex = applyToPoint(transformMatrix, {
       x: halfWidth,
       y: halfHeight,
     })
-    const bottomLeftVertex = applyToPoint(transformMatrix, {
+    const bottomLeftCornerVertex = applyToPoint(transformMatrix, {
       x: -halfWidth,
       y: halfHeight,
     })
 
-    // Start at midpoint of left edge to draw smoothly around
-    const startPoint = applyToPoint(transformMatrix, { x: -halfWidth, y: 0 })
-    ctx.moveTo(startPoint.x, startPoint.y)
+    // Start at a midpoint of the left vertical edge to ensure a smooth enclosed path drawing
+    const leftEdgeMidpoint = applyToPoint(transformMatrix, {
+      x: -halfWidth,
+      y: 0,
+    })
+    ctx.moveTo(leftEdgeMidpoint.x, leftEdgeMidpoint.y)
+
+    // Draw the rounded corners and straight edges
     ctx.arcTo(
-      topLeftVertex.x,
-      topLeftVertex.y,
-      topRightVertex.x,
-      topRightVertex.y,
-      roundedRadius,
+      topLeftCornerVertex.x,
+      topLeftCornerVertex.y,
+      topRightCornerVertex.x,
+      topRightCornerVertex.y,
+      rectCornerRadius,
     )
     ctx.arcTo(
-      topRightVertex.x,
-      topRightVertex.y,
-      bottomRightVertex.x,
-      bottomRightVertex.y,
-      roundedRadius,
+      topRightCornerVertex.x,
+      topRightCornerVertex.y,
+      bottomRightCornerVertex.x,
+      bottomRightCornerVertex.y,
+      rectCornerRadius,
     )
     ctx.arcTo(
-      bottomRightVertex.x,
-      bottomRightVertex.y,
-      bottomLeftVertex.x,
-      bottomLeftVertex.y,
-      roundedRadius,
+      bottomRightCornerVertex.x,
+      bottomRightCornerVertex.y,
+      bottomLeftCornerVertex.x,
+      bottomLeftCornerVertex.y,
+      rectCornerRadius,
     )
     ctx.arcTo(
-      bottomLeftVertex.x,
-      bottomLeftVertex.y,
-      topLeftVertex.x,
-      topLeftVertex.y,
-      roundedRadius,
+      bottomLeftCornerVertex.x,
+      bottomLeftCornerVertex.y,
+      topLeftCornerVertex.x,
+      topLeftCornerVertex.y,
+      rectCornerRadius,
     )
   } else {
     const topLeftVertex = applyToPoint(transformMatrix, {

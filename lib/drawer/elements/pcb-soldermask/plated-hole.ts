@@ -182,8 +182,8 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledOuterRadius =
       (hole.outer_diameter / 2) * Math.abs(realToCanvasMat.a)
-    const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const innerRadius = Math.max(0, scaledOuterRadius - scaledThickness)
+    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const innerRadius = Math.max(0, scaledOuterRadius - scaledMarginThickness)
 
     ctx.beginPath()
     ctx.arc(centerX, centerY, scaledOuterRadius, 0, Math.PI * 2)
@@ -196,9 +196,9 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledRadiusX = (hole.outer_width / 2) * Math.abs(realToCanvasMat.a)
     const scaledRadiusY = (hole.outer_height / 2) * Math.abs(realToCanvasMat.a)
-    const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const innerRadiusX = Math.max(0, scaledRadiusX - scaledThickness)
-    const innerRadiusY = Math.max(0, scaledRadiusY - scaledThickness)
+    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const innerRadiusX = Math.max(0, scaledRadiusX - scaledMarginThickness)
+    const innerRadiusY = Math.max(0, scaledRadiusY - scaledMarginThickness)
 
     const rotationRad = -((hole.ccw_rotation ?? 0) * Math.PI) / 180
     ctx.beginPath()
@@ -231,7 +231,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth = hole.outer_width * Math.abs(realToCanvasMat.a)
     const scaledHeight = hole.outer_height * Math.abs(realToCanvasMat.a)
-    const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
     drawPillPath({
@@ -242,8 +242,8 @@ function drawNegativeMarginRingForPlatedHole(params: {
       height: scaledHeight,
       ccwRotationDegrees: hole.ccw_rotation,
     })
-    const innerWidth = scaledWidth - scaledThickness * 2
-    const innerHeight = scaledHeight - scaledThickness * 2
+    const innerWidth = scaledWidth - scaledMarginThickness * 2
+    const innerHeight = scaledHeight - scaledMarginThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
       drawPillPath({
         ctx,
@@ -260,7 +260,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
     const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
-    const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
     const outerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
@@ -275,10 +275,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
       radius: outerRadius,
     })
 
-    const innerWidth = scaledWidth - scaledThickness * 2
-    const innerHeight = scaledHeight - scaledThickness * 2
+    const innerWidth = scaledWidth - scaledMarginThickness * 2
+    const innerHeight = scaledHeight - scaledMarginThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
-      const innerRadius = Math.max(0, outerRadius - scaledThickness)
+      const innerRadius = Math.max(0, outerRadius - scaledMarginThickness)
       drawRoundedRectPath({
         ctx,
         cx: centerX,
@@ -294,7 +294,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
     const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
-    const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
     const outerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
@@ -309,10 +309,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
       radius: outerRadius,
     })
 
-    const innerWidth = scaledWidth - scaledThickness * 2
-    const innerHeight = scaledHeight - scaledThickness * 2
+    const innerWidth = scaledWidth - scaledMarginThickness * 2
+    const innerHeight = scaledHeight - scaledMarginThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
-      const innerRadius = Math.max(0, outerRadius - scaledThickness)
+      const innerRadius = Math.max(0, outerRadius - scaledMarginThickness)
       drawRoundedRectPath({
         ctx,
         cx: centerX,
@@ -328,7 +328,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
     const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
-    const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
     const outerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
@@ -344,10 +344,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
       ccwRotationDegrees: hole.rect_ccw_rotation,
     })
 
-    const innerWidth = scaledWidth - scaledThickness * 2
-    const innerHeight = scaledHeight - scaledThickness * 2
+    const innerWidth = scaledWidth - scaledMarginThickness * 2
+    const innerHeight = scaledHeight - scaledMarginThickness * 2
     if (innerWidth > 0 && innerHeight > 0) {
-      const innerRadius = Math.max(0, outerRadius - scaledThickness)
+      const innerRadius = Math.max(0, outerRadius - scaledMarginThickness)
       drawRoundedRectPath({
         ctx,
         cx: centerX,

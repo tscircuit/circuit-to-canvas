@@ -14,68 +14,78 @@ export function drawPillPath(params: {
   height: number
   ccwRotationDegrees?: number
 }): void {
-  const { ctx, cx, cy, width, height, ccwRotationDegrees = 0 } = params
+  const {
+    ctx,
+    cx: centerX,
+    cy: centerY,
+    width,
+    height,
+    ccwRotationDegrees = 0,
+  } = params
 
-  const rotationRad = (-ccwRotationDegrees * Math.PI) / 180
-  const transformMatrix = compose(translate(cx, cy), rotate(rotationRad))
+  const rotationRadians = (-ccwRotationDegrees * Math.PI) / 180
+  const transformMatrix = compose(
+    translate(centerX, centerY),
+    rotate(rotationRadians),
+  )
 
   if (width > height) {
-    // Horizontal pill
-    const radius = height / 2
-    const halfStraightLength = (width - height) / 2
-    const capCenter1 = applyToPoint(transformMatrix, {
-      x: -halfStraightLength,
+    // Horizontal pill: rectangle with semicircular caps on left and right
+    const semicircleRadius = height / 2
+    const semicircleCenterOffset = (width - height) / 2
+    const leftSemicircleCenter = applyToPoint(transformMatrix, {
+      x: -semicircleCenterOffset,
       y: 0,
     })
-    const capCenter2 = applyToPoint(transformMatrix, {
-      x: halfStraightLength,
+    const rightSemicircleCenter = applyToPoint(transformMatrix, {
+      x: semicircleCenterOffset,
       y: 0,
     })
 
     ctx.arc(
-      capCenter2.x,
-      capCenter2.y,
-      radius,
-      rotationRad - Math.PI / 2,
-      rotationRad + Math.PI / 2,
+      rightSemicircleCenter.x,
+      rightSemicircleCenter.y,
+      semicircleRadius,
+      rotationRadians - Math.PI / 2,
+      rotationRadians + Math.PI / 2,
     )
     ctx.arc(
-      capCenter1.x,
-      capCenter1.y,
-      radius,
-      rotationRad + Math.PI / 2,
-      rotationRad - Math.PI / 2,
+      leftSemicircleCenter.x,
+      leftSemicircleCenter.y,
+      semicircleRadius,
+      rotationRadians + Math.PI / 2,
+      rotationRadians - Math.PI / 2,
     )
   } else if (height > width) {
-    // Vertical pill
-    const radius = width / 2
-    const halfStraightLength = (height - width) / 2
-    const capCenter1 = applyToPoint(transformMatrix, {
+    // Vertical pill: rectangle with semicircular caps on top and bottom
+    const semicircleRadius = width / 2
+    const semicircleCenterOffset = (height - width) / 2
+    const topSemicircleCenter = applyToPoint(transformMatrix, {
       x: 0,
-      y: -halfStraightLength,
+      y: -semicircleCenterOffset,
     })
-    const capCenter2 = applyToPoint(transformMatrix, {
+    const bottomSemicircleCenter = applyToPoint(transformMatrix, {
       x: 0,
-      y: halfStraightLength,
+      y: semicircleCenterOffset,
     })
 
     ctx.arc(
-      capCenter2.x,
-      capCenter2.y,
-      radius,
-      rotationRad,
-      rotationRad + Math.PI,
+      bottomSemicircleCenter.x,
+      bottomSemicircleCenter.y,
+      semicircleRadius,
+      rotationRadians,
+      rotationRadians + Math.PI,
     )
     ctx.arc(
-      capCenter1.x,
-      capCenter1.y,
-      radius,
-      rotationRad + Math.PI,
-      rotationRad,
+      topSemicircleCenter.x,
+      topSemicircleCenter.y,
+      semicircleRadius,
+      rotationRadians + Math.PI,
+      rotationRadians,
     )
   } else {
-    // Circle
-    ctx.arc(cx, cy, width / 2, 0, Math.PI * 2)
+    // Circle: fallback when width equals height
+    ctx.arc(centerX, centerY, width / 2, 0, Math.PI * 2)
   }
   ctx.closePath()
 }
