@@ -1,3 +1,4 @@
+import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 
 /**
@@ -11,28 +12,69 @@ export function drawPillPath(params: {
   cy: number
   width: number
   height: number
+  ccwRotationDegrees?: number
 }): void {
-  const { ctx, cx, cy, width, height } = params
+  const { ctx, cx, cy, width, height, ccwRotationDegrees = 0 } = params
+
+  const rotationRad = (-ccwRotationDegrees * Math.PI) / 180
+  const transformMatrix = compose(translate(cx, cy), rotate(rotationRad))
+
   if (width > height) {
     // Horizontal pill
     const radius = height / 2
-    const straightLength = width - height
-    ctx.moveTo(cx - straightLength / 2, cy - radius)
-    ctx.lineTo(cx + straightLength / 2, cy - radius)
-    ctx.arc(cx + straightLength / 2, cy, radius, -Math.PI / 2, Math.PI / 2)
-    ctx.lineTo(cx - straightLength / 2, cy + radius)
-    ctx.arc(cx - straightLength / 2, cy, radius, Math.PI / 2, -Math.PI / 2)
+    const halfStraightLength = (width - height) / 2
+    const capCenter1 = applyToPoint(transformMatrix, {
+      x: -halfStraightLength,
+      y: 0,
+    })
+    const capCenter2 = applyToPoint(transformMatrix, {
+      x: halfStraightLength,
+      y: 0,
+    })
+
+    ctx.arc(
+      capCenter2.x,
+      capCenter2.y,
+      radius,
+      rotationRad - Math.PI / 2,
+      rotationRad + Math.PI / 2,
+    )
+    ctx.arc(
+      capCenter1.x,
+      capCenter1.y,
+      radius,
+      rotationRad + Math.PI / 2,
+      rotationRad - Math.PI / 2,
+    )
   } else if (height > width) {
     // Vertical pill
     const radius = width / 2
-    const straightLength = height - width
-    ctx.moveTo(cx + radius, cy - straightLength / 2)
-    ctx.lineTo(cx + radius, cy + straightLength / 2)
-    ctx.arc(cx, cy + straightLength / 2, radius, 0, Math.PI)
-    ctx.lineTo(cx - radius, cy - straightLength / 2)
-    ctx.arc(cx, cy - straightLength / 2, radius, Math.PI, 0)
+    const halfStraightLength = (height - width) / 2
+    const capCenter1 = applyToPoint(transformMatrix, {
+      x: 0,
+      y: -halfStraightLength,
+    })
+    const capCenter2 = applyToPoint(transformMatrix, {
+      x: 0,
+      y: halfStraightLength,
+    })
+
+    ctx.arc(
+      capCenter2.x,
+      capCenter2.y,
+      radius,
+      rotationRad,
+      rotationRad + Math.PI,
+    )
+    ctx.arc(
+      capCenter1.x,
+      capCenter1.y,
+      radius,
+      rotationRad + Math.PI,
+      rotationRad,
+    )
   } else {
-    // Square dimensions = circle
+    // Circle
     ctx.arc(cx, cy, width / 2, 0, Math.PI * 2)
   }
   ctx.closePath()

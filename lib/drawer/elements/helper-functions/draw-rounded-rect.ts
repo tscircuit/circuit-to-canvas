@@ -1,3 +1,4 @@
+import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 
 /**
@@ -11,24 +12,88 @@ export function drawRoundedRectPath(params: {
   width: number
   height: number
   radius: number
+  ccwRotationDegrees?: number
 }): void {
-  const { ctx, cx, cy, width, height, radius } = params
-  const x = cx - width / 2
-  const y = cy - height / 2
-  const r = Math.min(radius, width / 2, height / 2)
+  const { ctx, cx, cy, width, height, radius, ccwRotationDegrees = 0 } = params
 
-  if (r > 0) {
-    ctx.moveTo(x + r, y)
-    ctx.lineTo(x + width - r, y)
-    ctx.arcTo(x + width, y, x + width, y + r, r)
-    ctx.lineTo(x + width, y + height - r)
-    ctx.arcTo(x + width, y + height, x + width - r, y + height, r)
-    ctx.lineTo(x + r, y + height)
-    ctx.arcTo(x, y + height, x, y + height - r, r)
-    ctx.lineTo(x, y + r)
-    ctx.arcTo(x, y, x + r, y, r)
+  const rotationRad = (-ccwRotationDegrees * Math.PI) / 180
+  const transformMatrix = compose(translate(cx, cy), rotate(rotationRad))
+
+  const halfWidth = width / 2
+  const halfHeight = height / 2
+  const roundedRadius = Math.min(radius, halfWidth, halfHeight)
+
+  if (roundedRadius > 0) {
+    const topLeftVertex = applyToPoint(transformMatrix, {
+      x: -halfWidth,
+      y: -halfHeight,
+    })
+    const topRightVertex = applyToPoint(transformMatrix, {
+      x: halfWidth,
+      y: -halfHeight,
+    })
+    const bottomRightVertex = applyToPoint(transformMatrix, {
+      x: halfWidth,
+      y: halfHeight,
+    })
+    const bottomLeftVertex = applyToPoint(transformMatrix, {
+      x: -halfWidth,
+      y: halfHeight,
+    })
+
+    // Start at midpoint of left edge to draw smoothly around
+    const startPoint = applyToPoint(transformMatrix, { x: -halfWidth, y: 0 })
+    ctx.moveTo(startPoint.x, startPoint.y)
+    ctx.arcTo(
+      topLeftVertex.x,
+      topLeftVertex.y,
+      topRightVertex.x,
+      topRightVertex.y,
+      roundedRadius,
+    )
+    ctx.arcTo(
+      topRightVertex.x,
+      topRightVertex.y,
+      bottomRightVertex.x,
+      bottomRightVertex.y,
+      roundedRadius,
+    )
+    ctx.arcTo(
+      bottomRightVertex.x,
+      bottomRightVertex.y,
+      bottomLeftVertex.x,
+      bottomLeftVertex.y,
+      roundedRadius,
+    )
+    ctx.arcTo(
+      bottomLeftVertex.x,
+      bottomLeftVertex.y,
+      topLeftVertex.x,
+      topLeftVertex.y,
+      roundedRadius,
+    )
   } else {
-    ctx.rect(x, y, width, height)
+    const topLeftVertex = applyToPoint(transformMatrix, {
+      x: -halfWidth,
+      y: -halfHeight,
+    })
+    const topRightVertex = applyToPoint(transformMatrix, {
+      x: halfWidth,
+      y: -halfHeight,
+    })
+    const bottomRightVertex = applyToPoint(transformMatrix, {
+      x: halfWidth,
+      y: halfHeight,
+    })
+    const bottomLeftVertex = applyToPoint(transformMatrix, {
+      x: -halfWidth,
+      y: halfHeight,
+    })
+
+    ctx.moveTo(topLeftVertex.x, topLeftVertex.y)
+    ctx.lineTo(topRightVertex.x, topRightVertex.y)
+    ctx.lineTo(bottomRightVertex.x, bottomRightVertex.y)
+    ctx.lineTo(bottomLeftVertex.x, bottomLeftVertex.y)
   }
   ctx.closePath()
 }
