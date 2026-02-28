@@ -261,7 +261,6 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
     const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
     const scaledThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const rotation = (hole as any).rect_ccw_rotation ?? 0
     const outerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
@@ -274,7 +273,6 @@ function drawNegativeMarginRingForPlatedHole(params: {
       width: scaledWidth,
       height: scaledHeight,
       radius: outerRadius,
-      ccwRotationDegrees: rotation,
     })
 
     const innerWidth = scaledWidth - scaledThickness * 2
@@ -288,7 +286,6 @@ function drawNegativeMarginRingForPlatedHole(params: {
         width: innerWidth,
         height: innerHeight,
         radius: innerRadius,
-        ccwRotationDegrees: rotation,
       })
     }
 
@@ -310,7 +307,6 @@ function drawNegativeMarginRingForPlatedHole(params: {
       width: scaledWidth,
       height: scaledHeight,
       radius: outerRadius,
-      ccwRotationDegrees: (hole as any).rect_ccw_rotation,
     })
 
     const innerWidth = scaledWidth - scaledThickness * 2
@@ -324,7 +320,6 @@ function drawNegativeMarginRingForPlatedHole(params: {
         width: innerWidth,
         height: innerHeight,
         radius: innerRadius,
-        ccwRotationDegrees: (hole as any).rect_ccw_rotation,
       })
     }
 
