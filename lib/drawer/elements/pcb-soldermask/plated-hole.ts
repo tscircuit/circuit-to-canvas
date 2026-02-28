@@ -62,25 +62,25 @@ function drawPlatedHoleShapePath(params: {
   const { ctx, hole, realToCanvasMat, margin } = params
   if (hole.shape === "circle") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledRadius =
+    const radius =
       (hole.outer_diameter / 2 + margin) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
-    ctx.arc(centerX, centerY, scaledRadius, 0, Math.PI * 2)
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
     ctx.closePath()
   } else if (hole.shape === "oval") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledRadiusX =
+    const ovalRadiusX =
       (hole.outer_width / 2 + margin) * Math.abs(realToCanvasMat.a)
-    const scaledRadiusY =
+    const ovalRadiusY =
       (hole.outer_height / 2 + margin) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
     ctx.ellipse(
       centerX,
       centerY,
-      scaledRadiusX,
-      scaledRadiusY,
+      ovalRadiusX,
+      ovalRadiusY,
       -((hole.ccw_rotation ?? 0) * Math.PI) / 180,
       0,
       Math.PI * 2,
@@ -88,9 +88,9 @@ function drawPlatedHoleShapePath(params: {
     ctx.closePath()
   } else if (hole.shape === "pill") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth =
+    const pillWidth =
       (hole.outer_width + margin * 2) * Math.abs(realToCanvasMat.a)
-    const scaledHeight =
+    const pillHeight =
       (hole.outer_height + margin * 2) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
@@ -98,8 +98,8 @@ function drawPlatedHoleShapePath(params: {
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
+      width: pillWidth,
+      height: pillHeight,
       ccwRotationDegrees: hole.ccw_rotation,
     })
   } else if (
@@ -107,11 +107,11 @@ function drawPlatedHoleShapePath(params: {
     hole.shape === "pill_hole_with_rect_pad"
   ) {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth =
+    const rectPadWidth =
       (hole.rect_pad_width + margin * 2) * Math.abs(realToCanvasMat.a)
-    const scaledHeight =
+    const rectPadHeight =
       (hole.rect_pad_height + margin * 2) * Math.abs(realToCanvasMat.a)
-    const scaledRadius =
+    const rectPadCornerRadius =
       (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
@@ -119,17 +119,17 @@ function drawPlatedHoleShapePath(params: {
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
-      radius: scaledRadius,
+      width: rectPadWidth,
+      height: rectPadHeight,
+      radius: rectPadCornerRadius,
     })
   } else if (hole.shape === "rotated_pill_hole_with_rect_pad") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth =
+    const rectPadWidth =
       (hole.rect_pad_width + margin * 2) * Math.abs(realToCanvasMat.a)
-    const scaledHeight =
+    const rectPadHeight =
       (hole.rect_pad_height + margin * 2) * Math.abs(realToCanvasMat.a)
-    const scaledRadius =
+    const rectPadCornerRadius =
       (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
@@ -137,9 +137,9 @@ function drawPlatedHoleShapePath(params: {
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
-      radius: scaledRadius,
+      width: rectPadWidth,
+      height: rectPadHeight,
+      radius: rectPadCornerRadius,
       ccwRotationDegrees: hole.rect_ccw_rotation,
     })
   } else if (
@@ -153,15 +153,15 @@ function drawPlatedHoleShapePath(params: {
         y: hole.y + point.y,
       }),
     )
-    const points =
+    const marginPoints =
       margin !== 0 ? offsetPolygonPoints(padPoints, margin) : padPoints
-    const canvasPoints = points.map((p) => {
+    const points = marginPoints.map((p) => {
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
 
     ctx.beginPath()
-    drawPolygonPath({ ctx, points: canvasPoints })
+    drawPolygonPath({ ctx, points: points })
   }
 }
 
@@ -180,13 +180,12 @@ function drawNegativeMarginRingForPlatedHole(params: {
 
   if (hole.shape === "circle") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledOuterRadius =
-      (hole.outer_diameter / 2) * Math.abs(realToCanvasMat.a)
-    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const innerRadius = Math.max(0, scaledOuterRadius - scaledMarginThickness)
+    const outerRadius = (hole.outer_diameter / 2) * Math.abs(realToCanvasMat.a)
+    const marginMagnitude = marginThickness * Math.abs(realToCanvasMat.a)
+    const innerRadius = Math.max(0, outerRadius - marginMagnitude)
 
     ctx.beginPath()
-    ctx.arc(centerX, centerY, scaledOuterRadius, 0, Math.PI * 2)
+    ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2)
     if (innerRadius > 0) {
       // Draw inner circle counter-clockwise to create a cutout (even-odd fill)
       ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2, true)
@@ -194,28 +193,30 @@ function drawNegativeMarginRingForPlatedHole(params: {
     ctx.fill("evenodd")
   } else if (hole.shape === "oval") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledRadiusX = (hole.outer_width / 2) * Math.abs(realToCanvasMat.a)
-    const scaledRadiusY = (hole.outer_height / 2) * Math.abs(realToCanvasMat.a)
-    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const innerRadiusX = Math.max(0, scaledRadiusX - scaledMarginThickness)
-    const innerRadiusY = Math.max(0, scaledRadiusY - scaledMarginThickness)
+    const padRadiusX = (hole.outer_width / 2) * Math.abs(realToCanvasMat.a)
+    const padRadiusY = (hole.outer_height / 2) * Math.abs(realToCanvasMat.a)
+    const marginMagnitude = marginThickness * Math.abs(realToCanvasMat.a)
+    const innerRadiusX = Math.max(0, padRadiusX - marginMagnitude)
+    const innerRadiusY = Math.max(0, padRadiusY - marginMagnitude)
 
     const rotationRad = -((hole.ccw_rotation ?? 0) * Math.PI) / 180
     ctx.beginPath()
     ctx.ellipse(
       centerX,
       centerY,
-      scaledRadiusX,
-      scaledRadiusY,
+      padRadiusX,
+      padRadiusY,
       rotationRad,
       0,
       Math.PI * 2,
     )
     if (innerRadiusX > 0 && innerRadiusY > 0) {
       // Move to inner ellipse start point and draw it
-      const startX = centerX + innerRadiusX * Math.cos(rotationRad)
-      const startY = centerY + innerRadiusX * Math.sin(rotationRad)
-      ctx.moveTo(startX, startY)
+      const soldermaskEllipseStartX =
+        centerX + innerRadiusX * Math.cos(rotationRad)
+      const soldermaskEllipseStartY =
+        centerY + innerRadiusX * Math.sin(rotationRad)
+      ctx.moveTo(soldermaskEllipseStartX, soldermaskEllipseStartY)
       ctx.ellipse(
         centerX,
         centerY,
@@ -229,28 +230,28 @@ function drawNegativeMarginRingForPlatedHole(params: {
     ctx.fill("evenodd")
   } else if (hole.shape === "pill") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth = hole.outer_width * Math.abs(realToCanvasMat.a)
-    const scaledHeight = hole.outer_height * Math.abs(realToCanvasMat.a)
-    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
+    const padWidth = hole.outer_width * Math.abs(realToCanvasMat.a)
+    const padHeight = hole.outer_height * Math.abs(realToCanvasMat.a)
+    const marginMagnitude = marginThickness * Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
     drawPillPath({
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
+      width: padWidth,
+      height: padHeight,
       ccwRotationDegrees: hole.ccw_rotation,
     })
-    const innerWidth = scaledWidth - scaledMarginThickness * 2
-    const innerHeight = scaledHeight - scaledMarginThickness * 2
-    if (innerWidth > 0 && innerHeight > 0) {
+    const soldermaskWidth = padWidth - marginMagnitude * 2
+    const soldermaskHeight = padHeight - marginMagnitude * 2
+    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
       drawPillPath({
         ctx,
         cx: centerX,
         cy: centerY,
-        width: innerWidth,
-        height: innerHeight,
+        width: soldermaskWidth,
+        height: soldermaskHeight,
         ccwRotationDegrees: hole.ccw_rotation,
       })
     }
@@ -258,10 +259,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
     ctx.fill("evenodd")
   } else if (hole.shape === "circular_hole_with_rect_pad") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
-    const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
-    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const outerRadius = hole.rect_border_radius
+    const padWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
+    const padHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
+    const marginMagnitude = marginThickness * Math.abs(realToCanvasMat.a)
+    const padCornerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
 
@@ -270,32 +271,35 @@ function drawNegativeMarginRingForPlatedHole(params: {
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
-      radius: outerRadius,
+      width: padWidth,
+      height: padHeight,
+      radius: padCornerRadius,
     })
 
-    const innerWidth = scaledWidth - scaledMarginThickness * 2
-    const innerHeight = scaledHeight - scaledMarginThickness * 2
-    if (innerWidth > 0 && innerHeight > 0) {
-      const innerRadius = Math.max(0, outerRadius - scaledMarginThickness)
+    const soldermaskWidth = padWidth - marginMagnitude * 2
+    const soldermaskHeight = padHeight - marginMagnitude * 2
+    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
+      const soldermaskCornerRadius = Math.max(
+        0,
+        padCornerRadius - marginMagnitude,
+      )
       drawRoundedRectPath({
         ctx,
         cx: centerX,
         cy: centerY,
-        width: innerWidth,
-        height: innerHeight,
-        radius: innerRadius,
+        width: soldermaskWidth,
+        height: soldermaskHeight,
+        radius: soldermaskCornerRadius,
       })
     }
 
     ctx.fill("evenodd")
   } else if (hole.shape === "pill_hole_with_rect_pad") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
-    const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
-    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const outerRadius = hole.rect_border_radius
+    const padWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
+    const padHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
+    const marginMagnitude = marginThickness * Math.abs(realToCanvasMat.a)
+    const padCornerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
 
@@ -304,32 +308,35 @@ function drawNegativeMarginRingForPlatedHole(params: {
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
-      radius: outerRadius,
+      width: padWidth,
+      height: padHeight,
+      radius: padCornerRadius,
     })
 
-    const innerWidth = scaledWidth - scaledMarginThickness * 2
-    const innerHeight = scaledHeight - scaledMarginThickness * 2
-    if (innerWidth > 0 && innerHeight > 0) {
-      const innerRadius = Math.max(0, outerRadius - scaledMarginThickness)
+    const soldermaskWidth = padWidth - marginMagnitude * 2
+    const soldermaskHeight = padHeight - marginMagnitude * 2
+    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
+      const soldermaskCornerRadius = Math.max(
+        0,
+        padCornerRadius - marginMagnitude,
+      )
       drawRoundedRectPath({
         ctx,
         cx: centerX,
         cy: centerY,
-        width: innerWidth,
-        height: innerHeight,
-        radius: innerRadius,
+        width: soldermaskWidth,
+        height: soldermaskHeight,
+        radius: soldermaskCornerRadius,
       })
     }
 
     ctx.fill("evenodd")
   } else if (hole.shape === "rotated_pill_hole_with_rect_pad") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
-    const scaledWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
-    const scaledHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
-    const scaledMarginThickness = marginThickness * Math.abs(realToCanvasMat.a)
-    const outerRadius = hole.rect_border_radius
+    const padWidth = hole.rect_pad_width * Math.abs(realToCanvasMat.a)
+    const padHeight = hole.rect_pad_height * Math.abs(realToCanvasMat.a)
+    const marginMagnitude = marginThickness * Math.abs(realToCanvasMat.a)
+    const padCornerRadius = hole.rect_border_radius
       ? hole.rect_border_radius * Math.abs(realToCanvasMat.a)
       : 0
 
@@ -338,23 +345,26 @@ function drawNegativeMarginRingForPlatedHole(params: {
       ctx,
       cx: centerX,
       cy: centerY,
-      width: scaledWidth,
-      height: scaledHeight,
-      radius: outerRadius,
+      width: padWidth,
+      height: padHeight,
+      radius: padCornerRadius,
       ccwRotationDegrees: hole.rect_ccw_rotation,
     })
 
-    const innerWidth = scaledWidth - scaledMarginThickness * 2
-    const innerHeight = scaledHeight - scaledMarginThickness * 2
-    if (innerWidth > 0 && innerHeight > 0) {
-      const innerRadius = Math.max(0, outerRadius - scaledMarginThickness)
+    const soldermaskWidth = padWidth - marginMagnitude * 2
+    const soldermaskHeight = padHeight - marginMagnitude * 2
+    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
+      const soldermaskCornerRadius = Math.max(
+        0,
+        padCornerRadius - marginMagnitude,
+      )
       drawRoundedRectPath({
         ctx,
         cx: centerX,
         cy: centerY,
-        width: innerWidth,
-        height: innerHeight,
-        radius: innerRadius,
+        width: soldermaskWidth,
+        height: soldermaskHeight,
+        radius: soldermaskCornerRadius,
         ccwRotationDegrees: hole.rect_ccw_rotation,
       })
     }
@@ -375,20 +385,20 @@ function drawNegativeMarginRingForPlatedHole(params: {
     ctx.beginPath()
 
     // Draw outer polygon
-    const canvasPoints = padPoints.map((p) => {
+    const outerPoints = padPoints.map((p) => {
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
-    drawPolygonPath({ ctx, points: canvasPoints })
+    drawPolygonPath({ ctx, points: outerPoints })
 
     // Draw inner polygon cutout
-    const innerPoints = offsetPolygonPoints(padPoints, -marginThickness)
-    if (innerPoints.length >= 3) {
-      const innerCanvasPoints = innerPoints.map((p) => {
+    const innerMarginPoints = offsetPolygonPoints(padPoints, -marginThickness)
+    if (innerMarginPoints.length >= 3) {
+      const innerPoints = innerMarginPoints.map((p) => {
         const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
         return { x, y }
       })
-      drawPolygonPath({ ctx, points: innerCanvasPoints })
+      drawPolygonPath({ ctx, points: innerPoints })
     }
 
     ctx.fill("evenodd")

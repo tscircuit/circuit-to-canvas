@@ -30,86 +30,86 @@ export function drawRoundedRectPath(params: {
     rotate(rotationRadians),
   )
 
-  const halfWidth = width / 2
-  const halfHeight = height / 2
-  const rectCornerRadius = Math.min(radius, halfWidth, halfHeight)
+  const rectHalfWidth = width / 2
+  const rectHalfHeight = height / 2
+  const rectCornerRadius = Math.min(radius, rectHalfWidth, rectHalfHeight)
 
   if (rectCornerRadius > 0) {
-    const topLeftCornerVertex = applyToPoint(transformMatrix, {
-      x: -halfWidth,
-      y: -halfHeight,
+    const rectTopLeftCorner = applyToPoint(transformMatrix, {
+      x: -rectHalfWidth,
+      y: -rectHalfHeight,
     })
-    const topRightCornerVertex = applyToPoint(transformMatrix, {
-      x: halfWidth,
-      y: -halfHeight,
+    const rectTopRightCorner = applyToPoint(transformMatrix, {
+      x: rectHalfWidth,
+      y: -rectHalfHeight,
     })
-    const bottomRightCornerVertex = applyToPoint(transformMatrix, {
-      x: halfWidth,
-      y: halfHeight,
+    const rectBottomRightCorner = applyToPoint(transformMatrix, {
+      x: rectHalfWidth,
+      y: rectHalfHeight,
     })
-    const bottomLeftCornerVertex = applyToPoint(transformMatrix, {
-      x: -halfWidth,
-      y: halfHeight,
+    const rectBottomLeftCorner = applyToPoint(transformMatrix, {
+      x: -rectHalfWidth,
+      y: rectHalfHeight,
     })
 
     // Start at a midpoint of the left vertical edge to ensure a smooth enclosed path drawing
     const leftEdgeMidpoint = applyToPoint(transformMatrix, {
-      x: -halfWidth,
+      x: -rectHalfWidth,
       y: 0,
     })
     ctx.moveTo(leftEdgeMidpoint.x, leftEdgeMidpoint.y)
 
     // Draw the rounded corners and straight edges
     ctx.arcTo(
-      topLeftCornerVertex.x,
-      topLeftCornerVertex.y,
-      topRightCornerVertex.x,
-      topRightCornerVertex.y,
+      rectTopLeftCorner.x,
+      rectTopLeftCorner.y,
+      rectTopRightCorner.x,
+      rectTopRightCorner.y,
       rectCornerRadius,
     )
     ctx.arcTo(
-      topRightCornerVertex.x,
-      topRightCornerVertex.y,
-      bottomRightCornerVertex.x,
-      bottomRightCornerVertex.y,
+      rectTopRightCorner.x,
+      rectTopRightCorner.y,
+      rectBottomRightCorner.x,
+      rectBottomRightCorner.y,
       rectCornerRadius,
     )
     ctx.arcTo(
-      bottomRightCornerVertex.x,
-      bottomRightCornerVertex.y,
-      bottomLeftCornerVertex.x,
-      bottomLeftCornerVertex.y,
+      rectBottomRightCorner.x,
+      rectBottomRightCorner.y,
+      rectBottomLeftCorner.x,
+      rectBottomLeftCorner.y,
       rectCornerRadius,
     )
     ctx.arcTo(
-      bottomLeftCornerVertex.x,
-      bottomLeftCornerVertex.y,
-      topLeftCornerVertex.x,
-      topLeftCornerVertex.y,
+      rectBottomLeftCorner.x,
+      rectBottomLeftCorner.y,
+      rectTopLeftCorner.x,
+      rectTopLeftCorner.y,
       rectCornerRadius,
     )
   } else {
-    const topLeftVertex = applyToPoint(transformMatrix, {
-      x: -halfWidth,
-      y: -halfHeight,
+    const rectTopLeftCorner = applyToPoint(transformMatrix, {
+      x: -rectHalfWidth,
+      y: -rectHalfHeight,
     })
-    const topRightVertex = applyToPoint(transformMatrix, {
-      x: halfWidth,
-      y: -halfHeight,
+    const rectTopRightCorner = applyToPoint(transformMatrix, {
+      x: rectHalfWidth,
+      y: -rectHalfHeight,
     })
-    const bottomRightVertex = applyToPoint(transformMatrix, {
-      x: halfWidth,
-      y: halfHeight,
+    const rectBottomRightCorner = applyToPoint(transformMatrix, {
+      x: rectHalfWidth,
+      y: rectHalfHeight,
     })
-    const bottomLeftVertex = applyToPoint(transformMatrix, {
-      x: -halfWidth,
-      y: halfHeight,
+    const rectBottomLeftCorner = applyToPoint(transformMatrix, {
+      x: -rectHalfWidth,
+      y: rectHalfHeight,
     })
 
-    ctx.moveTo(topLeftVertex.x, topLeftVertex.y)
-    ctx.lineTo(topRightVertex.x, topRightVertex.y)
-    ctx.lineTo(bottomRightVertex.x, bottomRightVertex.y)
-    ctx.lineTo(bottomLeftVertex.x, bottomLeftVertex.y)
+    ctx.moveTo(rectTopLeftCorner.x, rectTopLeftCorner.y)
+    ctx.lineTo(rectTopRightCorner.x, rectTopRightCorner.y)
+    ctx.lineTo(rectBottomRightCorner.x, rectBottomRightCorner.y)
+    ctx.lineTo(rectBottomLeftCorner.x, rectBottomLeftCorner.y)
   }
   ctx.closePath()
 }
