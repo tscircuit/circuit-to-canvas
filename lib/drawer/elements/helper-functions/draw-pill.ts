@@ -69,6 +69,11 @@ export function drawPillPath(params: {
       y: semicircleCenterOffset,
     })
 
+    // Start at a midpoint of the left vertical edge to ensure a smooth enclosed path drawing
+    ctx.moveTo(
+      bottomSemicircleCenter.x + semicircleRadius * Math.cos(rotationRadians),
+      bottomSemicircleCenter.y + semicircleRadius * Math.sin(rotationRadians),
+    )
     ctx.arc(
       bottomSemicircleCenter.x,
       bottomSemicircleCenter.y,
