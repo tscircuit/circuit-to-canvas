@@ -155,13 +155,13 @@ function drawPlatedHoleShapePath(params: {
     )
     const marginPoints =
       margin !== 0 ? offsetPolygonPoints(padPoints, margin) : padPoints
-    const points = marginPoints.map((p) => {
+    const canvasPoints = marginPoints.map((p) => {
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
 
     ctx.beginPath()
-    drawPolygonPath({ ctx, points: points })
+    drawPolygonPath({ ctx, points: canvasPoints })
   }
 }
 
@@ -199,30 +199,30 @@ function drawNegativeMarginRingForPlatedHole(params: {
     const innerRadiusX = Math.max(0, padRadiusX - marginMagnitude)
     const innerRadiusY = Math.max(0, padRadiusY - marginMagnitude)
 
-    const rotationRad = -((hole.ccw_rotation ?? 0) * Math.PI) / 180
+    const ccwRotation = -((hole.ccw_rotation ?? 0) * Math.PI) / 180
     ctx.beginPath()
     ctx.ellipse(
       centerX,
       centerY,
       padRadiusX,
       padRadiusY,
-      rotationRad,
+      ccwRotation,
       0,
       Math.PI * 2,
     )
     if (innerRadiusX > 0 && innerRadiusY > 0) {
       // Move to inner ellipse start point and draw it
       const soldermaskEllipseStartX =
-        centerX + innerRadiusX * Math.cos(rotationRad)
+        centerX + innerRadiusX * Math.cos(ccwRotation)
       const soldermaskEllipseStartY =
-        centerY + innerRadiusX * Math.sin(rotationRad)
+        centerY + innerRadiusX * Math.sin(ccwRotation)
       ctx.moveTo(soldermaskEllipseStartX, soldermaskEllipseStartY)
       ctx.ellipse(
         centerX,
         centerY,
         innerRadiusX,
         innerRadiusY,
-        rotationRad,
+        ccwRotation,
         0,
         Math.PI * 2,
       )
@@ -243,15 +243,15 @@ function drawNegativeMarginRingForPlatedHole(params: {
       height: padHeight,
       ccwRotationDegrees: hole.ccw_rotation,
     })
-    const soldermaskWidth = padWidth - marginMagnitude * 2
-    const soldermaskHeight = padHeight - marginMagnitude * 2
-    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
+    const soldermaskPadWidth = padWidth - marginMagnitude * 2
+    const soldermaskPadHeight = padHeight - marginMagnitude * 2
+    if (soldermaskPadWidth > 0 && soldermaskPadHeight > 0) {
       drawPillPath({
         ctx,
         cx: centerX,
         cy: centerY,
-        width: soldermaskWidth,
-        height: soldermaskHeight,
+        width: soldermaskPadWidth,
+        height: soldermaskPadHeight,
         ccwRotationDegrees: hole.ccw_rotation,
       })
     }
@@ -276,10 +276,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
       radius: padCornerRadius,
     })
 
-    const soldermaskWidth = padWidth - marginMagnitude * 2
-    const soldermaskHeight = padHeight - marginMagnitude * 2
-    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
-      const soldermaskCornerRadius = Math.max(
+    const soldermaskPadWidth = padWidth - marginMagnitude * 2
+    const soldermaskPadHeight = padHeight - marginMagnitude * 2
+    if (soldermaskPadWidth > 0 && soldermaskPadHeight > 0) {
+      const soldermaskPadCornerRadius = Math.max(
         0,
         padCornerRadius - marginMagnitude,
       )
@@ -287,9 +287,9 @@ function drawNegativeMarginRingForPlatedHole(params: {
         ctx,
         cx: centerX,
         cy: centerY,
-        width: soldermaskWidth,
-        height: soldermaskHeight,
-        radius: soldermaskCornerRadius,
+        width: soldermaskPadWidth,
+        height: soldermaskPadHeight,
+        radius: soldermaskPadCornerRadius,
       })
     }
 
@@ -313,10 +313,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
       radius: padCornerRadius,
     })
 
-    const soldermaskWidth = padWidth - marginMagnitude * 2
-    const soldermaskHeight = padHeight - marginMagnitude * 2
-    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
-      const soldermaskCornerRadius = Math.max(
+    const soldermaskPadWidth = padWidth - marginMagnitude * 2
+    const soldermaskPadHeight = padHeight - marginMagnitude * 2
+    if (soldermaskPadWidth > 0 && soldermaskPadHeight > 0) {
+      const soldermaskPadCornerRadius = Math.max(
         0,
         padCornerRadius - marginMagnitude,
       )
@@ -324,9 +324,9 @@ function drawNegativeMarginRingForPlatedHole(params: {
         ctx,
         cx: centerX,
         cy: centerY,
-        width: soldermaskWidth,
-        height: soldermaskHeight,
-        radius: soldermaskCornerRadius,
+        width: soldermaskPadWidth,
+        height: soldermaskPadHeight,
+        radius: soldermaskPadCornerRadius,
       })
     }
 
@@ -351,10 +351,10 @@ function drawNegativeMarginRingForPlatedHole(params: {
       ccwRotationDegrees: hole.rect_ccw_rotation,
     })
 
-    const soldermaskWidth = padWidth - marginMagnitude * 2
-    const soldermaskHeight = padHeight - marginMagnitude * 2
-    if (soldermaskWidth > 0 && soldermaskHeight > 0) {
-      const soldermaskCornerRadius = Math.max(
+    const soldermaskPadWidth = padWidth - marginMagnitude * 2
+    const soldermaskPadHeight = padHeight - marginMagnitude * 2
+    if (soldermaskPadWidth > 0 && soldermaskPadHeight > 0) {
+      const soldermaskPadCornerRadius = Math.max(
         0,
         padCornerRadius - marginMagnitude,
       )
@@ -362,9 +362,9 @@ function drawNegativeMarginRingForPlatedHole(params: {
         ctx,
         cx: centerX,
         cy: centerY,
-        width: soldermaskWidth,
-        height: soldermaskHeight,
-        radius: soldermaskCornerRadius,
+        width: soldermaskPadWidth,
+        height: soldermaskPadHeight,
+        radius: soldermaskPadCornerRadius,
         ccwRotationDegrees: hole.rect_ccw_rotation,
       })
     }
