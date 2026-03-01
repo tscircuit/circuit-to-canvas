@@ -1,3 +1,4 @@
+import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 
 /**
@@ -11,24 +12,104 @@ export function drawRoundedRectPath(params: {
   width: number
   height: number
   radius: number
+  ccwRotationDegrees?: number
 }): void {
-  const { ctx, cx, cy, width, height, radius } = params
-  const x = cx - width / 2
-  const y = cy - height / 2
-  const r = Math.min(radius, width / 2, height / 2)
+  const {
+    ctx,
+    cx: centerX,
+    cy: centerY,
+    width,
+    height,
+    radius,
+    ccwRotationDegrees = 0,
+  } = params
 
-  if (r > 0) {
-    ctx.moveTo(x + r, y)
-    ctx.lineTo(x + width - r, y)
-    ctx.arcTo(x + width, y, x + width, y + r, r)
-    ctx.lineTo(x + width, y + height - r)
-    ctx.arcTo(x + width, y + height, x + width - r, y + height, r)
-    ctx.lineTo(x + r, y + height)
-    ctx.arcTo(x, y + height, x, y + height - r, r)
-    ctx.lineTo(x, y + r)
-    ctx.arcTo(x, y, x + r, y, r)
+  const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
+  const realToPxTransform = compose(
+    translate(centerX, centerY),
+    rotate(-ccwRotationRadians),
+  )
+
+  const rectHalfWidth = width / 2
+  const rectHalfHeight = height / 2
+  const rectCornerRadius = Math.min(radius, rectHalfWidth, rectHalfHeight)
+
+  if (rectCornerRadius > 0) {
+    const rectTopLeftCorner = applyToPoint(realToPxTransform, {
+      x: -rectHalfWidth,
+      y: -rectHalfHeight,
+    })
+    const rectTopRightCorner = applyToPoint(realToPxTransform, {
+      x: rectHalfWidth,
+      y: -rectHalfHeight,
+    })
+    const rectBottomRightCorner = applyToPoint(realToPxTransform, {
+      x: rectHalfWidth,
+      y: rectHalfHeight,
+    })
+    const rectBottomLeftCorner = applyToPoint(realToPxTransform, {
+      x: -rectHalfWidth,
+      y: rectHalfHeight,
+    })
+
+    // Start at a midpoint of the left vertical edge to ensure a smooth enclosed path drawing
+    const leftEdgeMidpoint = applyToPoint(realToPxTransform, {
+      x: -rectHalfWidth,
+      y: 0,
+    })
+    ctx.moveTo(leftEdgeMidpoint.x, leftEdgeMidpoint.y)
+
+    // Draw the rounded corners and straight edges
+    ctx.arcTo(
+      rectTopLeftCorner.x,
+      rectTopLeftCorner.y,
+      rectTopRightCorner.x,
+      rectTopRightCorner.y,
+      rectCornerRadius,
+    )
+    ctx.arcTo(
+      rectTopRightCorner.x,
+      rectTopRightCorner.y,
+      rectBottomRightCorner.x,
+      rectBottomRightCorner.y,
+      rectCornerRadius,
+    )
+    ctx.arcTo(
+      rectBottomRightCorner.x,
+      rectBottomRightCorner.y,
+      rectBottomLeftCorner.x,
+      rectBottomLeftCorner.y,
+      rectCornerRadius,
+    )
+    ctx.arcTo(
+      rectBottomLeftCorner.x,
+      rectBottomLeftCorner.y,
+      rectTopLeftCorner.x,
+      rectTopLeftCorner.y,
+      rectCornerRadius,
+    )
   } else {
-    ctx.rect(x, y, width, height)
+    const rectTopLeftCorner = applyToPoint(realToPxTransform, {
+      x: -rectHalfWidth,
+      y: -rectHalfHeight,
+    })
+    const rectTopRightCorner = applyToPoint(realToPxTransform, {
+      x: rectHalfWidth,
+      y: -rectHalfHeight,
+    })
+    const rectBottomRightCorner = applyToPoint(realToPxTransform, {
+      x: rectHalfWidth,
+      y: rectHalfHeight,
+    })
+    const rectBottomLeftCorner = applyToPoint(realToPxTransform, {
+      x: -rectHalfWidth,
+      y: rectHalfHeight,
+    })
+
+    ctx.moveTo(rectTopLeftCorner.x, rectTopLeftCorner.y)
+    ctx.lineTo(rectTopRightCorner.x, rectTopRightCorner.y)
+    ctx.lineTo(rectBottomRightCorner.x, rectBottomRightCorner.y)
+    ctx.lineTo(rectBottomLeftCorner.x, rectBottomLeftCorner.y)
   }
   ctx.closePath()
 }

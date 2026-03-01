@@ -1,3 +1,4 @@
+import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 
 /**
@@ -11,29 +12,94 @@ export function drawPillPath(params: {
   cy: number
   width: number
   height: number
+  ccwRotationDegrees?: number
 }): void {
-  const { ctx, cx, cy, width, height } = params
+  const {
+    ctx,
+    cx: centerX,
+    cy: centerY,
+    width,
+    height,
+    ccwRotationDegrees = 0,
+  } = params
+
+  const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
+  const realToPxTransform = compose(
+    translate(centerX, centerY),
+    rotate(-ccwRotationRadians),
+  )
+
   if (width > height) {
-    // Horizontal pill
-    const radius = height / 2
-    const straightLength = width - height
-    ctx.moveTo(cx - straightLength / 2, cy - radius)
-    ctx.lineTo(cx + straightLength / 2, cy - radius)
-    ctx.arc(cx + straightLength / 2, cy, radius, -Math.PI / 2, Math.PI / 2)
-    ctx.lineTo(cx - straightLength / 2, cy + radius)
-    ctx.arc(cx - straightLength / 2, cy, radius, Math.PI / 2, -Math.PI / 2)
+    // Horizontal pill: rectangle with semicircular caps on left and right
+    const semicircleRadius = height / 2
+    const semicircleCenterOffset = (width - height) / 2
+    const leftSemicircleCenter = applyToPoint(realToPxTransform, {
+      x: -semicircleCenterOffset,
+      y: 0,
+    })
+    const rightSemicircleCenter = applyToPoint(realToPxTransform, {
+      x: semicircleCenterOffset,
+      y: 0,
+    })
+
+    const startPoint = applyToPoint(realToPxTransform, {
+      x: semicircleCenterOffset,
+      y: -semicircleRadius,
+    })
+    ctx.moveTo(startPoint.x, startPoint.y)
+
+    ctx.arc(
+      rightSemicircleCenter.x,
+      rightSemicircleCenter.y,
+      semicircleRadius,
+      -ccwRotationRadians - Math.PI / 2,
+      -ccwRotationRadians + Math.PI / 2,
+    )
+    ctx.arc(
+      leftSemicircleCenter.x,
+      leftSemicircleCenter.y,
+      semicircleRadius,
+      -ccwRotationRadians + Math.PI / 2,
+      -ccwRotationRadians - Math.PI / 2,
+    )
   } else if (height > width) {
-    // Vertical pill
-    const radius = width / 2
-    const straightLength = height - width
-    ctx.moveTo(cx + radius, cy - straightLength / 2)
-    ctx.lineTo(cx + radius, cy + straightLength / 2)
-    ctx.arc(cx, cy + straightLength / 2, radius, 0, Math.PI)
-    ctx.lineTo(cx - radius, cy - straightLength / 2)
-    ctx.arc(cx, cy - straightLength / 2, radius, Math.PI, 0)
+    // Vertical pill: rectangle with semicircular caps on top and bottom
+    const semicircleRadius = width / 2
+    const semicircleCenterOffset = (height - width) / 2
+    const topSemicircleCenter = applyToPoint(realToPxTransform, {
+      x: 0,
+      y: -semicircleCenterOffset,
+    })
+    const bottomSemicircleCenter = applyToPoint(realToPxTransform, {
+      x: 0,
+      y: semicircleCenterOffset,
+    })
+
+    const startPoint = applyToPoint(realToPxTransform, {
+      x: semicircleRadius,
+      y: semicircleCenterOffset,
+    })
+    ctx.moveTo(startPoint.x, startPoint.y)
+
+    ctx.arc(
+      bottomSemicircleCenter.x,
+      bottomSemicircleCenter.y,
+      semicircleRadius,
+      -ccwRotationRadians,
+      -ccwRotationRadians + Math.PI,
+    )
+    ctx.arc(
+      topSemicircleCenter.x,
+      topSemicircleCenter.y,
+      semicircleRadius,
+      -ccwRotationRadians + Math.PI,
+      -ccwRotationRadians,
+    )
   } else {
-    // Square dimensions = circle
-    ctx.arc(cx, cy, width / 2, 0, Math.PI * 2)
+    // Circle: fallback when width equals height
+    const radius = width / 2
+    ctx.moveTo(centerX + radius, centerY)
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
   }
   ctx.closePath()
 }
