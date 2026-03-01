@@ -32,15 +32,16 @@ export function drawOval(params: DrawOvalParams): void {
   const scaledRadiusY = radius_y * Math.abs(realToCanvasMat.a)
   const scaledStrokeWidth = strokeWidth * Math.abs(realToCanvasMat.a)
 
-  ctx.save()
-  ctx.translate(cx, cy)
-
-  if (rotation !== 0) {
-    ctx.rotate(-rotation * (Math.PI / 180))
-  }
-
   ctx.beginPath()
-  ctx.ellipse(0, 0, scaledRadiusX, scaledRadiusY, 0, 0, Math.PI * 2)
+  ctx.ellipse(
+    cx,
+    cy,
+    scaledRadiusX,
+    scaledRadiusY,
+    -((rotation * Math.PI) / 180),
+    0,
+    Math.PI * 2,
+  )
 
   if (fill) {
     ctx.fillStyle = fill
@@ -52,6 +53,4 @@ export function drawOval(params: DrawOvalParams): void {
     ctx.lineWidth = scaledStrokeWidth
     ctx.stroke()
   }
-
-  ctx.restore()
 }
