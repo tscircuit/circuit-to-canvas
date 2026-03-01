@@ -24,10 +24,10 @@ export function drawRoundedRectPath(params: {
     ccwRotationDegrees = 0,
   } = params
 
-  const rotationRadians = (-ccwRotationDegrees * Math.PI) / 180
-  const transformMatrix = compose(
+  const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
+  const realToPxTransform = compose(
     translate(centerX, centerY),
-    rotate(rotationRadians),
+    rotate(-ccwRotationRadians),
   )
 
   const rectHalfWidth = width / 2
@@ -35,25 +35,25 @@ export function drawRoundedRectPath(params: {
   const rectCornerRadius = Math.min(radius, rectHalfWidth, rectHalfHeight)
 
   if (rectCornerRadius > 0) {
-    const rectTopLeftCorner = applyToPoint(transformMatrix, {
+    const rectTopLeftCorner = applyToPoint(realToPxTransform, {
       x: -rectHalfWidth,
       y: -rectHalfHeight,
     })
-    const rectTopRightCorner = applyToPoint(transformMatrix, {
+    const rectTopRightCorner = applyToPoint(realToPxTransform, {
       x: rectHalfWidth,
       y: -rectHalfHeight,
     })
-    const rectBottomRightCorner = applyToPoint(transformMatrix, {
+    const rectBottomRightCorner = applyToPoint(realToPxTransform, {
       x: rectHalfWidth,
       y: rectHalfHeight,
     })
-    const rectBottomLeftCorner = applyToPoint(transformMatrix, {
+    const rectBottomLeftCorner = applyToPoint(realToPxTransform, {
       x: -rectHalfWidth,
       y: rectHalfHeight,
     })
 
     // Start at a midpoint of the left vertical edge to ensure a smooth enclosed path drawing
-    const leftEdgeMidpoint = applyToPoint(transformMatrix, {
+    const leftEdgeMidpoint = applyToPoint(realToPxTransform, {
       x: -rectHalfWidth,
       y: 0,
     })
@@ -89,19 +89,19 @@ export function drawRoundedRectPath(params: {
       rectCornerRadius,
     )
   } else {
-    const rectTopLeftCorner = applyToPoint(transformMatrix, {
+    const rectTopLeftCorner = applyToPoint(realToPxTransform, {
       x: -rectHalfWidth,
       y: -rectHalfHeight,
     })
-    const rectTopRightCorner = applyToPoint(transformMatrix, {
+    const rectTopRightCorner = applyToPoint(realToPxTransform, {
       x: rectHalfWidth,
       y: -rectHalfHeight,
     })
-    const rectBottomRightCorner = applyToPoint(transformMatrix, {
+    const rectBottomRightCorner = applyToPoint(realToPxTransform, {
       x: rectHalfWidth,
       y: rectHalfHeight,
     })
-    const rectBottomLeftCorner = applyToPoint(transformMatrix, {
+    const rectBottomLeftCorner = applyToPoint(realToPxTransform, {
       x: -rectHalfWidth,
       y: rectHalfHeight,
     })

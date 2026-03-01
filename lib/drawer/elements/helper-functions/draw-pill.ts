@@ -23,74 +23,83 @@ export function drawPillPath(params: {
     ccwRotationDegrees = 0,
   } = params
 
-  const rotationRadians = (-ccwRotationDegrees * Math.PI) / 180
-  const transformMatrix = compose(
+  const ccwRotationRadians = (ccwRotationDegrees * Math.PI) / 180
+  const realToPxTransform = compose(
     translate(centerX, centerY),
-    rotate(rotationRadians),
+    rotate(-ccwRotationRadians),
   )
 
   if (width > height) {
     // Horizontal pill: rectangle with semicircular caps on left and right
     const semicircleRadius = height / 2
     const semicircleCenterOffset = (width - height) / 2
-    const leftSemicircleCenter = applyToPoint(transformMatrix, {
+    const leftSemicircleCenter = applyToPoint(realToPxTransform, {
       x: -semicircleCenterOffset,
       y: 0,
     })
-    const rightSemicircleCenter = applyToPoint(transformMatrix, {
+    const rightSemicircleCenter = applyToPoint(realToPxTransform, {
       x: semicircleCenterOffset,
       y: 0,
     })
+
+    const startPoint = applyToPoint(realToPxTransform, {
+      x: semicircleCenterOffset,
+      y: -semicircleRadius,
+    })
+    ctx.moveTo(startPoint.x, startPoint.y)
 
     ctx.arc(
       rightSemicircleCenter.x,
       rightSemicircleCenter.y,
       semicircleRadius,
-      rotationRadians - Math.PI / 2,
-      rotationRadians + Math.PI / 2,
+      -ccwRotationRadians - Math.PI / 2,
+      -ccwRotationRadians + Math.PI / 2,
     )
     ctx.arc(
       leftSemicircleCenter.x,
       leftSemicircleCenter.y,
       semicircleRadius,
-      rotationRadians + Math.PI / 2,
-      rotationRadians - Math.PI / 2,
+      -ccwRotationRadians + Math.PI / 2,
+      -ccwRotationRadians - Math.PI / 2,
     )
   } else if (height > width) {
     // Vertical pill: rectangle with semicircular caps on top and bottom
     const semicircleRadius = width / 2
     const semicircleCenterOffset = (height - width) / 2
-    const topSemicircleCenter = applyToPoint(transformMatrix, {
+    const topSemicircleCenter = applyToPoint(realToPxTransform, {
       x: 0,
       y: -semicircleCenterOffset,
     })
-    const bottomSemicircleCenter = applyToPoint(transformMatrix, {
+    const bottomSemicircleCenter = applyToPoint(realToPxTransform, {
       x: 0,
       y: semicircleCenterOffset,
     })
 
-    // Start at a midpoint of the left vertical edge to ensure a smooth enclosed path drawing
-    ctx.moveTo(
-      bottomSemicircleCenter.x + semicircleRadius * Math.cos(rotationRadians),
-      bottomSemicircleCenter.y + semicircleRadius * Math.sin(rotationRadians),
-    )
+    const startPoint = applyToPoint(realToPxTransform, {
+      x: semicircleRadius,
+      y: semicircleCenterOffset,
+    })
+    ctx.moveTo(startPoint.x, startPoint.y)
+
     ctx.arc(
       bottomSemicircleCenter.x,
       bottomSemicircleCenter.y,
       semicircleRadius,
-      rotationRadians,
-      rotationRadians + Math.PI,
+      -ccwRotationRadians,
+      -ccwRotationRadians + Math.PI,
     )
     ctx.arc(
       topSemicircleCenter.x,
       topSemicircleCenter.y,
       semicircleRadius,
-      rotationRadians + Math.PI,
-      rotationRadians,
+      -ccwRotationRadians + Math.PI,
+      -ccwRotationRadians,
     )
   } else {
     // Circle: fallback when width equals height
-    ctx.arc(centerX, centerY, width / 2, 0, Math.PI * 2)
+    const radius = width / 2
+    ctx.moveTo(centerX + radius, centerY)
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
   }
   ctx.closePath()
 }
