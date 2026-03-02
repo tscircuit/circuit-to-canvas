@@ -30,6 +30,7 @@ test("draw circular hole with rotated rect pad when soldermask is true", async (
     rect_pad_height: 70,
     rect_ccw_rotation: 45,
     layers: ["top", "bottom"],
+    is_covered_with_solder_mask: true,
   }
 
   const board: PcbBoard = {
