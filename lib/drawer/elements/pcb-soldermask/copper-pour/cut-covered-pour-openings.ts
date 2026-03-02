@@ -175,10 +175,23 @@ function cutPlatedHole(params: {
     return
   }
 
-  if (
-    hole.shape === "circular_hole_with_rect_pad" ||
-    hole.shape === "pill_hole_with_rect_pad"
-  ) {
+  if (hole.shape === "circular_hole_with_rect_pad") {
+    drawRect({
+      ctx,
+      center: { x: hole.x, y: hole.y },
+      width: hole.rect_pad_width,
+      height: hole.rect_pad_height,
+      borderRadius: hole.rect_border_radius ?? 0,
+      ccwRotationDegrees: hole.rect_ccw_rotation
+        ? -hole.rect_ccw_rotation
+        : undefined,
+      fill: CUTOUT_MASK_COLOR,
+      realToCanvasMat,
+    })
+    return
+  }
+
+  if (hole.shape === "pill_hole_with_rect_pad") {
     drawRect({
       ctx,
       center: { x: hole.x, y: hole.y },

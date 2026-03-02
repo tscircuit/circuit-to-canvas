@@ -7,7 +7,7 @@ import type {
 } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test("draw circular hole with rotated rect pad", async () => {
+test("draw circular hole with rotated rect pad when soldermask is true", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -44,10 +44,13 @@ test("draw circular hole with rotated rect pad", async () => {
   }
 
   drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
-  drawer.drawElements([board, hole], { drawBoardMaterial: true })
+  drawer.drawElements([board, hole], {
+    drawBoardMaterial: true,
+    drawSoldermask: true,
+  })
 
   await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
-    "circular-hole-rotated-rect-pad",
+    "circular-hole-rotated-rect-pad-soldermask",
   )
 })

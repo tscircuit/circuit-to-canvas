@@ -119,7 +119,9 @@ function drawPlatedHoleShapePath(params: {
       width: rectPadWidth,
       height: rectPadHeight,
       radius: rectPadCornerRadius,
-      ccwRotationDegrees: hole.rect_ccw_rotation,
+      ccwRotationDegrees: hole.rect_ccw_rotation
+        ? -hole.rect_ccw_rotation
+        : undefined,
     })
   } else if (hole.shape === "pill_hole_with_rect_pad") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
@@ -290,6 +292,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
       width: padWidth,
       height: padHeight,
       radius: padCornerRadius,
+      ccwRotationDegrees: hole.rect_ccw_rotation,
     })
 
     const soldermaskPadWidth = padWidth - marginMagnitude * 2
@@ -382,7 +385,6 @@ function drawNegativeMarginRingForPlatedHole(params: {
         width: soldermaskPadWidth,
         height: soldermaskPadHeight,
         radius: soldermaskPadCornerRadius,
-        ccwRotationDegrees: hole.rect_ccw_rotation,
       })
     }
 
