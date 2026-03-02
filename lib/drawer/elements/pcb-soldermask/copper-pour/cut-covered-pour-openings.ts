@@ -182,6 +182,7 @@ function cutPlatedHole(params: {
       width: hole.rect_pad_width,
       height: hole.rect_pad_height,
       borderRadius: hole.rect_border_radius ?? 0,
+      // TODO: Rotation direction is reversed. Debug and fix instead of using negative sign.
       ccwRotationDegrees: hole.rect_ccw_rotation
         ? -hole.rect_ccw_rotation
         : undefined,
