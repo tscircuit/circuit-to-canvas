@@ -385,6 +385,7 @@ function drawNegativeMarginRingForPlatedHole(params: {
         width: soldermaskPadWidth,
         height: soldermaskPadHeight,
         radius: soldermaskPadCornerRadius,
+        ccwRotationDegrees: hole.rect_ccw_rotation,
       })
     }
 
