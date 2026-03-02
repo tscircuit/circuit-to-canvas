@@ -122,6 +122,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       borderRadius: hole.rect_border_radius
         ? Math.max(0, hole.rect_border_radius - copperInset)
         : 0,
+      ccwRotationDegrees: hole.rect_ccw_rotation,
     })
 
     // Draw circular drill hole (with offset)
