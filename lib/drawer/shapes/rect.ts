@@ -10,7 +10,7 @@ export interface DrawRectParams {
   fill?: string
   realToCanvasMat: Matrix
   borderRadius?: number
-  rotation?: number
+  ccwRotationDegrees?: number
   stroke?: string
   strokeWidth?: number
   isStrokeDashed?: boolean
@@ -25,7 +25,7 @@ export function drawRect(params: DrawRectParams): void {
     fill,
     realToCanvasMat,
     borderRadius = 0,
-    rotation = 0,
+    ccwRotationDegrees = 0,
     stroke,
     strokeWidth,
     isStrokeDashed = false,
@@ -42,8 +42,8 @@ export function drawRect(params: DrawRectParams): void {
   ctx.save()
   ctx.translate(cx, cy)
 
-  if (rotation !== 0) {
-    ctx.rotate(-rotation * (Math.PI / 180))
+  if (ccwRotationDegrees !== 0) {
+    ctx.rotate(-ccwRotationDegrees * (Math.PI / 180))
   }
 
   ctx.beginPath()

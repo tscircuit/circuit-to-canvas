@@ -55,7 +55,7 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
       fill: color,
       realToCanvasMat,
       borderRadius: getBorderRadius(pad),
-      rotation: pad.ccw_rotation ?? 0,
+      ccwRotationDegrees: pad.ccw_rotation ?? 0,
     })
     return
   }

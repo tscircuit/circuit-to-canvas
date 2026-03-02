@@ -90,7 +90,7 @@ function cutSmtPad(params: {
       width: pad.width,
       height: pad.height,
       borderRadius: pad.corner_radius ?? pad.rect_border_radius ?? 0,
-      rotation: pad.ccw_rotation ?? 0,
+      ccwRotationDegrees: pad.ccw_rotation ?? 0,
       fill: CUTOUT_MASK_COLOR,
       realToCanvasMat,
     })
@@ -198,7 +198,7 @@ function cutPlatedHole(params: {
       width: hole.rect_pad_width,
       height: hole.rect_pad_height,
       borderRadius: hole.rect_border_radius ?? 0,
-      rotation: hole.rect_ccw_rotation,
+      ccwRotationDegrees: hole.rect_ccw_rotation,
       fill: CUTOUT_MASK_COLOR,
       realToCanvasMat,
     })
@@ -250,7 +250,7 @@ function cutHole(params: {
       center: { x: hole.x, y: hole.y },
       width: hole.hole_diameter,
       height: hole.hole_diameter,
-      rotation,
+      ccwRotationDegrees: rotation,
       fill: CUTOUT_MASK_COLOR,
       realToCanvasMat,
     })
@@ -276,7 +276,7 @@ function cutHole(params: {
       center: { x: hole.x, y: hole.y },
       width: hole.hole_width,
       height: hole.hole_height,
-      rotation,
+      ccwRotationDegrees: rotation,
       fill: CUTOUT_MASK_COLOR,
       realToCanvasMat,
     })

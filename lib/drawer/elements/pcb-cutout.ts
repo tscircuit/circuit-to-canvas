@@ -23,7 +23,7 @@ export function drawPcbCutout(params: DrawPcbCutoutParams): void {
       height: cutout.height,
       fill: colorMap.drill,
       realToCanvasMat,
-      rotation: cutout.rotation ?? 0,
+      ccwRotationDegrees: cutout.rotation ?? 0,
       borderRadius: cutout.corner_radius ?? 0,
     })
     return
