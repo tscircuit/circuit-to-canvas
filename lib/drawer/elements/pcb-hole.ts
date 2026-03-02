@@ -52,7 +52,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
   }
 
   if (hole.hole_shape === "square") {
-    const rotation = getRotation(hole)
+    const ccwRotationDegrees = getRotation(hole)
     drawRect({
       ctx,
       center: { x: hole.x, y: hole.y },
@@ -60,7 +60,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       height: hole.hole_diameter - holeInset * 2,
       fill: colorMap.drill,
       realToCanvasMat,
-      rotation,
+      ccwRotationDegrees: ccwRotationDegrees,
     })
     return
   }
@@ -80,7 +80,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
   }
 
   if (hole.hole_shape === "rect") {
-    const rotation = getRotation(hole)
+    const ccwRotationDegrees = getRotation(hole)
     drawRect({
       ctx,
       center: { x: hole.x, y: hole.y },
@@ -88,7 +88,7 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       height: hole.hole_height - holeInset * 2,
       fill: colorMap.drill,
       realToCanvasMat,
-      rotation,
+      ccwRotationDegrees: ccwRotationDegrees,
     })
     return
   }
