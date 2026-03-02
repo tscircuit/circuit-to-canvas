@@ -119,10 +119,7 @@ function drawPlatedHoleShapePath(params: {
       width: rectPadWidth,
       height: rectPadHeight,
       radius: rectPadCornerRadius,
-      // TODO: Rotation direction is reversed. Debug and fix instead of using negative sign.
-      ccwRotationDegrees: hole.rect_ccw_rotation
-        ? -hole.rect_ccw_rotation
-        : undefined,
+      ccwRotationDegrees: hole.rect_ccw_rotation,
     })
   } else if (hole.shape === "pill_hole_with_rect_pad") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
