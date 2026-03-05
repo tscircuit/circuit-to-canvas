@@ -1,11 +1,11 @@
 import type { PcbPlatedHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../types"
 import { drawCircle } from "../shapes/circle"
-import { drawRect } from "../shapes/rect"
 import { drawOval } from "../shapes/oval"
 import { drawPill } from "../shapes/pill"
 import { drawPolygon } from "../shapes/polygon"
+import { drawRect } from "../shapes/rect"
+import type { CanvasContext, PcbColorMap } from "../types"
 import { offsetPolygonPoints } from "./soldermask-margin"
 
 export interface DrawPcbPlatedHoleParams {
@@ -49,7 +49,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       realToCanvasMat,
     })
 
-    // Draw inner drill hole
+    // Cut inner drill hole out of copper, then paint drill color.
+    cutCurrentLayer(ctx, () => {
+      drawCircle({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius: hole.hole_diameter / 2,
+        fill: "#000",
+        realToCanvasMat,
+      })
+    })
+
     drawCircle({
       ctx,
       center: { x: hole.x, y: hole.y },
@@ -72,7 +82,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       rotation: hole.ccw_rotation,
     })
 
-    // Draw inner drill hole
+    // Cut inner drill hole out of copper, then paint drill color.
+    cutCurrentLayer(ctx, () => {
+      drawOval({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        radius_x: hole.hole_width / 2,
+        radius_y: hole.hole_height / 2,
+        fill: "#000",
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    })
+
     drawOval({
       ctx,
       center: { x: hole.x, y: hole.y },
@@ -97,7 +119,19 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
       rotation: hole.ccw_rotation,
     })
 
-    // Draw inner drill hole
+    // Cut inner drill hole out of copper, then paint drill color.
+    cutCurrentLayer(ctx, () => {
+      drawPill({
+        ctx,
+        center: { x: hole.x, y: hole.y },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: "#000",
+        realToCanvasMat,
+        rotation: hole.ccw_rotation,
+      })
+    })
+
     drawPill({
       ctx,
       center: { x: hole.x, y: hole.y },
@@ -128,6 +162,16 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     // Draw circular drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
     const holeY = hole.y + (hole.hole_offset_y ?? 0)
+    cutCurrentLayer(ctx, () => {
+      drawCircle({
+        ctx,
+        center: { x: holeX, y: holeY },
+        radius: hole.hole_diameter / 2,
+        fill: "#000",
+        realToCanvasMat,
+      })
+    })
+
     drawCircle({
       ctx,
       center: { x: holeX, y: holeY },
@@ -155,6 +199,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     // Draw pill drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
     const holeY = hole.y + (hole.hole_offset_y ?? 0)
+    cutCurrentLayer(ctx, () => {
+      drawPill({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: "#000",
+        realToCanvasMat,
+      })
+    })
+
     drawPill({
       ctx,
       center: { x: holeX, y: holeY },
@@ -184,6 +239,18 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     // Draw rotated pill drill hole (with offset)
     const holeX = hole.x + (hole.hole_offset_x ?? 0)
     const holeY = hole.y + (hole.hole_offset_y ?? 0)
+    cutCurrentLayer(ctx, () => {
+      drawPill({
+        ctx,
+        center: { x: holeX, y: holeY },
+        width: hole.hole_width,
+        height: hole.hole_height,
+        fill: "#000",
+        realToCanvasMat,
+        rotation: hole.hole_ccw_rotation,
+      })
+    })
+
     drawPill({
       ctx,
       center: { x: holeX, y: holeY },
@@ -226,6 +293,16 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     const holeShape = hole.hole_shape
 
     if (holeShape === "circle") {
+      cutCurrentLayer(ctx, () => {
+        drawCircle({
+          ctx,
+          center: { x: holeX, y: holeY },
+          radius: (hole.hole_diameter ?? 0) / 2,
+          fill: "#000",
+          realToCanvasMat,
+        })
+      })
+
       drawCircle({
         ctx,
         center: { x: holeX, y: holeY },
@@ -234,6 +311,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         realToCanvasMat,
       })
     } else if (holeShape === "oval") {
+      cutCurrentLayer(ctx, () => {
+        drawOval({
+          ctx,
+          center: { x: holeX, y: holeY },
+          radius_x: (hole.hole_width ?? 0) / 2,
+          radius_y: (hole.hole_height ?? 0) / 2,
+          fill: "#000",
+          realToCanvasMat,
+        })
+      })
+
       drawOval({
         ctx,
         center: { x: holeX, y: holeY },
@@ -243,6 +331,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         realToCanvasMat,
       })
     } else if (holeShape === "pill") {
+      cutCurrentLayer(ctx, () => {
+        drawPill({
+          ctx,
+          center: { x: holeX, y: holeY },
+          width: hole.hole_width ?? 0,
+          height: hole.hole_height ?? 0,
+          fill: "#000",
+          realToCanvasMat,
+        })
+      })
+
       drawPill({
         ctx,
         center: { x: holeX, y: holeY },
@@ -252,6 +351,17 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
         realToCanvasMat,
       })
     } else if (holeShape === "rotated_pill") {
+      cutCurrentLayer(ctx, () => {
+        drawPill({
+          ctx,
+          center: { x: holeX, y: holeY },
+          width: hole.hole_width ?? 0,
+          height: hole.hole_height ?? 0,
+          fill: "#000",
+          realToCanvasMat,
+        })
+      })
+
       drawPill({
         ctx,
         center: { x: holeX, y: holeY },
@@ -263,4 +373,11 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     }
     return
   }
+}
+
+function cutCurrentLayer(ctx: CanvasContext, drawCutPath: () => void): void {
+  ctx.save()
+  ctx.globalCompositeOperation = "destination-out"
+  drawCutPath()
+  ctx.restore()
 }

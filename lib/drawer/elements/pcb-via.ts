@@ -1,7 +1,7 @@
 import type { PCBVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../types"
 import { drawCircle } from "../shapes/circle"
+import type { CanvasContext, PcbColorMap } from "../types"
 
 export interface DrawPcbViaParams {
   ctx: CanvasContext
@@ -22,7 +22,18 @@ export function drawPcbVia(params: DrawPcbViaParams): void {
     realToCanvasMat,
   })
 
-  // Draw inner drill hole
+  // Cut inner drill hole out of copper, then paint drill color.
+  ctx.save()
+  ctx.globalCompositeOperation = "destination-out"
+  drawCircle({
+    ctx,
+    center: { x: via.x, y: via.y },
+    radius: via.hole_diameter / 2,
+    fill: "#000",
+    realToCanvasMat,
+  })
+  ctx.restore()
+
   drawCircle({
     ctx,
     center: { x: via.x, y: via.y },
