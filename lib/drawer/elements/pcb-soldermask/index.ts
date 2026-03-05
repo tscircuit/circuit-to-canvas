@@ -1,4 +1,10 @@
-import type { AnyCircuitElement, PcbBoard, PcbPanel } from "circuit-json"
+import type {
+  AnyCircuitElement,
+  PcbBoard,
+  PcbPanel,
+  PcbPlatedHole,
+  PcbVia,
+} from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { drawBoardSoldermask } from "./board"
@@ -50,6 +56,10 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   const soldermaskColor = colorMap.soldermask[layer] ?? colorMap.soldermask.top
   const soldermaskOverCopperColor =
     colorMap.soldermaskOverCopper[layer] ?? colorMap.soldermaskOverCopper.top
+  const vias = elements.filter((el): el is PcbVia => el.type === "pcb_via")
+  const platedHoles = elements.filter(
+    (el): el is PcbPlatedHole => el.type === "pcb_plated_hole",
+  )
 
   const soldermaskCtx =
     createSoldermaskLayerContext(ctx, ctx.canvas.width, ctx.canvas.height) ??
@@ -98,6 +108,8 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
         realToCanvasMat,
         soldermaskOverCopperColor,
         layer,
+        vias,
+        platedHoles,
       })
     } else if (element.type === "pcb_copper_pour") {
       processCopperPourSoldermask({

@@ -229,6 +229,14 @@ export class CircuitToCanvasDrawer {
       drawSoldermask &&
       (board !== undefined || panel !== undefined) &&
       (options.drawSoldermaskBottom ?? false)
+    const drawableVias = elements.filter(
+      (el): el is PcbVia =>
+        shouldDrawElement(el, options) && el.type === "pcb_via",
+    )
+    const drawablePlatedHoles = elements.filter(
+      (el): el is PcbPlatedHole =>
+        shouldDrawElement(el, options) && el.type === "pcb_plated_hole",
+    )
 
     // Step 2: Draw board outline/material (inner board)
     if (board) {
@@ -290,6 +298,8 @@ export class CircuitToCanvasDrawer {
             trace: element as PcbTrace,
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
+            vias: drawableVias,
+            platedHoles: drawablePlatedHoles,
           })
         }
       }
@@ -420,6 +430,8 @@ export class CircuitToCanvasDrawer {
           trace: element as PcbTrace,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
+          vias: drawableVias,
+          platedHoles: drawablePlatedHoles,
         })
       }
     }

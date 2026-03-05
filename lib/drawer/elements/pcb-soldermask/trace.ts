@@ -1,10 +1,11 @@
-import type { PcbTrace } from "circuit-json"
+import type { PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import { drawLine } from "../../shapes/line"
 import { drawPolygon } from "../../shapes/polygon"
 import { buildTracePolygon } from "../pcb-trace/build-trace-polygon"
 import { collectTraceSegments } from "../pcb-trace/collect-trace-segments"
+import { cutTraceDestinationsAtDrills } from "../pcb-trace/cut-trace-destination-drills"
 import { hasVariableWidth } from "../pcb-trace/has-variable-width"
 
 export function processTraceSoldermask(params: {
@@ -13,6 +14,8 @@ export function processTraceSoldermask(params: {
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
+  vias: PcbVia[]
+  platedHoles: PcbPlatedHole[]
 }): void {
   const { ctx, trace, realToCanvasMat, soldermaskOverCopperColor, layer } =
     params
@@ -53,4 +56,13 @@ export function processTraceSoldermask(params: {
       })
     }
   }
+
+  cutTraceDestinationsAtDrills({
+    ctx,
+    trace,
+    realToCanvasMat,
+    layer,
+    vias: params.vias,
+    platedHoles: params.platedHoles,
+  })
 }
