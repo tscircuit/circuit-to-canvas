@@ -92,6 +92,8 @@ export interface DrawElementsOptions {
   drawBoardMaterial?: boolean
   /** Minimum on-screen outline stroke width for pcb_board only. */
   minBoardOutlineStrokePx?: number
+  /** Whether to render pcb_note elements. Defaults to true. */
+  showPcbNotes?: boolean
 }
 
 interface CanvasLike {
@@ -524,7 +526,9 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_note_rect") {
+      const showPcbNotes = options.showPcbNotes ?? true
+
+      if (showPcbNotes && element.type === "pcb_note_rect") {
         drawPcbNoteRect({
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
@@ -542,7 +546,7 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_note_path") {
+      if (showPcbNotes && element.type === "pcb_note_path") {
         drawPcbNotePath({
           ctx: this.ctx,
           path: element as PcbNotePath,
@@ -551,7 +555,7 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_note_text") {
+      if (showPcbNotes && element.type === "pcb_note_text") {
         drawPcbNoteText({
           ctx: this.ctx,
           text: element as PcbNoteText,
@@ -560,7 +564,7 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_note_line") {
+      if (showPcbNotes && element.type === "pcb_note_line") {
         drawPcbNoteLine({
           ctx: this.ctx,
           line: element as PcbNoteLine,
@@ -569,7 +573,7 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_note_dimension") {
+      if (showPcbNotes && element.type === "pcb_note_dimension") {
         drawPcbNoteDimension({
           ctx: this.ctx,
           pcbNoteDimension: element as PcbNoteDimension,
