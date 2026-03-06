@@ -156,56 +156,94 @@ export function drawText(params: DrawTextParams): void {
     ctx.scale(-1, 1)
   }
 
-  // Handle Knockout Background
+  // Handle Knockout Background - True knockout using destination-out
   if (knockout) {
+    // Save state before knockout rendering
+    ctx.save()
+
     const padding = { ...DEFAULT_KNOCKOUT_PADDING, ...knockoutPadding }
-    const paddingLeft = padding.left * scale
-    const paddingRight = padding.right * scale
-    const paddingTop = padding.top * scale
-    const paddingBottom = padding.bottom * scale
+    const paddingLeft = padding.left * scaledFontSize
+    const paddingRight = padding.right * scaledFontSize
+    const paddingTop = padding.top * scaledFontSize
+    const paddingBottom = padding.bottom * scaledFontSize
     const totalWidth = layout.width + layout.strokeWidth
 
-    // Logic copied from pcb-silkscreen-text.ts/pcb-copper-text.ts
-    // Note: The multiplier *4 for left/top seems specific to the existing implementation
-    const rectX = startPos.x - paddingLeft * 4
-    const rectY = startPos.y - paddingTop * 4
-    const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
+    // Calculate background rectangle dimensions
+    const rectX = startPos.x - paddingLeft
+    const rectY = startPos.y - paddingTop
+    const rectWidth = totalWidth + paddingLeft + paddingRight
     const rectHeight =
-      layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
+      layout.height + layout.strokeWidth + paddingTop + paddingBottom
 
+    // Step 1: Draw background rectangle with silkscreen color
     ctx.fillStyle = color
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
-  } else {
-    // Only set strokeStyle if NOT knockout, matching existing behavior
-    ctx.strokeStyle = color
-  }
 
-  ctx.lineWidth = layout.strokeWidth
-  ctx.lineCap = "round"
-  ctx.lineJoin = "round"
+    // Step 2: Set composite operation to "destination-out" to erase text area
+    ctx.globalCompositeOperation = "destination-out"
 
-  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+    // Step 3: Set stroke style for text (will erase from background)
+    ctx.strokeStyle = "rgba(0, 0, 0, 1)" // Color doesn't matter for destination-out
+    ctx.lineWidth = layout.strokeWidth
+    ctx.lineCap = "round"
+    ctx.lineJoin = "round"
 
-  lines.forEach((line, lineIndex) => {
-    const lineStartX =
-      startPos.x +
-      getLineStartX({
-        alignment: anchorAlignment,
-        lineWidth: lineWidths[lineIndex]!,
-        maxWidth: width,
-        strokeWidth,
+    // Step 4: Draw text lines (creates transparent holes)
+    const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+    lines.forEach((line, lineIndex) => {
+      const lineStartX =
+        startPos.x +
+        getLineStartX({
+          alignment: anchorAlignment,
+          lineWidth: lineWidths[lineIndex]!,
+          maxWidth: width,
+          strokeWidth,
+        })
+      const lineStartY = startPos.y + lineIndex * lineHeight
+
+      strokeAlphabetLine({
+        ctx,
+        line,
+        fontSize: scaledFontSize,
+        startX: lineStartX,
+        startY: lineStartY,
+        layout,
       })
-    const lineStartY = startPos.y + lineIndex * lineHeight
-
-    strokeAlphabetLine({
-      ctx,
-      line,
-      fontSize: scaledFontSize,
-      startX: lineStartX,
-      startY: lineStartY,
-      layout,
     })
-  })
+
+    // Step 5: Restore state (includes composite operation, fillStyle, lineWidth, etc.)
+    ctx.restore()
+  } else {
+    // Non-knockout rendering (original behavior)
+    ctx.strokeStyle = color
+    ctx.lineWidth = layout.strokeWidth
+    ctx.lineCap = "round"
+    ctx.lineJoin = "round"
+
+    const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+    lines.forEach((line, lineIndex) => {
+      const lineStartX =
+        startPos.x +
+        getLineStartX({
+          alignment: anchorAlignment,
+          lineWidth: lineWidths[lineIndex]!,
+          maxWidth: width,
+          strokeWidth,
+        })
+      const lineStartY = startPos.y + lineIndex * lineHeight
+
+      strokeAlphabetLine({
+        ctx,
+        line,
+        fontSize: scaledFontSize,
+        startX: lineStartX,
+        startY: lineStartY,
+        layout,
+      })
+    })
+  }
 
   ctx.restore()
 }
