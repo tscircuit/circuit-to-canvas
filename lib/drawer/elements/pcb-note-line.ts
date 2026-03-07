@@ -15,7 +15,7 @@ export function drawPcbNoteLine(params: DrawPcbNoteLineParams): void {
 
   // Use the color from the line if provided, otherwise use a default color
   // Notes are typically shown in a distinct color
-  const defaultColor = "rgb(89, 148, 220)" // Blue color for notes
+  const defaultColor = colorMap.pcbNote // Blue color for notes
   const color = line.color ?? defaultColor
 
   const strokeWidth = line.stroke_width ?? 0.1

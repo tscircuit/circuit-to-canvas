@@ -15,7 +15,7 @@ export function drawPcbNoteRect(params: DrawPcbNoteRectParams): void {
 
   // Use the color from the rect if provided, otherwise use a default color
   // Notes are typically shown in a distinct color
-  const defaultColor = "rgb(89, 148, 220)" // White color for notes
+  const defaultColor = colorMap.pcbNote
   const color = rect.color ?? defaultColor
 
   const isFilled = rect.is_filled ?? false
