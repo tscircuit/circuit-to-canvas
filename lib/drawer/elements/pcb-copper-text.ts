@@ -70,9 +70,12 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     const rectHeight =
       layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
 
-    // Draw knockout rectangle
+    // Draw knockout rectangle, then cut out text
     ctx.fillStyle = textColor
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
+
+    ctx.globalCompositeOperation = "destination-out"
+    ctx.strokeStyle = textColor
   } else {
     ctx.strokeStyle = textColor
   }
