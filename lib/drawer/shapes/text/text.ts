@@ -62,10 +62,8 @@ export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
 /**
  * Draw glyph line segments as filled shapes (rounded-cap thick lines).
  * Used for knockout text because destination-out compositing with stroke()
- * has rendering issues in @napi-rs/canvas.
- *
- * Each line segment is drawn as a single path (two half-circle caps + a
- * rectangle body) in one fill() call to reduce anti-aliasing artifacts.
+ * has rendering issues in @napi-rs/canvas, as does single-path fill() with
+ * multiple sub-paths. Each segment is drawn individually as a capsule shape.
  */
 function fillAlphabetLine(params: StrokeAlphabetLineParams): void {
   const { ctx, line, fontSize, startX, startY, layout } = params
@@ -91,23 +89,19 @@ function fillAlphabetLine(params: StrokeAlphabetLineParams): void {
         const len = Math.sqrt(dx * dx + dy * dy)
         const angle = Math.atan2(dy, dx)
 
-        // Draw entire segment (caps + body) as one path for clean edges
         ctx.save()
         ctx.translate(x1, y1)
         ctx.rotate(angle)
 
         ctx.beginPath()
-        // Start cap (half circle)
+        // Left semicircle (clockwise from bottom to top)
         ctx.arc(0, 0, r, Math.PI / 2, -Math.PI / 2)
         if (len > 0) {
-          // Top edge to end cap
           ctx.lineTo(len, -r)
-          // End cap (half circle)
+          // Right semicircle (clockwise from top to bottom)
           ctx.arc(len, 0, r, -Math.PI / 2, Math.PI / 2)
-          // Bottom edge back to start
           ctx.lineTo(0, r)
         } else {
-          // Zero-length segment: complete the circle
           ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2)
         }
         ctx.closePath()
@@ -245,9 +239,8 @@ export function drawText(params: DrawTextParams): void {
     ctx.clip()
 
     // Use destination-out to cut the text shapes from the rectangle.
-    // stroke() has rendering bugs with destination-out in @napi-rs/canvas,
-    // so we use filled shapes (circles + rectangles) that approximate
-    // round-capped stroked lines.
+    // stroke() + destination-out is broken in @napi-rs/canvas (partial rendering),
+    // so we use filled shapes that approximate round-capped stroked lines.
     if (ctx.globalCompositeOperation !== undefined) {
       ctx.globalCompositeOperation = "destination-out"
     }
