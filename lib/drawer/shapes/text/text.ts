@@ -60,9 +60,12 @@ export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
 }
 
 /**
- * Draw glyph line segments as filled shapes (rectangles + circle caps).
+ * Draw glyph line segments as filled shapes (rounded-cap thick lines).
  * Used for knockout text because destination-out compositing with stroke()
- * has rendering issues in some canvas implementations.
+ * has rendering issues in @napi-rs/canvas.
+ *
+ * Each line segment is drawn as a single path (two half-circle caps + a
+ * rectangle body) in one fill() call to reduce anti-aliasing artifacts.
  */
 function fillAlphabetLine(params: StrokeAlphabetLineParams): void {
   const { ctx, line, fontSize, startX, startY, layout } = params
@@ -86,25 +89,31 @@ function fillAlphabetLine(params: StrokeAlphabetLineParams): void {
         const dx = x2 - x1
         const dy = y2 - y1
         const len = Math.sqrt(dx * dx + dy * dy)
+        const angle = Math.atan2(dy, dx)
 
-        // Round cap at start
+        // Draw entire segment (caps + body) as one path for clean edges
+        ctx.save()
+        ctx.translate(x1, y1)
+        ctx.rotate(angle)
+
         ctx.beginPath()
-        ctx.arc(x1, y1, r, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Round cap at end
-        ctx.beginPath()
-        ctx.arc(x2, y2, r, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Line body as rotated rectangle
+        // Start cap (half circle)
+        ctx.arc(0, 0, r, Math.PI / 2, -Math.PI / 2)
         if (len > 0) {
-          ctx.save()
-          ctx.translate(x1, y1)
-          ctx.rotate(Math.atan2(dy, dx))
-          ctx.fillRect(0, -r, len, strokeWidth)
-          ctx.restore()
+          // Top edge to end cap
+          ctx.lineTo(len, -r)
+          // End cap (half circle)
+          ctx.arc(len, 0, r, -Math.PI / 2, Math.PI / 2)
+          // Bottom edge back to start
+          ctx.lineTo(0, r)
+        } else {
+          // Zero-length segment: complete the circle
+          ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2)
         }
+        ctx.closePath()
+        ctx.fill()
+
+        ctx.restore()
       }
     }
 
@@ -224,6 +233,8 @@ export function drawText(params: DrawTextParams): void {
     const rectHeight =
       layout.height + layout.strokeWidth + paddingTop + paddingBottom
 
+    const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
     // Fill the knockout rectangle with the layer color
     ctx.fillStyle = color
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
@@ -233,13 +244,14 @@ export function drawText(params: DrawTextParams): void {
     ctx.rect(rectX, rectY, rectWidth, rectHeight)
     ctx.clip()
 
-    // Use destination-out to cut the text shapes from the rectangle
+    // Use destination-out to cut the text shapes from the rectangle.
+    // stroke() has rendering bugs with destination-out in @napi-rs/canvas,
+    // so we use filled shapes (circles + rectangles) that approximate
+    // round-capped stroked lines.
     if (ctx.globalCompositeOperation !== undefined) {
       ctx.globalCompositeOperation = "destination-out"
     }
     ctx.fillStyle = "rgba(0,0,0,1)"
-
-    const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
 
     lines.forEach((line, lineIndex) => {
       const lineStartX =
@@ -252,9 +264,6 @@ export function drawText(params: DrawTextParams): void {
         })
       const lineStartY = startPos.y + lineIndex * lineHeight
 
-      // Use fillAlphabetLine instead of strokeAlphabetLine for knockout,
-      // because destination-out with stroke() has rendering issues in some
-      // canvas implementations (@napi-rs/canvas).
       fillAlphabetLine({
         ctx,
         line,
