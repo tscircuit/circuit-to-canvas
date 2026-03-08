@@ -59,6 +59,59 @@ export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
   })
 }
 
+/**
+ * Draw glyph line segments as filled shapes (rectangles + circle caps).
+ * Used for knockout text because destination-out compositing with stroke()
+ * has rendering issues in some canvas implementations.
+ */
+function fillAlphabetLine(params: StrokeAlphabetLineParams): void {
+  const { ctx, line, fontSize, startX, startY, layout } = params
+  const { strokeWidth } = layout
+  const height = fontSize
+  const glyphScaleX = fontSize
+  const topY = startY
+  const characters = Array.from(line)
+  let cursor = startX + strokeWidth / 2
+  const r = strokeWidth / 2
+
+  characters.forEach((char, index) => {
+    const glyphLines = getGlyphLines(char)
+
+    if (glyphLines?.length) {
+      for (const glyph of glyphLines) {
+        const x1 = cursor + glyph.x1 * glyphScaleX
+        const y1 = topY + (1 - glyph.y1) * height
+        const x2 = cursor + glyph.x2 * glyphScaleX
+        const y2 = topY + (1 - glyph.y2) * height
+        const dx = x2 - x1
+        const dy = y2 - y1
+        const len = Math.sqrt(dx * dx + dy * dy)
+
+        // Round cap at start
+        ctx.beginPath()
+        ctx.arc(x1, y1, r, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Round cap at end
+        ctx.beginPath()
+        ctx.arc(x2, y2, r, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Line body as rotated rectangle
+        if (len > 0) {
+          ctx.save()
+          ctx.translate(x1, y1)
+          ctx.rotate(Math.atan2(dy, dx))
+          ctx.fillRect(0, -r, len, strokeWidth)
+          ctx.restore()
+        }
+      }
+    }
+
+    cursor += getAlphabetAdvanceWidth(char, characters[index + 1], fontSize)
+  })
+}
+
 export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
   const {
     ctx,
@@ -165,47 +218,86 @@ export function drawText(params: DrawTextParams): void {
     const paddingBottom = padding.bottom * scale
     const totalWidth = layout.width + layout.strokeWidth
 
-    // Logic copied from pcb-silkscreen-text.ts/pcb-copper-text.ts
-    // Note: The multiplier *4 for left/top seems specific to the existing implementation
-    const rectX = startPos.x - paddingLeft * 4
-    const rectY = startPos.y - paddingTop * 4
-    const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
+    const rectX = startPos.x - paddingLeft
+    const rectY = startPos.y - paddingTop
+    const rectWidth = totalWidth + paddingLeft + paddingRight
     const rectHeight =
-      layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
+      layout.height + layout.strokeWidth + paddingTop + paddingBottom
 
+    // Fill the knockout rectangle with the layer color
     ctx.fillStyle = color
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
-  } else {
-    // Only set strokeStyle if NOT knockout, matching existing behavior
-    ctx.strokeStyle = color
-  }
 
-  ctx.lineWidth = layout.strokeWidth
-  ctx.lineCap = "round"
-  ctx.lineJoin = "round"
+    // Clip to the knockout rectangle so destination-out only affects this area
+    ctx.beginPath()
+    ctx.rect(rectX, rectY, rectWidth, rectHeight)
+    ctx.clip()
 
-  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+    // Use destination-out to cut the text shapes from the rectangle
+    if (ctx.globalCompositeOperation !== undefined) {
+      ctx.globalCompositeOperation = "destination-out"
+    }
+    ctx.fillStyle = "rgba(0,0,0,1)"
 
-  lines.forEach((line, lineIndex) => {
-    const lineStartX =
-      startPos.x +
-      getLineStartX({
-        alignment: anchorAlignment,
-        lineWidth: lineWidths[lineIndex]!,
-        maxWidth: width,
-        strokeWidth,
+    const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+    lines.forEach((line, lineIndex) => {
+      const lineStartX =
+        startPos.x +
+        getLineStartX({
+          alignment: anchorAlignment,
+          lineWidth: lineWidths[lineIndex]!,
+          maxWidth: width,
+          strokeWidth,
+        })
+      const lineStartY = startPos.y + lineIndex * lineHeight
+
+      // Use fillAlphabetLine instead of strokeAlphabetLine for knockout,
+      // because destination-out with stroke() has rendering issues in some
+      // canvas implementations (@napi-rs/canvas).
+      fillAlphabetLine({
+        ctx,
+        line,
+        fontSize: scaledFontSize,
+        startX: lineStartX,
+        startY: lineStartY,
+        layout,
       })
-    const lineStartY = startPos.y + lineIndex * lineHeight
-
-    strokeAlphabetLine({
-      ctx,
-      line,
-      fontSize: scaledFontSize,
-      startX: lineStartX,
-      startY: lineStartY,
-      layout,
     })
-  })
+
+    // Reset composite operation
+    if (ctx.globalCompositeOperation !== undefined) {
+      ctx.globalCompositeOperation = "source-over"
+    }
+  } else {
+    ctx.strokeStyle = color
+    ctx.lineWidth = layout.strokeWidth
+    ctx.lineCap = "round"
+    ctx.lineJoin = "round"
+
+    const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+
+    lines.forEach((line, lineIndex) => {
+      const lineStartX =
+        startPos.x +
+        getLineStartX({
+          alignment: anchorAlignment,
+          lineWidth: lineWidths[lineIndex]!,
+          maxWidth: width,
+          strokeWidth,
+        })
+      const lineStartY = startPos.y + lineIndex * lineHeight
+
+      strokeAlphabetLine({
+        ctx,
+        line,
+        fontSize: scaledFontSize,
+        startX: lineStartX,
+        startY: lineStartY,
+        layout,
+      })
+    })
+  }
 
   ctx.restore()
 }
