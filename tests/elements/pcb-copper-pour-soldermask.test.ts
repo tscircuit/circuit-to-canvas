@@ -342,6 +342,7 @@ test("render top copper pour with soldermask-over-copper color", async () => {
       pcb_component_id: "pcb_component_0",
       source_component_id: "source_component_0",
       footprinter_string: "0805",
+      model_object_fit: "contain_within_bounds",
     },
     {
       type: "cad_component",
@@ -360,6 +361,7 @@ test("render top copper pour with soldermask-over-copper color", async () => {
       pcb_component_id: "pcb_component_1",
       source_component_id: "source_component_1",
       footprinter_string: "0805",
+      model_object_fit: "contain_within_bounds",
     },
     {
       type: "pcb_trace",
