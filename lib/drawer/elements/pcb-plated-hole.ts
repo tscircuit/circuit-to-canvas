@@ -15,6 +15,7 @@ export interface DrawPcbPlatedHoleParams {
   colorMap: PcbColorMap
   soldermaskMargin?: number
   drawSoldermask?: boolean
+  layer?: "top" | "bottom"
 }
 
 export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
@@ -34,7 +35,7 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     return
   }
 
-  const copperColor = colorMap.copper.top
+  const copperColor = colorMap.copper[params.layer ?? "top"]
 
   // For negative margins, draw smaller copper (inset by margin amount)
   const copperInset = soldermaskMargin < 0 ? Math.abs(soldermaskMargin) : 0

@@ -33,13 +33,7 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import {
-  applyToPoint,
-  compose,
-  identity,
-  scale,
-  translate,
-} from "transformation-matrix"
+import { compose, identity, scale, translate } from "transformation-matrix"
 import { drawPcbBoard } from "./elements/pcb-board"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
@@ -98,6 +92,12 @@ export interface DrawElementsOptions {
 
 interface CanvasLike {
   getContext(contextId: "2d"): CanvasContext | null
+}
+
+function getCopperLayer(layers?: PcbRenderLayer[]): "top" | "bottom" {
+  if (!layers || layers.length === 0) return "top"
+  const hasBottom = layers.some((l) => l.startsWith("bottom"))
+  return hasBottom ? "bottom" : "top"
 }
 
 export class CircuitToCanvasDrawer {
@@ -185,6 +185,8 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
+    const layer = getCopperLayer(options.layers)
+
     // Find the board or panel element
     const board = elements.find((el) => el.type === "pcb_board") as
       | PcbBoard
@@ -326,6 +328,7 @@ export class CircuitToCanvasDrawer {
             colorMap: this.colorMap,
             soldermaskMargin: (element as PcbPlatedHole).soldermask_margin,
             drawSoldermask: renderTopSoldermask,
+            layer,
           })
         }
 
@@ -335,6 +338,7 @@ export class CircuitToCanvasDrawer {
             via: element as PcbVia,
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
+            layer,
           })
         }
       }
@@ -468,6 +472,7 @@ export class CircuitToCanvasDrawer {
             ? (element as PcbPlatedHole).soldermask_margin
             : undefined,
           drawSoldermask: renderTopSoldermask,
+          layer,
         })
       }
 
@@ -477,6 +482,7 @@ export class CircuitToCanvasDrawer {
           via: element as PcbVia,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
+          layer,
         })
       }
     }
