@@ -33,21 +33,7 @@ export function collectTraceSegments(
     }
 
     currentLayer = layer
-    current.push({
-      route_type: "wire",
-      x,
-      y,
-      width,
-      layer,
-      start_pcb_port_id:
-        "start_pcb_port_id" in routePoint
-          ? routePoint.start_pcb_port_id
-          : undefined,
-      end_pcb_port_id:
-        "end_pcb_port_id" in routePoint
-          ? routePoint.end_pcb_port_id
-          : undefined,
-    })
+    current.push(routePoint)
   }
 
   if (current.length >= 2) segments.push(current)

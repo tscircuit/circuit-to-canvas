@@ -48,6 +48,9 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
       const start = segment[i]
       const end = segment[i + 1]
       if (!start || !end) continue
+      if (start.is_inside_copper_pour && end.is_inside_copper_pour) {
+        continue
+      }
 
       drawLine({
         ctx,
