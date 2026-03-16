@@ -175,8 +175,11 @@ export function drawText(params: DrawTextParams): void {
 
     ctx.fillStyle = color
     ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
+
+    // Use destination-out to cut text out of the filled rectangle
+    ctx.globalCompositeOperation = "destination-out"
+    ctx.strokeStyle = color
   } else {
-    // Only set strokeStyle if NOT knockout, matching existing behavior
     ctx.strokeStyle = color
   }
 
