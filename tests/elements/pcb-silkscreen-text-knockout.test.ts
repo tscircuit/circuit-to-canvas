@@ -13,6 +13,20 @@ test("draw silkscreen text knockout", async () => {
 
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, canvas.width / SCALE, canvas.height / SCALE)
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.3)"
+  ctx.lineWidth = 1
+  for (let y = 22; y <= 58; y += 3) {
+    ctx.beginPath()
+    ctx.moveTo(8, y)
+    ctx.lineTo(92, y)
+    ctx.stroke()
+  }
+  for (let x = 48; x <= 92; x += 4) {
+    ctx.beginPath()
+    ctx.moveTo(x, 60)
+    ctx.lineTo(x + 28, 20)
+    ctx.stroke()
+  }
 
   drawer.realToCanvasMat = scale(2, 2)
 

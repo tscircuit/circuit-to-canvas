@@ -2,12 +2,15 @@ import { glyphLineAlphabet } from "@tscircuit/alphabet"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
-import type { NinePointAnchor } from "circuit-json"
+import type { NinePointAnchor, Point } from "circuit-json"
+import { addPolygonToPath } from "./addPolygonToPath"
 import {
   getAlphabetAdvanceWidth,
   getAlphabetLayout,
   type AlphabetLayout,
 } from "./getAlphabetLayout"
+import { getAlphabetOutlineGroups } from "./getAlphabetOutlineGroups"
+import { getPolygonBounds } from "./getPolygonBounds"
 import { getTextStartPosition, getLineStartX } from "./getTextStartPosition"
 
 const getGlyphLines = (char: string) => glyphLineAlphabet[char]
@@ -143,6 +146,7 @@ export function drawText(params: DrawTextParams): void {
   const scaledFontSize = fontSize * scale
   const layout = getAlphabetLayout(text, scaledFontSize)
   const startPos = getTextStartPosition(anchorAlignment, layout)
+  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
 
   ctx.save()
   ctx.translate(canvasX, canvasY)
@@ -163,18 +167,50 @@ export function drawText(params: DrawTextParams): void {
     const paddingRight = padding.right * scale
     const paddingTop = padding.top * scale
     const paddingBottom = padding.bottom * scale
-    const totalWidth = layout.width + layout.strokeWidth
+    const glyphPolygons: Point[][] = []
+    const glyphGroups: Point[][][] = []
 
-    // Logic copied from pcb-silkscreen-text.ts/pcb-copper-text.ts
-    // Note: The multiplier *4 for left/top seems specific to the existing implementation
-    const rectX = startPos.x - paddingLeft * 4
-    const rectY = startPos.y - paddingTop * 4
-    const rectWidth = totalWidth + paddingLeft * 2 + paddingRight * 2
-    const rectHeight =
-      layout.height + layout.strokeWidth + paddingTop * 2 + paddingBottom * 2
+    for (const [lineIndex, line] of lines.entries()) {
+      const lineStartX =
+        startPos.x +
+        getLineStartX({
+          alignment: anchorAlignment,
+          lineWidth: lineWidths[lineIndex]!,
+          maxWidth: width,
+          strokeWidth,
+        })
+      const lineStartY = startPos.y + lineIndex * lineHeight
+      const groups = getAlphabetOutlineGroups({
+        line,
+        fontSize: scaledFontSize,
+        startX: lineStartX,
+        startY: lineStartY,
+        layout,
+      })
+      glyphGroups.push(...groups)
+      for (const group of groups) glyphPolygons.push(...group)
+    }
+
+    const bounds = getPolygonBounds(glyphPolygons)
+    if (!bounds) {
+      ctx.restore()
+      return
+    }
+
+    const rectX = bounds.minX - paddingLeft
+    const rectY = bounds.minY - paddingTop
+    const rectWidth = bounds.maxX - bounds.minX + paddingLeft + paddingRight
+    const rectHeight = bounds.maxY - bounds.minY + paddingTop + paddingBottom
 
     ctx.fillStyle = color
-    ctx.fillRect(rectX, rectY, rectWidth, rectHeight)
+    ctx.beginPath()
+    ctx.rect(rectX, rectY, rectWidth, rectHeight)
+    for (const group of glyphGroups) {
+      for (const polygon of group) {
+        addPolygonToPath(ctx, polygon)
+      }
+    }
+    ctx.fill("evenodd")
   } else {
     // Only set strokeStyle if NOT knockout, matching existing behavior
     ctx.strokeStyle = color
@@ -184,28 +220,28 @@ export function drawText(params: DrawTextParams): void {
   ctx.lineCap = "round"
   ctx.lineJoin = "round"
 
-  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+  if (!knockout) {
+    lines.forEach((line, lineIndex) => {
+      const lineStartX =
+        startPos.x +
+        getLineStartX({
+          alignment: anchorAlignment,
+          lineWidth: lineWidths[lineIndex]!,
+          maxWidth: width,
+          strokeWidth,
+        })
+      const lineStartY = startPos.y + lineIndex * lineHeight
 
-  lines.forEach((line, lineIndex) => {
-    const lineStartX =
-      startPos.x +
-      getLineStartX({
-        alignment: anchorAlignment,
-        lineWidth: lineWidths[lineIndex]!,
-        maxWidth: width,
-        strokeWidth,
+      strokeAlphabetLine({
+        ctx,
+        line,
+        fontSize: scaledFontSize,
+        startX: lineStartX,
+        startY: lineStartY,
+        layout,
       })
-    const lineStartY = startPos.y + lineIndex * lineHeight
-
-    strokeAlphabetLine({
-      ctx,
-      line,
-      fontSize: scaledFontSize,
-      startX: lineStartX,
-      startY: lineStartY,
-      layout,
     })
-  })
+  }
 
   ctx.restore()
 }
