@@ -87,7 +87,7 @@ export function drawRect(params: DrawRectParams): void {
       ctx.setLineDash([])
     }
     if (strokeLineJoin) {
-      ctx.strokeLineJoin = strokeLineJoin
+      ctx.lineJoin = strokeLineJoin
     }
     ctx.strokeStyle = stroke
     ctx.lineWidth = scaledStrokeWidth

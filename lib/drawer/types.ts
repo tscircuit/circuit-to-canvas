@@ -42,7 +42,7 @@ export interface CanvasContext {
   globalAlpha: number
   lineWidth: number
   lineCap: "butt" | "round" | "square"
-  strokeLineJoin: "bevel" | "round" | "miter"
+  lineJoin: "bevel" | "round" | "miter"
   setLineDash(segments: number[]): void
   canvas: { width: number; height: number }
   fillText(text: string, x: number, y: number): void

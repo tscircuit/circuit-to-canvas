@@ -39,6 +39,6 @@ export function drawPcbCourtyardOutline(
   ctx.closePath()
   ctx.lineWidth = 0.05 * Math.abs(realToCanvasMat.a) // Scale line width
   ctx.strokeStyle = layerToCourtyardColor(outline.layer, colorMap)
-  ctx.strokeLineJoin = "round"
+  ctx.lineJoin = "round"
   ctx.stroke()
 }
