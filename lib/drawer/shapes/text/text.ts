@@ -218,7 +218,7 @@ export function drawText(params: DrawTextParams): void {
 
   ctx.lineWidth = layout.strokeWidth
   ctx.lineCap = "round"
-  ctx.lineJoin = "round"
+  ctx.strokeLineJoin = "round"
 
   if (!knockout) {
     lines.forEach((line, lineIndex) => {
