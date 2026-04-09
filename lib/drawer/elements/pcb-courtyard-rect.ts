@@ -26,5 +26,6 @@ export function drawPcbCourtyardRect(params: DrawPcbCourtyardRectParams): void {
     strokeWidth: 0.05, // Default thin line for courtyard info
     realToCanvasMat,
     ccwRotationDegrees: rect.ccw_rotation ?? 0,
+    lineJoin: "round",
   })
 }
