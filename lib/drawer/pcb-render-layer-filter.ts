@@ -20,8 +20,13 @@ export function shouldDrawElement(
 
   const elementLayers = getElementRenderLayers(element)
 
-  // If element has no layer info (board, holes, etc.), always draw
+  // If element has no layer info (board, holes, etc.), always draw.
+  // Exception: pcb_note elements are annotations controlled by showPcbNotes,
+  // not layer-agnostic elements — exclude them from layer-filtered renders.
   if (elementLayers.length === 0) {
+    if ((element.type as string).startsWith("pcb_note_")) {
+      return false
+    }
     return true
   }
 
