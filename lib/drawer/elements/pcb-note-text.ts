@@ -30,5 +30,6 @@ export function drawPcbNoteText(params: DrawPcbNoteTextParams): void {
     color,
     realToCanvasMat,
     anchorAlignment: text.anchor_alignment ?? "center",
+    rotation: text.ccw_rotation ?? 0,
   })
 }
