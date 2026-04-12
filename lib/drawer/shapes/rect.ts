@@ -14,6 +14,7 @@ export interface DrawRectParams {
   stroke?: string
   strokeWidth?: number
   isStrokeDashed?: boolean
+  lineJoin?: CanvasLineJoin
 }
 
 export function drawRect(params: DrawRectParams): void {
@@ -29,6 +30,7 @@ export function drawRect(params: DrawRectParams): void {
     stroke,
     strokeWidth,
     isStrokeDashed = false,
+    lineJoin,
   } = params
 
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
@@ -83,6 +85,9 @@ export function drawRect(params: DrawRectParams): void {
       ctx.setLineDash([scaledStrokeWidth * 3, scaledStrokeWidth * 2])
     } else {
       ctx.setLineDash([])
+    }
+    if (lineJoin) {
+      ctx.lineJoin = lineJoin
     }
     ctx.strokeStyle = stroke
     ctx.lineWidth = scaledStrokeWidth
