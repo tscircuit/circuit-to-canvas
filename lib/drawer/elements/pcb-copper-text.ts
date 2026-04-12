@@ -35,7 +35,7 @@ export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
     realToCanvasMat,
     anchorAlignment: mapAnchorAlignment(text.anchor_alignment),
     rotation: text.ccw_rotation ?? 0,
-    mirrorX: text.is_mirrored,
+    mirrorX: text.is_mirrored ?? text.layer === "bottom",
     knockout: text.is_knockout,
     knockoutPadding: text.is_knockout ? text.knockout_padding : undefined,
   })
