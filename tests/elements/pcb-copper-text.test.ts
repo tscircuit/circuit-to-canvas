@@ -49,6 +49,49 @@ test("draw copper text", async () => {
   )
 })
 
+test("draw bottom copper text auto-mirrored when is_mirrored is omitted", async () => {
+  const SCALE = 4
+  const canvas = createCanvas(100 * SCALE, 100 * SCALE)
+  const ctx = canvas.getContext("2d")
+  ctx.scale(SCALE, SCALE)
+  const drawer = new CircuitToCanvasDrawer(ctx)
+
+  ctx.fillStyle = "#1a1a1a"
+  ctx.fillRect(0, 0, canvas.width / SCALE, canvas.height / SCALE)
+
+  const text: PcbCopperText[] = [
+    {
+      type: "pcb_copper_text",
+      pcb_copper_text_id: "copper-text-auto-mirror-top",
+      pcb_component_id: "component1",
+      layer: "top",
+      text: "F3",
+      anchor_position: { x: 30, y: 50 },
+      anchor_alignment: "center",
+      font: "tscircuit2024",
+      font_size: 8,
+    },
+    {
+      type: "pcb_copper_text",
+      pcb_copper_text_id: "copper-text-auto-mirror-bottom",
+      pcb_component_id: "component1",
+      layer: "bottom",
+      text: "F3",
+      anchor_position: { x: 70, y: 50 },
+      anchor_alignment: "center",
+      font: "tscircuit2024",
+      font_size: 8,
+    },
+  ]
+
+  drawer.drawElements(text)
+
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "pcb-copper-text-bottom-auto-mirror",
+  )
+})
+
 test("draw copper text knockout mirrored with padding", async () => {
   const SCALE = 4
   const canvas = createCanvas(100 * SCALE, 60 * SCALE)
