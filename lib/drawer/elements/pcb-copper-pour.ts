@@ -20,10 +20,6 @@ function layerToColor(layer: string, colorMap: PcbColorMap): string {
   )
 }
 
-function layerToPourOpacity(): number {
-  return 0.5
-}
-
 /**
  * Compute arc center and radius from two points and a bulge value.
  * Bulge is the tangent of 1/4 of the included angle.
@@ -241,7 +237,7 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   const { ctx, pour, realToCanvasMat, colorMap } = params
 
   const color = layerToColor(pour.layer, colorMap)
-  const opacity = layerToPourOpacity()
+  const opacity = 0.5
 
   // Save context to apply opacity
   ctx.save()
