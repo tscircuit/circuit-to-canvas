@@ -20,9 +20,8 @@ function layerToColor(layer: string, colorMap: PcbColorMap): string {
   )
 }
 
-function layerToPourOpacity(layer: string): number {
-  if (layer === "top" || layer === "bottom") return 0.5
-  return 1
+function layerToPourOpacity(): number {
+  return 0.5
 }
 
 /**
@@ -242,7 +241,7 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   const { ctx, pour, realToCanvasMat, colorMap } = params
 
   const color = layerToColor(pour.layer, colorMap)
-  const opacity = layerToPourOpacity(pour.layer)
+  const opacity = layerToPourOpacity()
 
   // Save context to apply opacity
   ctx.save()
