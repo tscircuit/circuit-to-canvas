@@ -38,3 +38,4 @@ bun.lock
 *.diff.png
 
 .vscode
+.codex
