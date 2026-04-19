@@ -14,6 +14,7 @@ test("draw pcb note line with custom color", async () => {
   const line: PcbNoteLine = {
     type: "pcb_note_line",
     pcb_note_line_id: "note_line_custom_color",
+    layer: "top",
     x1: 10,
     y1: 10,
     x2: 90,

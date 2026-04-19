@@ -14,6 +14,7 @@ test("draw pcb note line with dashed stroke", async () => {
   const line: PcbNoteLine = {
     type: "pcb_note_line",
     pcb_note_line_id: "note_line_dashed",
+    layer: "top",
     x1: 10,
     y1: 50,
     x2: 90,

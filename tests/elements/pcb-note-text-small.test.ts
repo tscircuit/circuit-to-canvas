@@ -16,6 +16,7 @@ test("draw pcb note text with small font size", async () => {
   const text: PcbNoteText = {
     type: "pcb_note_text",
     pcb_note_text_id: "note-small",
+    layer: "top",
     text: "SMALL",
     anchor_position: { x: 50, y: 50 },
     anchor_alignment: "center",

@@ -36,6 +36,7 @@ test("draw pcb note text with different anchor alignments", async () => {
   const textTopLeft: PcbNoteText = {
     type: "pcb_note_text",
     pcb_note_text_id: "note-top-left",
+    layer: "top",
     text: "TOP",
     anchor_position: { x: 50, y: 50 },
     anchor_alignment: "top_left",
@@ -47,6 +48,7 @@ test("draw pcb note text with different anchor alignments", async () => {
   const textCenter: PcbNoteText = {
     type: "pcb_note_text",
     pcb_note_text_id: "note-center",
+    layer: "top",
     text: "CENTER",
     anchor_position: { x: 150, y: 100 },
     anchor_alignment: "center",
@@ -58,6 +60,7 @@ test("draw pcb note text with different anchor alignments", async () => {
   const textBottomRight: PcbNoteText = {
     type: "pcb_note_text",
     pcb_note_text_id: "note-bottom-right",
+    layer: "top",
     text: "BOTTOM",
     anchor_position: { x: 250, y: 150 },
     anchor_alignment: "bottom_right",

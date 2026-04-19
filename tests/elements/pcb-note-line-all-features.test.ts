@@ -14,6 +14,7 @@ test("draw pcb note line with all features", async () => {
   const line: PcbNoteLine = {
     type: "pcb_note_line",
     pcb_note_line_id: "note_line1",
+    layer: "top",
     pcb_component_id: "component1",
     pcb_group_id: "group1",
     subcircuit_id: "subcircuit1",

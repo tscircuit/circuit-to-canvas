@@ -19,6 +19,7 @@ test("draw pcb note dimension - angled", async () => {
   const angledDim: PcbNoteDimension = {
     type: "pcb_note_dimension",
     pcb_note_dimension_id: "note_dimension_angled_1",
+    layer: "top",
     from: { x: 40, y: 120 },
     to: { x: 200, y: 40 }, // angled up-right
     arrow_size: 6,
