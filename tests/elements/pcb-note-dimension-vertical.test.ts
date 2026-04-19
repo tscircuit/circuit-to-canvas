@@ -19,6 +19,7 @@ test("draw pcb note dimension - vertical with rotation", async () => {
   const verticalDim: PcbNoteDimension = {
     type: "pcb_note_dimension",
     pcb_note_dimension_id: "note_dimension_vertical_1",
+    layer: "top",
     from: { x: 80, y: 40 },
     to: { x: 80, y: 200 }, // vertical line downwards
     arrow_size: 6,

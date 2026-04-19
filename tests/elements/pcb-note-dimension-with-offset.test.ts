@@ -19,6 +19,7 @@ test("draw pcb note dimension - with offset", async () => {
   const dimWithOffset: PcbNoteDimension = {
     type: "pcb_note_dimension",
     pcb_note_dimension_id: "note_dimension_offset_1",
+    layer: "top",
     from: { x: 40, y: 70 },
     to: { x: 160, y: 70 },
     arrow_size: 5,

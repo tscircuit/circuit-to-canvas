@@ -20,6 +20,7 @@ test("draw pcb note dimension - basic", async () => {
   const dim: PcbNoteDimension = {
     type: "pcb_note_dimension",
     pcb_note_dimension_id: "note_dimension_basic_1",
+    layer: "top",
     from: { x: 20, y: 50 },
     to: { x: 180, y: 50 },
     arrow_size: 4,

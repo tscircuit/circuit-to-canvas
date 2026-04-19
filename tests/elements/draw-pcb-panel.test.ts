@@ -13,6 +13,7 @@ test("drawPcbPanel with board and components", async () => {
       center: { x: 100, y: 75 },
       width: 180,
       height: 120,
+      thickness: 1.6,
       covered_with_solder_mask: false,
     },
     // BOARD - smaller PCB board inside the panel

@@ -30,5 +30,6 @@ export function drawPcbNoteText(params: DrawPcbNoteTextParams): void {
     color,
     realToCanvasMat,
     anchorAlignment: text.anchor_alignment ?? "center",
+    mirrorX: text.is_mirrored_from_top_view ?? text.layer === "bottom",
   })
 }

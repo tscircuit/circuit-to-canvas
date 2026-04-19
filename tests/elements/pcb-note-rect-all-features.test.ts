@@ -14,6 +14,7 @@ test("draw pcb note rect with all features", async () => {
   const rect: PcbNoteRect = {
     type: "pcb_note_rect",
     pcb_note_rect_id: "note_rect1",
+    layer: "top",
     pcb_component_id: "component1",
     pcb_group_id: "group1",
     subcircuit_id: "subcircuit1",

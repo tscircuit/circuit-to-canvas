@@ -6,6 +6,7 @@ import { CircuitToCanvasDrawer } from "../../lib/drawer"
 const noteRect: PcbNoteRect = {
   type: "pcb_note_rect",
   pcb_note_rect_id: "note_rect1",
+  layer: "top",
   pcb_component_id: "component1",
   pcb_group_id: "group1",
   subcircuit_id: "subcircuit1",

@@ -16,6 +16,7 @@ test("draw pcb note text with custom color", async () => {
   const text: PcbNoteText = {
     type: "pcb_note_text",
     pcb_note_text_id: "note-custom-color",
+    layer: "top",
     text: "CustYp",
     anchor_position: { x: 50, y: 50 },
     anchor_alignment: "center",

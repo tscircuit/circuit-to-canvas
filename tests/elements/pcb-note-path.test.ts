@@ -14,6 +14,7 @@ test("draw pcb note path", async () => {
   const path: PcbNotePath = {
     type: "pcb_note_path",
     pcb_note_path_id: "note_path1",
+    layer: "top",
     route: [
       { x: 10, y: 50 },
       { x: 30, y: 20 },

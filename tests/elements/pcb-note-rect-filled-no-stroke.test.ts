@@ -14,6 +14,7 @@ test("draw pcb note rect with fill and no stroke", async () => {
   const rect: PcbNoteRect = {
     type: "pcb_note_rect",
     pcb_note_rect_id: "note_rect3",
+    layer: "top",
     center: { x: 50, y: 50 },
     width: 60,
     height: 40,
