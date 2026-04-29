@@ -235,6 +235,10 @@ export class CircuitToCanvasDrawer {
       (el): el is PcbVia =>
         shouldDrawElement(el, options) && el.type === "pcb_via",
     )
+    const drawableHoles = elements.filter(
+      (el): el is PcbHole =>
+        shouldDrawElement(el, options) && el.type === "pcb_hole",
+    )
     const drawablePlatedHoles = elements.filter(
       (el): el is PcbPlatedHole =>
         shouldDrawElement(el, options) && el.type === "pcb_plated_hole",
@@ -276,6 +280,9 @@ export class CircuitToCanvasDrawer {
           pad: element as PcbSmtPad,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
+          holes: drawableHoles,
+          platedHoles: drawablePlatedHoles,
+          vias: drawableVias,
         })
       }
 
