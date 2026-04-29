@@ -1,16 +1,23 @@
-import type { PcbSmtPad } from "circuit-json"
+import type { PcbHole, PcbPlatedHole, PcbSmtPad, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawCircle } from "../shapes/circle"
 import { drawRect } from "../shapes/rect"
 import { drawPill } from "../shapes/pill"
 import { drawPolygon } from "../shapes/polygon"
+import {
+  drawPadWithDrillCutouts,
+  getPadDrillCutouts,
+} from "./helper-functions/pcb-smtpad-drill-cutouts"
 
 export interface DrawPcbSmtPadParams {
   ctx: CanvasContext
   pad: PcbSmtPad
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
+  holes?: PcbHole[]
+  platedHoles?: PcbPlatedHole[]
+  vias?: PcbVia[]
 }
 
 function layerToColor(layer: string, colorMap: PcbColorMap): string {
@@ -31,6 +38,18 @@ export function drawPcbSmtPad(params: DrawPcbSmtPadParams): void {
   const { ctx, pad, realToCanvasMat, colorMap } = params
 
   const color = layerToColor(pad.layer, colorMap)
+  const drillCutouts = getPadDrillCutouts(params)
+
+  if (drillCutouts.length > 0) {
+    drawPadWithDrillCutouts({
+      ctx,
+      pad,
+      realToCanvasMat,
+      color,
+      drillCutouts,
+    })
+    return
+  }
 
   // Draw the copper pad
   if (pad.shape === "rect") {
