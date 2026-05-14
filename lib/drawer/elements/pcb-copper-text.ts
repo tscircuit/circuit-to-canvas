@@ -12,9 +12,7 @@ export interface DrawPcbCopperTextParams {
 
 function mapAnchorAlignment(alignment?: string): NinePointAnchor {
   if (!alignment) return "center"
-  if (alignment.includes("left")) return "center_left"
-  if (alignment.includes("right")) return "center_right"
-  return "center"
+  return alignment as NinePointAnchor
 }
 
 export function drawPcbCopperText(params: DrawPcbCopperTextParams): void {
