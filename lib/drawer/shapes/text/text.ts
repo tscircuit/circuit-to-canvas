@@ -2,16 +2,14 @@ import { glyphLineAlphabet } from "@tscircuit/alphabet"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
-import type { NinePointAnchor, Point } from "circuit-json"
+import type { NinePointAnchor } from "circuit-json"
 import { addPolygonToPath } from "./addPolygonToPath"
 import {
   getAlphabetAdvanceWidth,
   getAlphabetLayout,
   type AlphabetLayout,
 } from "./getAlphabetLayout"
-import { getAlphabetOutlineGroups } from "./getAlphabetOutlineGroups"
-import { getPolygonBounds } from "./getPolygonBounds"
-import { getTextStartPosition, getLineStartX } from "./getTextStartPosition"
+import { getTextGeometry } from "./getTextStartPosition"
 
 const getGlyphLines = (char: string) => glyphLineAlphabet[char]
 
@@ -72,28 +70,20 @@ export function strokeAlphabetText(params: StrokeAlphabetTextParams): void {
     anchorAlignment = "center",
   } = params
   const layout = getAlphabetLayout(text, fontSize)
-  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+  const geometry = getTextGeometry(anchorAlignment, layout, fontSize)
 
-  lines.forEach((line, lineIndex) => {
-    const lineStartX =
-      startX +
-      getLineStartX({
-        alignment: anchorAlignment,
-        lineWidth: lineWidths[lineIndex]!,
-        maxWidth: width,
-        strokeWidth,
+  geometry.linePlacements.forEach(
+    ({ line, startX: lineStartX, startY: lineStartY }) => {
+      strokeAlphabetLine({
+        ctx,
+        line,
+        fontSize,
+        startX: startX + lineStartX,
+        startY: startY + lineStartY,
+        layout,
       })
-    const lineStartY = startY + lineIndex * lineHeight
-
-    strokeAlphabetLine({
-      ctx,
-      line,
-      fontSize,
-      startX: lineStartX,
-      startY: lineStartY,
-      layout,
-    })
-  })
+    },
+  )
 }
 
 const DEFAULT_KNOCKOUT_PADDING = {
@@ -145,8 +135,7 @@ export function drawText(params: DrawTextParams): void {
   const scale = Math.abs(realToCanvasMat.a)
   const scaledFontSize = fontSize * scale
   const layout = getAlphabetLayout(text, scaledFontSize)
-  const startPos = getTextStartPosition(anchorAlignment, layout)
-  const { lines, lineWidths, lineHeight, width, strokeWidth } = layout
+  const geometry = getTextGeometry(anchorAlignment, layout, scaledFontSize)
 
   ctx.save()
   ctx.translate(canvasX, canvasY)
@@ -167,31 +156,7 @@ export function drawText(params: DrawTextParams): void {
     const paddingRight = padding.right * scale
     const paddingTop = padding.top * scale
     const paddingBottom = padding.bottom * scale
-    const glyphPolygons: Point[][] = []
-    const glyphGroups: Point[][][] = []
-
-    for (const [lineIndex, line] of lines.entries()) {
-      const lineStartX =
-        startPos.x +
-        getLineStartX({
-          alignment: anchorAlignment,
-          lineWidth: lineWidths[lineIndex]!,
-          maxWidth: width,
-          strokeWidth,
-        })
-      const lineStartY = startPos.y + lineIndex * lineHeight
-      const groups = getAlphabetOutlineGroups({
-        line,
-        fontSize: scaledFontSize,
-        startX: lineStartX,
-        startY: lineStartY,
-        layout,
-      })
-      glyphGroups.push(...groups)
-      for (const group of groups) glyphPolygons.push(...group)
-    }
-
-    const bounds = getPolygonBounds(glyphPolygons)
+    const bounds = geometry.bounds
     if (!bounds) {
       ctx.restore()
       return
@@ -205,7 +170,7 @@ export function drawText(params: DrawTextParams): void {
     ctx.fillStyle = color
     ctx.beginPath()
     ctx.rect(rectX, rectY, rectWidth, rectHeight)
-    for (const group of glyphGroups) {
+    for (const group of geometry.glyphGroups) {
       for (const polygon of group) {
         addPolygonToPath(ctx, polygon)
       }
@@ -221,26 +186,18 @@ export function drawText(params: DrawTextParams): void {
   ctx.lineJoin = "round"
 
   if (!knockout) {
-    lines.forEach((line, lineIndex) => {
-      const lineStartX =
-        startPos.x +
-        getLineStartX({
-          alignment: anchorAlignment,
-          lineWidth: lineWidths[lineIndex]!,
-          maxWidth: width,
-          strokeWidth,
+    geometry.linePlacements.forEach(
+      ({ line, startX: lineStartX, startY: lineStartY }) => {
+        strokeAlphabetLine({
+          ctx,
+          line,
+          fontSize: scaledFontSize,
+          startX: lineStartX,
+          startY: lineStartY,
+          layout,
         })
-      const lineStartY = startPos.y + lineIndex * lineHeight
-
-      strokeAlphabetLine({
-        ctx,
-        line,
-        fontSize: scaledFontSize,
-        startX: lineStartX,
-        startY: lineStartY,
-        layout,
-      })
-    })
+      },
+    )
   }
 
   ctx.restore()
