@@ -6,11 +6,7 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import {
-  DEFAULT_PCB_COLOR_MAP,
-  type CanvasContext,
-  type PcbColorMap,
-} from "../../types"
+import type { CanvasContext, PcbColorMap } from "../../types"
 import { drawBoardSoldermask } from "./board"
 import { mergeSoldermaskLayer } from "./merge-soldermask-layer"
 import { createSoldermaskLayerContext } from "./create-soldermask-layer-context"
@@ -30,6 +26,7 @@ export interface DrawPcbSoldermaskParams {
   colorMap: PcbColorMap
   layer: "top" | "bottom"
   drawSoldermask: boolean
+  boardSoldermaskColor?: string
 }
 
 /**
@@ -45,8 +42,15 @@ export interface DrawPcbSoldermaskParams {
  * 3. For elements with is_covered_with_soldermask: draw soldermask-over-copper on top
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
-  const { ctx, elements, realToCanvasMat, colorMap, layer, drawSoldermask } =
-    params
+  const {
+    ctx,
+    elements,
+    realToCanvasMat,
+    colorMap,
+    layer,
+    drawSoldermask,
+    boardSoldermaskColor,
+  } = params
 
   if (!drawSoldermask) return
   if (ctx.canvas.width <= 0 || ctx.canvas.height <= 0) return
@@ -95,19 +99,11 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   }
 
   for (const board of boards) {
-    let boardSoldermaskColor = soldermaskColor
-    if (
-      board.solder_mask_color &&
-      soldermaskColor === DEFAULT_PCB_COLOR_MAP.soldermask[layer]
-    ) {
-      boardSoldermaskColor = board.solder_mask_color
-    }
-
     drawBoardSoldermask({
       ctx: soldermaskCtx,
       board,
       realToCanvasMat,
-      soldermaskColor: boardSoldermaskColor,
+      soldermaskColor: boardSoldermaskColor ?? soldermaskColor,
     })
   }
 

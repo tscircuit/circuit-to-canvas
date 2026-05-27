@@ -103,6 +103,10 @@ function getCopperLayer(layers?: PcbRenderLayer[]): "top" | "bottom" {
 export class CircuitToCanvasDrawer {
   private ctx: CanvasContext
   private colorMap: PcbColorMap
+  private colorOverrides: {
+    silkscreen?: Partial<PcbColorMap["silkscreen"]>
+    soldermask?: Partial<PcbColorMap["soldermask"]>
+  } = {}
   public realToCanvasMat: Matrix
 
   constructor(canvasOrContext: CanvasLike | CanvasContext) {
@@ -126,6 +130,17 @@ export class CircuitToCanvasDrawer {
 
   configure(config: DrawerConfig): void {
     if (config.colorOverrides) {
+      this.colorOverrides = {
+        ...this.colorOverrides,
+        silkscreen: {
+          ...this.colorOverrides.silkscreen,
+          ...config.colorOverrides.silkscreen,
+        },
+        soldermask: {
+          ...this.colorOverrides.soldermask,
+          ...config.colorOverrides.soldermask,
+        },
+      }
       this.colorMap = {
         ...this.colorMap,
         ...config.colorOverrides,
@@ -212,22 +227,12 @@ export class CircuitToCanvasDrawer {
     const colorMap = this.colorMap
     let silkscreenColorMap = colorMap
     if (drawSoldermask && board?.silkscreen_color) {
-      let topSilkscreenColor = colorMap.silkscreen.top
-      let bottomSilkscreenColor = colorMap.silkscreen.bottom
-
-      if (topSilkscreenColor === DEFAULT_PCB_COLOR_MAP.silkscreen.top) {
-        topSilkscreenColor = board.silkscreen_color
-      }
-
-      if (bottomSilkscreenColor === DEFAULT_PCB_COLOR_MAP.silkscreen.bottom) {
-        bottomSilkscreenColor = board.silkscreen_color
-      }
-
       silkscreenColorMap = {
         ...colorMap,
         silkscreen: {
-          top: topSilkscreenColor,
-          bottom: bottomSilkscreenColor,
+          top: this.colorOverrides?.silkscreen?.top ?? board.silkscreen_color,
+          bottom:
+            this.colorOverrides?.silkscreen?.bottom ?? board.silkscreen_color,
         },
       }
     }
@@ -382,6 +387,10 @@ export class CircuitToCanvasDrawer {
         colorMap,
         layer: "top",
         drawSoldermask: true,
+        boardSoldermaskColor:
+          this.colorOverrides?.soldermask?.top === undefined
+            ? board?.solder_mask_color
+            : undefined,
       })
     }
 
@@ -525,6 +534,10 @@ export class CircuitToCanvasDrawer {
         colorMap,
         layer: "bottom",
         drawSoldermask: true,
+        boardSoldermaskColor:
+          this.colorOverrides?.soldermask?.bottom === undefined
+            ? board?.solder_mask_color
+            : undefined,
       })
     }
 
