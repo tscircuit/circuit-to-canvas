@@ -103,10 +103,6 @@ function getCopperLayer(layers?: PcbRenderLayer[]): "top" | "bottom" {
 export class CircuitToCanvasDrawer {
   private ctx: CanvasContext
   private colorMap: PcbColorMap
-  private colorOverrides: {
-    silkscreen?: Partial<PcbColorMap["silkscreen"]>
-    soldermask?: Partial<PcbColorMap["soldermask"]>
-  } = {}
   public realToCanvasMat: Matrix
 
   constructor(canvasOrContext: CanvasLike | CanvasContext) {
@@ -130,17 +126,6 @@ export class CircuitToCanvasDrawer {
 
   configure(config: DrawerConfig): void {
     if (config.colorOverrides) {
-      this.colorOverrides = {
-        ...this.colorOverrides,
-        silkscreen: {
-          ...this.colorOverrides.silkscreen,
-          ...config.colorOverrides.silkscreen,
-        },
-        soldermask: {
-          ...this.colorOverrides.soldermask,
-          ...config.colorOverrides.soldermask,
-        },
-      }
       this.colorMap = {
         ...this.colorMap,
         ...config.colorOverrides,
@@ -230,9 +215,8 @@ export class CircuitToCanvasDrawer {
       silkscreenColorMap = {
         ...colorMap,
         silkscreen: {
-          top: this.colorOverrides?.silkscreen?.top ?? board.silkscreen_color,
-          bottom:
-            this.colorOverrides?.silkscreen?.bottom ?? board.silkscreen_color,
+          top: board.silkscreen_color,
+          bottom: board.silkscreen_color,
         },
       }
     }
@@ -387,8 +371,6 @@ export class CircuitToCanvasDrawer {
         colorMap,
         layer: "top",
         drawSoldermask: true,
-        useBoardSoldermaskColor:
-          this.colorOverrides?.soldermask?.top === undefined,
       })
     }
 
@@ -532,8 +514,6 @@ export class CircuitToCanvasDrawer {
         colorMap,
         layer: "bottom",
         drawSoldermask: true,
-        useBoardSoldermaskColor:
-          this.colorOverrides?.soldermask?.bottom === undefined,
       })
     }
 

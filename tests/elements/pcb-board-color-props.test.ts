@@ -80,25 +80,4 @@ test("board color props are used only when drawing soldermask", async () => {
   await expect(realisticCanvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
   )
-
-  const overrideCanvas = createCanvas(100, 100)
-  const overrideCtx = overrideCanvas.getContext("2d")
-  overrideCtx.fillStyle = "#101010"
-  overrideCtx.fillRect(0, 0, 100, 100)
-
-  const overrideDrawer = new CircuitToCanvasDrawer(overrideCtx)
-  overrideDrawer.configure({
-    colorOverrides: {
-      soldermask: { top: "#008000", bottom: "#008000" },
-      silkscreen: { top: "#ff00ff", bottom: "#ff00ff" },
-    },
-  })
-  overrideDrawer.drawElements(circuit, { drawSoldermask: true })
-
-  expect(Array.from(overrideCtx.getImageData(20, 40, 1, 1).data)).toEqual([
-    0, 128, 0, 255,
-  ])
-  expect(Array.from(overrideCtx.getImageData(50, 30, 1, 1).data)).toEqual([
-    255, 0, 255, 255,
-  ])
 })
