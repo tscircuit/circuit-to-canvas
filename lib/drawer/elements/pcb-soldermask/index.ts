@@ -6,7 +6,11 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { CanvasContext, PcbColorMap } from "../../types"
+import {
+  DEFAULT_PCB_COLOR_MAP,
+  type CanvasContext,
+  type PcbColorMap,
+} from "../../types"
 import { drawBoardSoldermask } from "./board"
 import { mergeSoldermaskLayer } from "./merge-soldermask-layer"
 import { createSoldermaskLayerContext } from "./create-soldermask-layer-context"
@@ -91,11 +95,19 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   }
 
   for (const board of boards) {
+    let boardSoldermaskColor = soldermaskColor
+    if (
+      board.solder_mask_color &&
+      soldermaskColor === DEFAULT_PCB_COLOR_MAP.soldermask[layer]
+    ) {
+      boardSoldermaskColor = board.solder_mask_color
+    }
+
     drawBoardSoldermask({
       ctx: soldermaskCtx,
       board,
       realToCanvasMat,
-      soldermaskColor,
+      soldermaskColor: boardSoldermaskColor,
     })
   }
 
