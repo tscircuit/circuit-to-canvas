@@ -26,7 +26,7 @@ export interface DrawPcbSoldermaskParams {
   colorMap: PcbColorMap
   layer: "top" | "bottom"
   drawSoldermask: boolean
-  boardSoldermaskColor?: string
+  useBoardSoldermaskColor?: boolean
 }
 
 /**
@@ -49,7 +49,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     colorMap,
     layer,
     drawSoldermask,
-    boardSoldermaskColor,
+    useBoardSoldermaskColor,
   } = params
 
   if (!drawSoldermask) return
@@ -103,7 +103,10 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       ctx: soldermaskCtx,
       board,
       realToCanvasMat,
-      soldermaskColor: boardSoldermaskColor ?? soldermaskColor,
+      soldermaskColor:
+        useBoardSoldermaskColor && board.solder_mask_color
+          ? board.solder_mask_color
+          : soldermaskColor,
     })
   }
 

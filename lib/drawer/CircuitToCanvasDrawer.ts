@@ -387,10 +387,8 @@ export class CircuitToCanvasDrawer {
         colorMap,
         layer: "top",
         drawSoldermask: true,
-        boardSoldermaskColor:
-          this.colorOverrides?.soldermask?.top === undefined
-            ? board?.solder_mask_color
-            : undefined,
+        useBoardSoldermaskColor:
+          this.colorOverrides?.soldermask?.top === undefined,
       })
     }
 
@@ -534,10 +532,8 @@ export class CircuitToCanvasDrawer {
         colorMap,
         layer: "bottom",
         drawSoldermask: true,
-        boardSoldermaskColor:
-          this.colorOverrides?.soldermask?.bottom === undefined
-            ? board?.solder_mask_color
-            : undefined,
+        useBoardSoldermaskColor:
+          this.colorOverrides?.soldermask?.bottom === undefined,
       })
     }
 
