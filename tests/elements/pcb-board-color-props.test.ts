@@ -77,6 +77,13 @@ test("board color props are used only when drawing soldermask", async () => {
     drawSoldermask: true,
   })
 
+  expect(Array.from(realisticCtx.getImageData(20, 40, 1, 1).data)).toEqual([
+    32, 32, 96, 255,
+  ])
+  expect(Array.from(realisticCtx.getImageData(50, 30, 1, 1).data)).toEqual([
+    255, 210, 0, 255,
+  ])
+
   await expect(realisticCanvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
   )

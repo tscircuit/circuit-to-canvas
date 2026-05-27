@@ -41,14 +41,8 @@ export interface DrawPcbSoldermaskParams {
  * 3. For elements with is_covered_with_soldermask: draw soldermask-over-copper on top
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
-  const {
-    ctx,
-    elements,
-    realToCanvasMat,
-    colorMap,
-    layer,
-    drawSoldermask,
-  } = params
+  const { ctx, elements, realToCanvasMat, colorMap, layer, drawSoldermask } =
+    params
 
   if (!drawSoldermask) return
   if (ctx.canvas.width <= 0 || ctx.canvas.height <= 0) return
