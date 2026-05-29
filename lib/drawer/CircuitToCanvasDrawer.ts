@@ -76,6 +76,8 @@ import {
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
+  /** Use the board texture color palette instead of editor/debug layer colors. */
+  useBoardTextureColors?: boolean
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
   /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
@@ -98,6 +100,61 @@ function getCopperLayer(layers?: PcbRenderLayer[]): "top" | "bottom" {
   if (!layers || layers.length === 0) return "top"
   const hasBottom = layers.some((l) => l.startsWith("bottom"))
   return hasBottom ? "bottom" : "top"
+}
+
+const BOARD_TEXTURE_COPPER_COLOR = "#ffe066"
+const BOARD_TEXTURE_DRILL_COLOR = "rgba(0,0,0,0.5)"
+const BOARD_TEXTURE_SILKSCREEN_COLOR = "#ffffff"
+
+function getColorMapForDraw(params: {
+  colorMap: PcbColorMap
+  board?: PcbBoard
+  useBoardTextureColors?: boolean
+}): PcbColorMap {
+  if (!params.useBoardTextureColors) {
+    return params.colorMap
+  }
+
+  const solderMaskColor =
+    params.board?.solder_mask_color ?? params.colorMap.soldermask.top
+  const silkscreenColor =
+    params.board?.silkscreen_color ?? BOARD_TEXTURE_SILKSCREEN_COLOR
+
+  return {
+    ...params.colorMap,
+    copper: {
+      ...params.colorMap.copper,
+      top: BOARD_TEXTURE_COPPER_COLOR,
+      bottom: BOARD_TEXTURE_COPPER_COLOR,
+      inner1: BOARD_TEXTURE_COPPER_COLOR,
+      inner2: BOARD_TEXTURE_COPPER_COLOR,
+      inner3: BOARD_TEXTURE_COPPER_COLOR,
+      inner4: BOARD_TEXTURE_COPPER_COLOR,
+      inner5: BOARD_TEXTURE_COPPER_COLOR,
+      inner6: BOARD_TEXTURE_COPPER_COLOR,
+    },
+    copperPour: {
+      top: BOARD_TEXTURE_COPPER_COLOR,
+      bottom: BOARD_TEXTURE_COPPER_COLOR,
+    },
+    soldermask: {
+      top: solderMaskColor,
+      bottom: solderMaskColor,
+    },
+    soldermaskWithCopperUnderneath: {
+      top: solderMaskColor,
+      bottom: solderMaskColor,
+    },
+    soldermaskOverCopper: {
+      top: solderMaskColor,
+      bottom: solderMaskColor,
+    },
+    silkscreen: {
+      top: silkscreenColor,
+      bottom: silkscreenColor,
+    },
+    drill: BOARD_TEXTURE_DRILL_COLOR,
+  }
 }
 
 export class CircuitToCanvasDrawer {
@@ -194,6 +251,11 @@ export class CircuitToCanvasDrawer {
     const panel = elements.find((el) => el.type === "pcb_panel") as
       | PcbPanel
       | undefined
+    const colorMap = getColorMapForDraw({
+      colorMap: this.colorMap,
+      board,
+      useBoardTextureColors: options.useBoardTextureColors,
+    })
 
     // Drawing order:
     // 1. Panel outline (outer boundary)
@@ -213,34 +275,13 @@ export class CircuitToCanvasDrawer {
         ctx: this.ctx,
         panel,
         realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
+        colorMap,
         drawBoardMaterial: false,
       })
     }
 
     const drawBoardMaterial = options.drawBoardMaterial ?? false
     const drawSoldermask = options.drawSoldermask ?? false
-    let silkscreenColorMap = this.colorMap
-    if (drawSoldermask && board?.silkscreen_color) {
-      let topSilkscreenColor = this.colorMap.silkscreen.top
-      let bottomSilkscreenColor = this.colorMap.silkscreen.bottom
-
-      if (topSilkscreenColor === DEFAULT_PCB_COLOR_MAP.silkscreen.top) {
-        topSilkscreenColor = board.silkscreen_color
-      }
-
-      if (bottomSilkscreenColor === DEFAULT_PCB_COLOR_MAP.silkscreen.bottom) {
-        bottomSilkscreenColor = board.silkscreen_color
-      }
-
-      silkscreenColorMap = {
-        ...this.colorMap,
-        silkscreen: {
-          top: topSilkscreenColor,
-          bottom: bottomSilkscreenColor,
-        },
-      }
-    }
     const hasExplicitSoldermaskLayers =
       options.drawSoldermaskTop !== undefined ||
       options.drawSoldermaskBottom !== undefined
@@ -271,7 +312,7 @@ export class CircuitToCanvasDrawer {
         ctx: this.ctx,
         board,
         realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
+        colorMap,
         drawBoardMaterial,
         minBoardOutlineStrokePx: options.minBoardOutlineStrokePx,
       })
@@ -286,7 +327,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           pour: element as PcbCopperPour,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
     }
@@ -300,7 +341,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           pad: element as PcbSmtPad,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
           holes: drawableHoles,
           platedHoles: drawablePlatedHoles,
           vias: drawableVias,
@@ -312,7 +353,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           text: element as PcbCopperText,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
     }
@@ -327,7 +368,7 @@ export class CircuitToCanvasDrawer {
             ctx: this.ctx,
             trace: element as PcbTrace,
             realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
+            colorMap,
             vias: drawableVias,
             platedHoles: drawablePlatedHoles,
           })
@@ -342,7 +383,7 @@ export class CircuitToCanvasDrawer {
             ctx: this.ctx,
             hole: element as PcbHole,
             realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
+            colorMap,
             soldermaskMargin: element.soldermask_margin,
             drawSoldermask: renderTopSoldermask,
           })
@@ -353,7 +394,7 @@ export class CircuitToCanvasDrawer {
             ctx: this.ctx,
             hole: element as PcbPlatedHole,
             realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
+            colorMap,
             soldermaskMargin: (element as PcbPlatedHole).soldermask_margin,
             drawSoldermask: renderTopSoldermask,
             layer,
@@ -365,7 +406,7 @@ export class CircuitToCanvasDrawer {
             ctx: this.ctx,
             via: element as PcbVia,
             realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
+            colorMap,
             layer,
           })
         }
@@ -378,7 +419,7 @@ export class CircuitToCanvasDrawer {
         ctx: this.ctx,
         elements,
         realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
+        colorMap,
         layer: "top",
         drawSoldermask: true,
       })
@@ -393,7 +434,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           text: element as PcbSilkscreenText,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
 
@@ -402,7 +443,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           rect: element as PcbSilkscreenRect,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
 
@@ -411,7 +452,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           circle: element as PcbSilkscreenCircle,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
 
@@ -420,7 +461,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           line: element as PcbSilkscreenLine,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
 
@@ -429,7 +470,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           path: element as PcbSilkscreenPath,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
 
@@ -438,7 +479,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           pill: element as PcbSilkscreenPill,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
 
@@ -447,7 +488,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           oval: element as PcbSilkscreenOval,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: silkscreenColorMap,
+          colorMap,
         })
       }
     }
@@ -461,7 +502,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           trace: element as PcbTrace,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
           vias: drawableVias,
           platedHoles: drawablePlatedHoles,
         })
@@ -477,7 +518,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           hole: element as PcbHole,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
           soldermaskMargin: renderTopSoldermask
             ? element.soldermask_margin
             : undefined,
@@ -495,7 +536,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           hole: element as PcbPlatedHole,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
           soldermaskMargin: renderTopSoldermask
             ? (element as PcbPlatedHole).soldermask_margin
             : undefined,
@@ -509,7 +550,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           via: element as PcbVia,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
           layer,
         })
       }
@@ -521,7 +562,7 @@ export class CircuitToCanvasDrawer {
         ctx: this.ctx,
         elements,
         realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
+        colorMap,
         layer: "bottom",
         drawSoldermask: true,
       })
@@ -536,7 +577,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           cutout: element as PcbCutout,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
     }
@@ -550,7 +591,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           keepout: element as PCBKeepout,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -559,7 +600,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           text: element as PcbFabricationNoteText,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -568,7 +609,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           rect: element as PcbFabricationNoteRect,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -577,7 +618,7 @@ export class CircuitToCanvasDrawer {
       if (showPcbNotes && element.type === "pcb_note_rect") {
         drawPcbNoteRect({
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
           ctx: this.ctx,
           rect: element as PcbNoteRect,
         })
@@ -588,7 +629,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           path: element as PcbFabricationNotePath,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -597,7 +638,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           path: element as PcbNotePath,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -606,7 +647,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           text: element as PcbNoteText,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -615,7 +656,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           line: element as PcbNoteLine,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -624,7 +665,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           pcbNoteDimension: element as PcbNoteDimension,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -633,7 +674,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           pcbFabricationNoteDimension: element as PcbFabricationNoteDimension,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -642,7 +683,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           circle: element as PcbCourtyardCircle,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -651,7 +692,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           rect: element as PcbCourtyardRect,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
 
@@ -660,7 +701,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           outline: element as PcbCourtyardOutline,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap,
         })
       }
     }

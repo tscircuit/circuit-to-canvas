@@ -14,7 +14,7 @@ const circuit: AnyCircuitElement[] = [
     num_layers: 2,
     material: "fr4",
     solder_mask_color: "#202060",
-    silkscreen_color: "#ffd200",
+    silkscreen_color: "#ffffff",
   },
   {
     type: "pcb_silkscreen_line",
@@ -57,34 +57,44 @@ const circuit: AnyCircuitElement[] = [
   },
 ]
 
-test("board color props are used only when drawing soldermask", async () => {
-  const plainCanvas = createCanvas(100, 100)
-  const plainCtx = plainCanvas.getContext("2d")
-  plainCtx.fillStyle = "#101010"
-  plainCtx.fillRect(0, 0, 100, 100)
+test("board color props are used for board texture colors", async () => {
+  const defaultCanvas = createCanvas(100, 100)
+  const defaultCtx = defaultCanvas.getContext("2d")
+  defaultCtx.fillStyle = "#101010"
+  defaultCtx.fillRect(0, 0, 100, 100)
 
-  new CircuitToCanvasDrawer(plainCtx).drawElements(circuit)
-
-  const plainPixel = plainCtx.getImageData(20, 40, 1, 1).data
-  expect(Array.from(plainPixel)).toEqual([16, 16, 16, 255])
-
-  const realisticCanvas = createCanvas(100, 100)
-  const realisticCtx = realisticCanvas.getContext("2d")
-  realisticCtx.fillStyle = "#101010"
-  realisticCtx.fillRect(0, 0, 100, 100)
-
-  new CircuitToCanvasDrawer(realisticCtx).drawElements(circuit, {
+  new CircuitToCanvasDrawer(defaultCtx).drawElements(circuit, {
     drawSoldermask: true,
   })
 
-  expect(Array.from(realisticCtx.getImageData(20, 40, 1, 1).data)).toEqual([
-    32, 32, 96, 255,
+  expect(Array.from(defaultCtx.getImageData(20, 40, 1, 1).data)).toEqual([
+    12, 55, 33, 255,
   ])
-  expect(Array.from(realisticCtx.getImageData(50, 30, 1, 1).data)).toEqual([
-    255, 210, 0, 255,
+  expect(Array.from(defaultCtx.getImageData(30, 50, 1, 1).data)).toEqual([
+    200, 52, 52, 255,
   ])
 
-  await expect(realisticCanvas.toBuffer("image/png")).toMatchPngSnapshot(
+  const textureCanvas = createCanvas(100, 100)
+  const textureCtx = textureCanvas.getContext("2d")
+  textureCtx.fillStyle = "#101010"
+  textureCtx.fillRect(0, 0, 100, 100)
+
+  new CircuitToCanvasDrawer(textureCtx).drawElements(circuit, {
+    drawSoldermask: true,
+    useBoardTextureColors: true,
+  })
+
+  expect(Array.from(textureCtx.getImageData(20, 40, 1, 1).data)).toEqual([
+    32, 32, 96, 255,
+  ])
+  expect(Array.from(textureCtx.getImageData(30, 50, 1, 1).data)).toEqual([
+    255, 224, 102, 255,
+  ])
+  expect(Array.from(textureCtx.getImageData(50, 30, 1, 1).data)).toEqual([
+    255, 255, 255, 255,
+  ])
+
+  await expect(textureCanvas.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
   )
 })
