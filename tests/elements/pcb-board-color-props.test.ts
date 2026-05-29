@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
 import type { AnyCircuitElement } from "circuit-json"
-import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import { CircuitToCanvasDrawer, DEFAULT_PCB_COLOR_MAP } from "../../lib/drawer"
+import type { PcbColorMap } from "../../lib/drawer/types"
 
 const circuit: AnyCircuitElement[] = [
   {
@@ -14,7 +15,7 @@ const circuit: AnyCircuitElement[] = [
     num_layers: 2,
     material: "fr4",
     solder_mask_color: "#202060",
-    silkscreen_color: "#ffffff",
+    silkscreen_color: "#ffd200",
   },
   {
     type: "pcb_silkscreen_line",
@@ -57,7 +58,31 @@ const circuit: AnyCircuitElement[] = [
   },
 ]
 
-test("board color props are used for board texture colors", async () => {
+const boardTextureColorMap: PcbColorMap = {
+  ...DEFAULT_PCB_COLOR_MAP,
+  copper: {
+    ...DEFAULT_PCB_COLOR_MAP.copper,
+    top: "#ffe066",
+    bottom: "#ffe066",
+    inner1: "#ffe066",
+    inner2: "#ffe066",
+    inner3: "#ffe066",
+    inner4: "#ffe066",
+    inner5: "#ffe066",
+    inner6: "#ffe066",
+  },
+  copperPour: {
+    top: "#ffe066",
+    bottom: "#ffe066",
+  },
+  drill: "rgba(0,0,0,0.5)",
+  silkscreen: {
+    top: "#ffffff",
+    bottom: "#ffffff",
+  },
+}
+
+test("board color props are opt-in and work with caller color overrides", async () => {
   const defaultCanvas = createCanvas(100, 100)
   const defaultCtx = defaultCanvas.getContext("2d")
   defaultCtx.fillStyle = "#101010"
@@ -79,9 +104,13 @@ test("board color props are used for board texture colors", async () => {
   textureCtx.fillStyle = "#101010"
   textureCtx.fillRect(0, 0, 100, 100)
 
-  new CircuitToCanvasDrawer(textureCtx).drawElements(circuit, {
+  const textureDrawer = new CircuitToCanvasDrawer(textureCtx)
+  textureDrawer.configure({
+    colorOverrides: boardTextureColorMap,
+  })
+  textureDrawer.drawElements(circuit, {
     drawSoldermask: true,
-    useBoardTextureColors: true,
+    useBoardColorProps: true,
   })
 
   expect(Array.from(textureCtx.getImageData(20, 40, 1, 1).data)).toEqual([
@@ -91,7 +120,7 @@ test("board color props are used for board texture colors", async () => {
     255, 224, 102, 255,
   ])
   expect(Array.from(textureCtx.getImageData(50, 30, 1, 1).data)).toEqual([
-    255, 255, 255, 255,
+    255, 210, 0, 255,
   ])
 
   await expect(textureCanvas.toBuffer("image/png")).toMatchPngSnapshot(

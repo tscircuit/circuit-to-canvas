@@ -76,8 +76,8 @@ import {
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
-  /** Use the board texture color palette instead of editor/debug layer colors. */
-  useBoardTextureColors?: boolean
+  /** Apply pcb_board color props to soldermask and silkscreen colors. */
+  useBoardColorProps?: boolean
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
   /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
@@ -102,58 +102,43 @@ function getCopperLayer(layers?: PcbRenderLayer[]): "top" | "bottom" {
   return hasBottom ? "bottom" : "top"
 }
 
-const BOARD_TEXTURE_COPPER_COLOR = "#ffe066"
-const BOARD_TEXTURE_DRILL_COLOR = "rgba(0,0,0,0.5)"
-const BOARD_TEXTURE_SILKSCREEN_COLOR = "#ffffff"
-
 function getColorMapForDraw(params: {
   colorMap: PcbColorMap
   board?: PcbBoard
-  useBoardTextureColors?: boolean
+  useBoardColorProps?: boolean
 }): PcbColorMap {
-  if (!params.useBoardTextureColors) {
+  if (!params.useBoardColorProps || !params.board) {
     return params.colorMap
   }
 
-  const solderMaskColor =
-    params.board?.solder_mask_color ?? params.colorMap.soldermask.top
-  const silkscreenColor =
-    params.board?.silkscreen_color ?? BOARD_TEXTURE_SILKSCREEN_COLOR
+  const solderMaskColor = params.board.solder_mask_color
+  const silkscreenColor = params.board.silkscreen_color
+
+  if (!solderMaskColor && !silkscreenColor) {
+    return params.colorMap
+  }
 
   return {
     ...params.colorMap,
-    copper: {
-      ...params.colorMap.copper,
-      top: BOARD_TEXTURE_COPPER_COLOR,
-      bottom: BOARD_TEXTURE_COPPER_COLOR,
-      inner1: BOARD_TEXTURE_COPPER_COLOR,
-      inner2: BOARD_TEXTURE_COPPER_COLOR,
-      inner3: BOARD_TEXTURE_COPPER_COLOR,
-      inner4: BOARD_TEXTURE_COPPER_COLOR,
-      inner5: BOARD_TEXTURE_COPPER_COLOR,
-      inner6: BOARD_TEXTURE_COPPER_COLOR,
-    },
-    copperPour: {
-      top: BOARD_TEXTURE_COPPER_COLOR,
-      bottom: BOARD_TEXTURE_COPPER_COLOR,
-    },
     soldermask: {
-      top: solderMaskColor,
-      bottom: solderMaskColor,
+      top: solderMaskColor ?? params.colorMap.soldermask.top,
+      bottom: solderMaskColor ?? params.colorMap.soldermask.bottom,
     },
     soldermaskWithCopperUnderneath: {
-      top: solderMaskColor,
-      bottom: solderMaskColor,
+      top:
+        solderMaskColor ?? params.colorMap.soldermaskWithCopperUnderneath.top,
+      bottom:
+        solderMaskColor ??
+        params.colorMap.soldermaskWithCopperUnderneath.bottom,
     },
     soldermaskOverCopper: {
-      top: solderMaskColor,
-      bottom: solderMaskColor,
+      top: solderMaskColor ?? params.colorMap.soldermaskOverCopper.top,
+      bottom: solderMaskColor ?? params.colorMap.soldermaskOverCopper.bottom,
     },
     silkscreen: {
-      top: silkscreenColor,
-      bottom: silkscreenColor,
+      top: silkscreenColor ?? params.colorMap.silkscreen.top,
+      bottom: silkscreenColor ?? params.colorMap.silkscreen.bottom,
     },
-    drill: BOARD_TEXTURE_DRILL_COLOR,
   }
 }
 
@@ -254,7 +239,7 @@ export class CircuitToCanvasDrawer {
     const colorMap = getColorMapForDraw({
       colorMap: this.colorMap,
       board,
-      useBoardTextureColors: options.useBoardTextureColors,
+      useBoardColorProps: options.useBoardColorProps,
     })
 
     // Drawing order:
