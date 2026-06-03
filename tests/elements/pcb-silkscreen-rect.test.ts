@@ -20,6 +20,7 @@ test("draw silkscreen rect", async () => {
     width: 80,
     height: 40,
     stroke_width: 0.4,
+    corner_radius: 10,
   }
 
   drawer.drawElements([rect])
