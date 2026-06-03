@@ -28,6 +28,7 @@ export function drawPcbSilkscreenRect(
     center: rect.center,
     width: rect.width,
     height: rect.height,
+    borderRadius: rect.corner_radius,
     fill: rect.is_filled ? color : "transparent",
     stroke: color,
     strokeWidth: rect.stroke_width,
