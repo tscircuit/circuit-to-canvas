@@ -10,9 +10,6 @@ export interface DrawPcbKeepoutParams {
   colorMap: PcbColorMap
 }
 
-/**
- * Converts hex color to rgba with transparency
- */
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
@@ -20,22 +17,96 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
+function getKeepoutColor(keepout: PCBKeepout, colorMap: PcbColorMap): string {
+  return keepout.layers.includes("bottom") && !keepout.layers.includes("top")
+    ? colorMap.keepout.bottom
+    : colorMap.keepout.top
+}
+
+function drawRectPath(ctx: CanvasContext, width: number, height: number): void {
+  ctx.beginPath()
+  ctx.rect(-width / 2, -height / 2, width, height)
+}
+
+function drawCirclePath(ctx: CanvasContext, radius: number): void {
+  ctx.beginPath()
+  ctx.arc(0, 0, radius, 0, Math.PI * 2)
+}
+
+function drawHatchLines(params: {
+  ctx: CanvasContext
+  strokeColor: string
+  hatchWidth: number
+  hatchSpacing: number
+  diagonal: number
+  getLineEndpoints: (offset: number) => {
+    startX: number
+    startY: number
+    endX: number
+    endY: number
+  }
+}): void {
+  const {
+    ctx,
+    strokeColor,
+    hatchWidth,
+    hatchSpacing,
+    diagonal,
+    getLineEndpoints,
+  } = params
+
+  ctx.strokeStyle = strokeColor
+  ctx.lineWidth = hatchWidth
+  ctx.setLineDash([])
+
+  for (let offset = -diagonal; offset < diagonal * 2; offset += hatchSpacing) {
+    const { startX, startY, endX, endY } = getLineEndpoints(offset)
+    ctx.beginPath()
+    ctx.moveTo(startX, startY)
+    ctx.lineTo(endX, endY)
+    ctx.stroke()
+  }
+}
+
+function drawKeepoutSurface(params: {
+  ctx: CanvasContext
+  strokeColor: string
+  fillColor: string
+  drawPath: () => void
+  drawHatch: () => void
+}): void {
+  const { ctx, fillColor, drawPath, drawHatch } = params
+
+  drawPath()
+  ctx.fillStyle = fillColor
+  ctx.fill()
+
+  drawPath()
+  ctx.clip()
+  drawHatch()
+}
+
 export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
   const { ctx, keepout, realToCanvasMat, colorMap } = params
-
-  // Keepout zones are shown with transparent red background and diagonal red lines pattern
-  const strokeColor = colorMap.keepout
-  const fillColor = hexToRgba(colorMap.keepout, 0.2) // Slight transparent red background
-  const hatchSpacing = 1.0 // Spacing between diagonal lines
+  const scale = Math.abs(realToCanvasMat.a)
+  const strokeColor = getKeepoutColor(keepout, colorMap)
+  const fillColor = hexToRgba(strokeColor, 0.2)
+  const hatchSpacing = 1.0 * scale
+  const hatchWidth = 0.15 * scale
 
   if (keepout.shape === "rect") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [
       keepout.center.x,
       keepout.center.y,
     ])
-    const scaledWidth = keepout.width * Math.abs(realToCanvasMat.a)
-    const scaledHeight = keepout.height * Math.abs(realToCanvasMat.a)
+    const scaledWidth = keepout.width * scale
+    const scaledHeight = keepout.height * scale
     const rotation = (keepout as { rotation?: number }).rotation ?? 0
+    const diagonal = Math.sqrt(
+      scaledWidth * scaledWidth + scaledHeight * scaledHeight,
+    )
+    const halfWidth = scaledWidth / 2
+    const halfHeight = scaledHeight / 2
 
     ctx.save()
     ctx.translate(cx, cy)
@@ -44,46 +115,26 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
       ctx.rotate(-rotation * (Math.PI / 180))
     }
 
-    // Draw transparent red background
-    ctx.beginPath()
-    ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
-    ctx.fillStyle = fillColor
-    ctx.fill()
-
-    // Set up clipping path for the rectangle
-    ctx.beginPath()
-    ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
-    ctx.clip()
-
-    // Draw diagonal lines pattern at 45 degrees
-    const scaledSpacing = hatchSpacing * Math.abs(realToCanvasMat.a)
-    const diagonal = Math.sqrt(
-      scaledWidth * scaledWidth + scaledHeight * scaledHeight,
-    )
-    const halfWidth = scaledWidth / 2
-    const halfHeight = scaledHeight / 2
-
-    ctx.strokeStyle = strokeColor
-    ctx.lineWidth = 0.15 * Math.abs(realToCanvasMat.a)
-    ctx.setLineDash([])
-
-    // Draw diagonal lines from top-left to bottom-right
-    for (
-      let offset = -diagonal;
-      offset < diagonal * 2;
-      offset += scaledSpacing
-    ) {
-      ctx.beginPath()
-      // Line goes from left edge to right edge (or top to bottom)
-      const startX = -halfWidth + offset
-      const startY = -halfHeight
-      const endX = -halfWidth + offset + diagonal
-      const endY = -halfHeight + diagonal
-
-      ctx.moveTo(startX, startY)
-      ctx.lineTo(endX, endY)
-      ctx.stroke()
-    }
+    drawKeepoutSurface({
+      ctx,
+      strokeColor,
+      fillColor,
+      drawPath: () => drawRectPath(ctx, scaledWidth, scaledHeight),
+      drawHatch: () =>
+        drawHatchLines({
+          ctx,
+          strokeColor,
+          hatchWidth,
+          hatchSpacing,
+          diagonal,
+          getLineEndpoints: (offset) => ({
+            startX: -halfWidth + offset,
+            startY: -halfHeight,
+            endX: -halfWidth + offset + diagonal,
+            endY: -halfHeight + diagonal,
+          }),
+        }),
+    })
 
     ctx.restore()
     return
@@ -94,43 +145,33 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
       keepout.center.x,
       keepout.center.y,
     ])
-    const scaledRadius = keepout.radius * Math.abs(realToCanvasMat.a)
-    const scaledSpacing = hatchSpacing * Math.abs(realToCanvasMat.a)
+    const scaledRadius = keepout.radius * scale
+    const diagonal = scaledRadius * 2
 
     ctx.save()
     ctx.translate(cx, cy)
 
-    // Draw transparent red background
-    ctx.beginPath()
-    ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2)
-    ctx.fillStyle = fillColor
-    ctx.fill()
-
-    // Set up clipping path for the circle
-    ctx.beginPath()
-    ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2)
-    ctx.clip()
-
-    // Draw diagonal lines pattern at 45 degrees
-    const diagonal = scaledRadius * 2
-
-    ctx.strokeStyle = strokeColor
-    ctx.lineWidth = 0.15 * Math.abs(realToCanvasMat.a)
-    ctx.setLineDash([])
-
-    // Draw diagonal lines from top-left to bottom-right
-    for (
-      let offset = -diagonal;
-      offset < diagonal * 2;
-      offset += scaledSpacing
-    ) {
-      ctx.beginPath()
-      ctx.moveTo(offset - diagonal, -diagonal)
-      ctx.lineTo(offset + diagonal, diagonal)
-      ctx.stroke()
-    }
+    drawKeepoutSurface({
+      ctx,
+      strokeColor,
+      fillColor,
+      drawPath: () => drawCirclePath(ctx, scaledRadius),
+      drawHatch: () =>
+        drawHatchLines({
+          ctx,
+          strokeColor,
+          hatchWidth,
+          hatchSpacing,
+          diagonal,
+          getLineEndpoints: (offset) => ({
+            startX: offset - diagonal,
+            startY: -diagonal,
+            endX: offset + diagonal,
+            endY: diagonal,
+          }),
+        }),
+    })
 
     ctx.restore()
-    return
   }
 }

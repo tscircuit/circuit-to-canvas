@@ -99,7 +99,10 @@ export interface PcbColorMap {
     top: string
     bottom: string
   }
-  keepout: string
+  keepout: {
+    top: string
+    bottom: string
+  }
   fabricationNote: string
 }
 
@@ -141,7 +144,10 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
     top: "#FF00FF",
     bottom: "rgb(38, 233, 255)",
   },
-  keepout: "#FF6B6B", // Red color for keepout zones
+  keepout: {
+    top: "#FF6B6B",
+    bottom: "#5da9e9",
+  },
   fabricationNote: "rgba(255, 255, 255, 0.5)",
 }
 
