@@ -2,6 +2,7 @@ import type { PCBKeepout } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
+import { drawCirclePath, drawRectPath } from "./helper-functions"
 
 export interface DrawPcbKeepoutParams {
   ctx: CanvasContext
@@ -21,16 +22,6 @@ function getKeepoutColor(keepout: PCBKeepout, colorMap: PcbColorMap): string {
   return keepout.layers.includes("bottom") && !keepout.layers.includes("top")
     ? colorMap.keepout.bottom
     : colorMap.keepout.top
-}
-
-function drawRectPath(ctx: CanvasContext, width: number, height: number): void {
-  ctx.beginPath()
-  ctx.rect(-width / 2, -height / 2, width, height)
-}
-
-function drawCirclePath(ctx: CanvasContext, radius: number): void {
-  ctx.beginPath()
-  ctx.arc(0, 0, radius, 0, Math.PI * 2)
 }
 
 function drawHatchLines(params: {
@@ -119,7 +110,14 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
       ctx,
       strokeColor,
       fillColor,
-      drawPath: () => drawRectPath(ctx, scaledWidth, scaledHeight),
+      drawPath: () =>
+        drawRectPath({
+          ctx,
+          cx: 0,
+          cy: 0,
+          width: scaledWidth,
+          height: scaledHeight,
+        }),
       drawHatch: () =>
         drawHatchLines({
           ctx,
@@ -155,7 +153,13 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
       ctx,
       strokeColor,
       fillColor,
-      drawPath: () => drawCirclePath(ctx, scaledRadius),
+      drawPath: () =>
+        drawCirclePath({
+          ctx,
+          cx: 0,
+          cy: 0,
+          radius: scaledRadius,
+        }),
       drawHatch: () =>
         drawHatchLines({
           ctx,
