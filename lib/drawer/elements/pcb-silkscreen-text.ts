@@ -21,6 +21,20 @@ function mapAnchorAlignment(alignment?: string): AnchorAlignment {
   return alignment as AnchorAlignment
 }
 
+/**
+ * Keep silkscreen text readable regardless of the component's rotation.
+ *
+ * KiCad plots footprint text "keep upright": any angle that would render the
+ * text upside-down (in the (90°, 270°] half) is flipped by 180°. Without this,
+ * a component rotated 180° gets an upside-down reference designator and one
+ * rotated 270° gets an upside-down-vertical one — unreadable on the board and
+ * a divergence from KiCad.
+ */
+function keepTextUpright(rotation: number): number {
+  const a = ((rotation % 360) + 360) % 360
+  return a > 90 && a <= 270 ? a - 180 : a
+}
+
 export function drawPcbSilkscreenText(
   params: DrawPcbSilkscreenTextParams,
 ): void {
@@ -42,7 +56,7 @@ export function drawPcbSilkscreenText(
     color,
     realToCanvasMat,
     anchorAlignment: alignment,
-    rotation: text.ccw_rotation ?? 0,
+    rotation: keepTextUpright(text.ccw_rotation ?? 0),
     mirrorX: text.layer === "bottom",
     knockout: text.is_knockout,
     knockoutPadding: text.is_knockout ? text.knockout_padding : undefined,

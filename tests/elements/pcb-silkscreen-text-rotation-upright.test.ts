@@ -81,7 +81,7 @@ const renderRotationStrip = (): Buffer => {
   return canvas.toBuffer("image/png")
 }
 
-test.failing("silkscreen text stays upright when rotated (matches KiCad keep-upright)", async () => {
+test("silkscreen text stays upright when rotated (matches KiCad keep-upright)", async () => {
   // Visual before/after: F rendered at 0°, 90°, 180°, 270°.
   await expect(renderRotationStrip()).toMatchPngSnapshot(
     import.meta.path,
