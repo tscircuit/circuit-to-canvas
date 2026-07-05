@@ -1,4 +1,10 @@
-import type { PcbHole, PcbPlatedHole, PcbSmtPad, PcbVia } from "circuit-json"
+import type {
+  PcbCutout,
+  PcbHole,
+  PcbPlatedHole,
+  PcbSmtPad,
+  PcbVia,
+} from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
@@ -34,7 +40,13 @@ interface DrillCutoutRect {
   y: number
   width: number
   height: number
+  radius?: number
   rotation?: number
+}
+
+interface DrillCutoutPolygon {
+  shape: "polygon"
+  points: Array<{ x: number; y: number }>
 }
 
 type DrillCutout =
@@ -42,6 +54,7 @@ type DrillCutout =
   | DrillCutoutOval
   | DrillCutoutPill
   | DrillCutoutRect
+  | DrillCutoutPolygon
 
 interface Bounds {
   minX: number
@@ -55,6 +68,7 @@ export interface PcbSmtPadDrillCutoutParams {
   holes?: PcbHole[]
   platedHoles?: PcbPlatedHole[]
   vias?: PcbVia[]
+  cutouts?: PcbCutout[]
 }
 
 export function drawPadWithDrillCutouts(params: {
@@ -87,26 +101,28 @@ export function drawPadWithDrillCutouts(params: {
 export function getPadDrillCutouts(
   params: PcbSmtPadDrillCutoutParams,
 ): DrillCutout[] {
-  const { pad, holes = [], platedHoles = [], vias = [] } = params
+  const { pad, holes = [], platedHoles = [], vias = [], cutouts = [] } = params
   const padBounds = getPadBounds(pad)
   if (!padBounds) return []
 
-  const cutouts: DrillCutout[] = []
+  const drillCutouts: DrillCutout[] = []
+  const addIfOverlapping = (cutout: DrillCutout | undefined): void => {
+    if (cutout && boundsOverlap(padBounds, getDrillCutoutBounds(cutout))) {
+      drillCutouts.push(cutout)
+    }
+  }
+
+  for (const cutout of cutouts) {
+    addIfOverlapping(getBoardCutout(cutout))
+  }
 
   for (const hole of holes) {
-    const cutout = getHoleDrillCutout(hole)
-    if (cutout && boundsOverlap(padBounds, getDrillCutoutBounds(cutout))) {
-      cutouts.push(cutout)
-    }
+    addIfOverlapping(getHoleDrillCutout(hole))
   }
 
   for (const platedHole of platedHoles) {
     if (!layersIncludePadLayer(platedHole.layers, pad.layer)) continue
-
-    const cutout = getPlatedHoleDrillCutout(platedHole)
-    if (cutout && boundsOverlap(padBounds, getDrillCutoutBounds(cutout))) {
-      cutouts.push(cutout)
-    }
+    addIfOverlapping(getPlatedHoleDrillCutout(platedHole))
   }
 
   for (const via of vias) {
@@ -120,12 +136,10 @@ export function getPadDrillCutouts(
       y: via.y,
       radius,
     }
-    if (boundsOverlap(padBounds, getDrillCutoutBounds(cutout))) {
-      cutouts.push(cutout)
-    }
+    addIfOverlapping(cutout)
   }
 
-  return cutouts
+  return drillCutouts
 }
 
 function appendPadPath(
@@ -215,11 +229,17 @@ function appendDrillCutoutPath(
     return
   }
 
+  if (drillCutout.shape === "polygon") {
+    appendPolygonPath(ctx, drillCutout.points, realToCanvasMat)
+    return
+  }
+
   appendRectPath(ctx, {
     x: drillCutout.x,
     y: drillCutout.y,
     width: drillCutout.width,
     height: drillCutout.height,
+    radius: drillCutout.radius,
     rotation: drillCutout.rotation,
     realToCanvasMat,
   })
@@ -429,6 +449,10 @@ function getPadBounds(pad: PcbSmtPad): Bounds | undefined {
 }
 
 function getDrillCutoutBounds(cutout: DrillCutout): Bounds {
+  if (cutout.shape === "polygon") {
+    return getPointBounds(cutout.points)
+  }
+
   if (cutout.shape === "circle") {
     return boundsAroundCenter(cutout.x, cutout.y, cutout.radius, cutout.radius)
   }
@@ -453,6 +477,35 @@ function getDrillCutoutBounds(cutout: DrillCutout): Bounds {
     return boundsAroundCenter(cutout.x, cutout.y, halfDiagonal, halfDiagonal)
   }
   return boundsAroundCenter(cutout.x, cutout.y, halfWidth, halfHeight)
+}
+
+function getBoardCutout(cutout: PcbCutout): DrillCutout | undefined {
+  if (cutout.shape === "circle") {
+    if (cutout.radius <= 0) return
+    return {
+      shape: "circle",
+      x: cutout.center.x,
+      y: cutout.center.y,
+      radius: cutout.radius,
+    }
+  }
+
+  if (cutout.shape === "rect") {
+    if (cutout.width <= 0 || cutout.height <= 0) return
+    return {
+      shape: "rect",
+      x: cutout.center.x,
+      y: cutout.center.y,
+      width: cutout.width,
+      height: cutout.height,
+      radius: cutout.corner_radius,
+      rotation: cutout.rotation,
+    }
+  }
+
+  if (cutout.shape === "polygon" && cutout.points.length >= 3) {
+    return { shape: "polygon", points: cutout.points }
+  }
 }
 
 function getPointBounds(points: Array<{ x: number; y: number }>): Bounds {

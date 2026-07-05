@@ -243,6 +243,10 @@ export class CircuitToCanvasDrawer {
       (el): el is PcbPlatedHole =>
         shouldDrawElement(el, options) && el.type === "pcb_plated_hole",
     )
+    const drawableCutouts = elements.filter(
+      (el): el is PcbCutout =>
+        shouldDrawElement(el, options) && el.type === "pcb_cutout",
+    )
 
     // Step 2: Draw board outline/material (inner board)
     if (board) {
@@ -283,6 +287,7 @@ export class CircuitToCanvasDrawer {
           holes: drawableHoles,
           platedHoles: drawablePlatedHoles,
           vias: drawableVias,
+          cutouts: drawableCutouts,
         })
       }
 
