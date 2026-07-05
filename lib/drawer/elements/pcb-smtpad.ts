@@ -1,10 +1,16 @@
-import type { PcbHole, PcbPlatedHole, PcbSmtPad, PcbVia } from "circuit-json"
+import type {
+  PcbCutout,
+  PcbHole,
+  PcbPlatedHole,
+  PcbSmtPad,
+  PcbVia,
+} from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../types"
 import { drawCircle } from "../shapes/circle"
-import { drawRect } from "../shapes/rect"
 import { drawPill } from "../shapes/pill"
 import { drawPolygon } from "../shapes/polygon"
+import { drawRect } from "../shapes/rect"
+import type { CanvasContext, PcbColorMap } from "../types"
 import {
   drawPadWithDrillCutouts,
   getPadDrillCutouts,
@@ -18,6 +24,7 @@ export interface DrawPcbSmtPadParams {
   holes?: PcbHole[]
   platedHoles?: PcbPlatedHole[]
   vias?: PcbVia[]
+  cutouts?: PcbCutout[]
 }
 
 function layerToColor(layer: string, colorMap: PcbColorMap): string {
