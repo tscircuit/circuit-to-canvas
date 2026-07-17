@@ -1,5 +1,6 @@
 import type {
   AnyCircuitElement,
+  LayerRef,
   PCBKeepout,
   PcbBoard,
   PcbCopperPour,
@@ -94,11 +95,16 @@ interface CanvasLike {
   getContext(contextId: "2d"): CanvasContext | null
 }
 
-function getCopperLayer(layers?: PcbRenderLayer[]): "top" | "bottom" {
+function getCopperLayer(layers?: PcbRenderLayer[]): LayerRef {
   if (!layers || layers.length === 0) return "top"
-  const hasBottom = layers.some((l) => l.startsWith("bottom"))
-  return hasBottom ? "bottom" : "top"
+  const copperLayer = layers.find((candidate) => candidate.endsWith("_copper"))
+  return copperLayer
+    ? (copperLayer.slice(0, -"_copper".length) as LayerRef)
+    : "top"
 }
+
+const isOnCopperLayer = (element: PcbVia | PcbPlatedHole, layer: LayerRef) =>
+  element.layers?.includes(layer) ?? true
 
 export class CircuitToCanvasDrawer {
   private ctx: CanvasContext
@@ -233,7 +239,9 @@ export class CircuitToCanvasDrawer {
       (options.drawSoldermaskBottom ?? false)
     const drawableVias = elements.filter(
       (el): el is PcbVia =>
-        shouldDrawElement(el, options) && el.type === "pcb_via",
+        shouldDrawElement(el, options) &&
+        el.type === "pcb_via" &&
+        isOnCopperLayer(el, layer),
     )
     const drawableHoles = elements.filter(
       (el): el is PcbHole =>
@@ -241,7 +249,9 @@ export class CircuitToCanvasDrawer {
     )
     const drawablePlatedHoles = elements.filter(
       (el): el is PcbPlatedHole =>
-        shouldDrawElement(el, options) && el.type === "pcb_plated_hole",
+        shouldDrawElement(el, options) &&
+        el.type === "pcb_plated_hole" &&
+        isOnCopperLayer(el, layer),
     )
     const drawableCutouts = elements.filter(
       (el): el is PcbCutout =>
@@ -332,7 +342,10 @@ export class CircuitToCanvasDrawer {
           })
         }
 
-        if (element.type === "pcb_plated_hole") {
+        if (
+          element.type === "pcb_plated_hole" &&
+          isOnCopperLayer(element, layer)
+        ) {
           drawPcbPlatedHole({
             ctx: this.ctx,
             hole: element as PcbPlatedHole,
@@ -344,7 +357,7 @@ export class CircuitToCanvasDrawer {
           })
         }
 
-        if (element.type === "pcb_via") {
+        if (element.type === "pcb_via" && isOnCopperLayer(element, layer)) {
           drawPcbVia({
             ctx: this.ctx,
             via: element as PcbVia,
@@ -474,7 +487,11 @@ export class CircuitToCanvasDrawer {
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
-      if (element.type === "pcb_plated_hole" && !renderTopSoldermask) {
+      if (
+        element.type === "pcb_plated_hole" &&
+        !renderTopSoldermask &&
+        isOnCopperLayer(element, layer)
+      ) {
         drawPcbPlatedHole({
           ctx: this.ctx,
           hole: element as PcbPlatedHole,
@@ -488,7 +505,11 @@ export class CircuitToCanvasDrawer {
         })
       }
 
-      if (element.type === "pcb_via" && !renderTopSoldermask) {
+      if (
+        element.type === "pcb_via" &&
+        !renderTopSoldermask &&
+        isOnCopperLayer(element, layer)
+      ) {
         drawPcbVia({
           ctx: this.ctx,
           via: element as PcbVia,

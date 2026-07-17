@@ -1,9 +1,12 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
-import type { AnyCircuitElement } from "circuit-json"
+import type { AnyCircuitElement, LayerRef, PcbRenderLayer } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-function renderCopperPourScene(elements: AnyCircuitElement[]): Buffer {
+function renderCopperPourScene(
+  elements: AnyCircuitElement[],
+  layer: LayerRef,
+): Buffer {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -11,7 +14,9 @@ function renderCopperPourScene(elements: AnyCircuitElement[]): Buffer {
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, 100, 100)
 
-  drawer.drawElements(elements)
+  drawer.drawElements(elements, {
+    layers: [`${layer}_copper` as PcbRenderLayer],
+  })
 
   return canvas.toBuffer("image/png")
 }
@@ -23,6 +28,8 @@ const INNER_LAYERS = [
   "inner4",
   "inner5",
   "inner6",
+  "inner7",
+  "inner8",
 ] as const
 
 function createCopperPourWithTraceScene(
@@ -78,9 +85,10 @@ for (const layer of INNER_LAYERS) {
   test(`draw ${layer} copper pour with trace`, async () => {
     const elements = createCopperPourWithTraceScene(layer)
 
-    const withTrace = renderCopperPourScene(elements)
+    const withTrace = renderCopperPourScene(elements, layer)
     const withoutTrace = renderCopperPourScene(
       elements.filter((element) => element.type !== "pcb_trace"),
+      layer,
     )
 
     expect(Buffer.compare(withTrace, withoutTrace)).not.toBe(0)
