@@ -23,6 +23,8 @@ const INNER_LAYERS = [
   "inner4",
   "inner5",
   "inner6",
+  "inner7",
+  "inner8",
 ] as const
 
 function createCopperPourWithTraceScene(
