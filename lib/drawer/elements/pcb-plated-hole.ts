@@ -1,4 +1,4 @@
-import type { PcbPlatedHole } from "circuit-json"
+import type { LayerRef, PcbPlatedHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawCircle } from "../shapes/circle"
 import { drawOval } from "../shapes/oval"
@@ -15,7 +15,7 @@ export interface DrawPcbPlatedHoleParams {
   colorMap: PcbColorMap
   soldermaskMargin?: number
   drawSoldermask?: boolean
-  layer?: "top" | "bottom"
+  layer?: LayerRef
 }
 
 export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {

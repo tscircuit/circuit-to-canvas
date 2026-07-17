@@ -1,4 +1,4 @@
-import type { PCBVia } from "circuit-json"
+import type { LayerRef, PCBVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawCircle } from "../shapes/circle"
 import type { CanvasContext, PcbColorMap } from "../types"
@@ -8,7 +8,7 @@ export interface DrawPcbViaParams {
   via: PCBVia
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
-  layer?: "top" | "bottom"
+  layer?: LayerRef
 }
 
 export function drawPcbVia(params: DrawPcbViaParams): void {
