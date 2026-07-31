@@ -37,6 +37,11 @@ export {
 } from "./pcb-silkscreen-circle"
 
 export {
+  drawPcbSilkscreenGraphic,
+  type DrawPcbSilkscreenGraphicParams,
+} from "./pcb-silkscreen-graphic"
+
+export {
   drawPcbSilkscreenLine,
   type DrawPcbSilkscreenLineParams,
 } from "./pcb-silkscreen-line"
