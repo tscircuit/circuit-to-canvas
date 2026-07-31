@@ -57,10 +57,17 @@ test("solder paste is hidden by default and filtered by selected layer", () => {
 
   const topOnly = renderSolderPaste(solderPaste, {
     drawSolderPaste: true,
-    layers: ["top_copper"],
   })
   expect(getRgbAt(topOnly.ctx, 30, 40)).toEqual(SOLDER_PASTE_GRAY)
   expect(getRgbAt(topOnly.ctx, 90, 40)).toEqual(BLACK)
+
+  const bottomOnly = renderSolderPaste(solderPaste, {
+    drawSolderPaste: true,
+    drawSolderPasteTop: false,
+    drawSolderPasteBottom: true,
+  })
+  expect(getRgbAt(bottomOnly.ctx, 30, 40)).toEqual(BLACK)
+  expect(getRgbAt(bottomOnly.ctx, 90, 40)).toEqual(SOLDER_PASTE_GRAY)
 })
 
 test("draws every supported solder paste shape using circuit-to-svg color", () => {

@@ -30,7 +30,6 @@ import type {
   PcbSilkscreenRect,
   PcbSilkscreenText,
   PcbSmtPad,
-  PcbSolderPaste,
   PcbTrace,
   PcbVia,
 } from "circuit-json"
@@ -83,6 +82,10 @@ export interface DrawElementsOptions {
   drawSoldermask?: boolean
   /** Whether to render pcb_solder_paste elements. Defaults to false. */
   drawSolderPaste?: boolean
+  /** Render top solder-paste elements when drawSolderPaste is enabled. Defaults to true if both layer flags are unset. */
+  drawSolderPasteTop?: boolean
+  /** Render bottom solder-paste elements when drawSolderPaste is enabled. */
+  drawSolderPasteBottom?: boolean
   /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
   drawSoldermaskTop?: boolean
   /** Render bottom soldermask layer when drawSoldermask is enabled. */
@@ -109,14 +112,6 @@ function getCopperLayer(layers?: PcbRenderLayer[]): LayerRef {
 
 const isOnCopperLayer = (element: PcbVia | PcbPlatedHole, layer: LayerRef) =>
   element.layers?.includes(layer) ?? true
-
-const isSolderPasteLayerVisible = (
-  solderPaste: PcbSolderPaste,
-  layers?: PcbRenderLayer[],
-) =>
-  !layers ||
-  layers.length === 0 ||
-  layers.some((renderLayer) => renderLayer.startsWith(`${solderPaste.layer}_`))
 
 export class CircuitToCanvasDrawer {
   private ctx: CanvasContext
@@ -243,6 +238,9 @@ export class CircuitToCanvasDrawer {
     const hasExplicitSoldermaskLayers =
       options.drawSoldermaskTop !== undefined ||
       options.drawSoldermaskBottom !== undefined
+    const hasExplicitSolderPasteLayers =
+      options.drawSolderPasteTop !== undefined ||
+      options.drawSolderPasteBottom !== undefined
     const renderTopSoldermask =
       drawSoldermask &&
       (board !== undefined || panel !== undefined) &&
@@ -253,19 +251,17 @@ export class CircuitToCanvasDrawer {
       (options.drawSoldermaskBottom ?? false)
     const renderTopSolderPaste =
       drawSolderPaste &&
+      (options.drawSolderPasteTop ?? !hasExplicitSolderPasteLayers) &&
       elements.some(
         (element) =>
-          element.type === "pcb_solder_paste" &&
-          element.layer === "top" &&
-          isSolderPasteLayerVisible(element, options.layers),
+          element.type === "pcb_solder_paste" && element.layer === "top",
       )
     const renderBottomSolderPaste =
       drawSolderPaste &&
+      (options.drawSolderPasteBottom ?? false) &&
       elements.some(
         (element) =>
-          element.type === "pcb_solder_paste" &&
-          element.layer === "bottom" &&
-          isSolderPasteLayerVisible(element, options.layers),
+          element.type === "pcb_solder_paste" && element.layer === "bottom",
       )
     const renderTopLayerOverlay = renderTopSoldermask || renderTopSolderPaste
     const drawableVias = elements.filter(
@@ -419,11 +415,7 @@ export class CircuitToCanvasDrawer {
     // Step 5: Draw top solder paste on soldermask/copper, under silkscreen.
     if (renderTopSolderPaste) {
       for (const element of elements) {
-        if (
-          element.type !== "pcb_solder_paste" ||
-          element.layer !== "top" ||
-          !isSolderPasteLayerVisible(element, options.layers)
-        ) {
+        if (element.type !== "pcb_solder_paste" || element.layer !== "top") {
           continue
         }
 
@@ -589,11 +581,7 @@ export class CircuitToCanvasDrawer {
     // Bottom paste is drawn after bottom soldermask so it remains visible.
     if (renderBottomSolderPaste) {
       for (const element of elements) {
-        if (
-          element.type !== "pcb_solder_paste" ||
-          element.layer !== "bottom" ||
-          !isSolderPasteLayerVisible(element, options.layers)
-        ) {
+        if (element.type !== "pcb_solder_paste" || element.layer !== "bottom") {
           continue
         }
 

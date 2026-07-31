@@ -2,6 +2,7 @@ import type { PcbSolderPaste } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawCircle } from "../shapes/circle"
 import { drawOval } from "../shapes/oval"
+import { drawPill } from "../shapes/pill"
 import { drawRect } from "../shapes/rect"
 import type { CanvasContext } from "../types"
 
@@ -43,16 +44,14 @@ export function drawPcbSolderPaste(params: DrawPcbSolderPasteParams): void {
   }
 
   if (solderPaste.shape === "pill") {
-    drawRect({
+    drawPill({
       ctx,
       center,
       width: solderPaste.width,
       height: solderPaste.height,
+      radius: solderPaste.radius,
       fill: SOLDER_PASTE_COLOR,
       realToCanvasMat,
-      borderRadius:
-        solderPaste.radius ??
-        Math.min(solderPaste.width, solderPaste.height) / 2,
     })
     return
   }
