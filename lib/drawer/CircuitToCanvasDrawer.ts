@@ -30,6 +30,7 @@ import type {
   PcbSilkscreenRect,
   PcbSilkscreenText,
   PcbSmtPad,
+  PcbSolderPaste,
   PcbTrace,
   PcbVia,
 } from "circuit-json"
@@ -63,6 +64,7 @@ import { drawPcbSilkscreenPill } from "./elements/pcb-silkscreen-pill"
 import { drawPcbSilkscreenRect } from "./elements/pcb-silkscreen-rect"
 import { drawPcbSilkscreenText } from "./elements/pcb-silkscreen-text"
 import { drawPcbSmtPad } from "./elements/pcb-smtpad"
+import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTrace } from "./elements/pcb-trace/pcb-trace"
 import { drawPcbVia } from "./elements/pcb-via"
@@ -79,6 +81,8 @@ export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /** Whether to render the soldermask layer. Defaults to false. */
   drawSoldermask?: boolean
+  /** Whether to render pcb_solder_paste elements. Defaults to false. */
+  drawSolderPaste?: boolean
   /** Render top soldermask layer when drawSoldermask is enabled. Defaults to true if both layer flags are unset. */
   drawSoldermaskTop?: boolean
   /** Render bottom soldermask layer when drawSoldermask is enabled. */
@@ -105,6 +109,14 @@ function getCopperLayer(layers?: PcbRenderLayer[]): LayerRef {
 
 const isOnCopperLayer = (element: PcbVia | PcbPlatedHole, layer: LayerRef) =>
   element.layers?.includes(layer) ?? true
+
+const isSolderPasteLayerVisible = (
+  solderPaste: PcbSolderPaste,
+  layers?: PcbRenderLayer[],
+) =>
+  !layers ||
+  layers.length === 0 ||
+  layers.some((renderLayer) => renderLayer.startsWith(`${solderPaste.layer}_`))
 
 export class CircuitToCanvasDrawer {
   private ctx: CanvasContext
@@ -206,12 +218,13 @@ export class CircuitToCanvasDrawer {
     // 2. Board outline (inner board)
     // 3. Copper elements underneath soldermask (pads, copper text)
     // 4. Soldermask (covers everything except openings)
-    // 5. Silkscreen (on soldermask, under top copper layers)
-    // 6. Copper pour and traces (drawn on top of soldermask and silkscreen)
-    // 7. Holes (drill) on top of copper and soldermask
-    // 8. Plated holes, vias (copper ring + drill hole on top of soldermask)
-    // 9. Cutouts (punch through everything)
-    // 10. Other annotations
+    // 5. Solder paste (on soldermask/copper, under silkscreen)
+    // 6. Silkscreen (on soldermask, under top copper layers)
+    // 7. Copper pour and traces (drawn on top of soldermask and silkscreen)
+    // 8. Holes (drill) on top of copper and soldermask
+    // 9. Plated holes, vias (copper ring + drill hole on top of soldermask)
+    // 10. Cutouts (punch through everything)
+    // 11. Other annotations
 
     // Step 1: Draw panel outline (outer boundary)
     if (panel) {
@@ -226,6 +239,7 @@ export class CircuitToCanvasDrawer {
 
     const drawBoardMaterial = options.drawBoardMaterial ?? false
     const drawSoldermask = options.drawSoldermask ?? false
+    const drawSolderPaste = options.drawSolderPaste ?? false
     const hasExplicitSoldermaskLayers =
       options.drawSoldermaskTop !== undefined ||
       options.drawSoldermaskBottom !== undefined
@@ -237,6 +251,23 @@ export class CircuitToCanvasDrawer {
       drawSoldermask &&
       (board !== undefined || panel !== undefined) &&
       (options.drawSoldermaskBottom ?? false)
+    const renderTopSolderPaste =
+      drawSolderPaste &&
+      elements.some(
+        (element) =>
+          element.type === "pcb_solder_paste" &&
+          element.layer === "top" &&
+          isSolderPasteLayerVisible(element, options.layers),
+      )
+    const renderBottomSolderPaste =
+      drawSolderPaste &&
+      elements.some(
+        (element) =>
+          element.type === "pcb_solder_paste" &&
+          element.layer === "bottom" &&
+          isSolderPasteLayerVisible(element, options.layers),
+      )
+    const renderTopLayerOverlay = renderTopSoldermask || renderTopSolderPaste
     const drawableVias = elements.filter(
       (el): el is PcbVia =>
         shouldDrawElement(el, options) &&
@@ -311,8 +342,8 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Draw traces before drills, then drills before soldermask so mask is rendered on top.
-    if (renderTopSoldermask) {
+    // Draw traces and drills before soldermask/paste so overlays stay on top.
+    if (renderTopLayerOverlay) {
       for (const element of elements) {
         if (!shouldDrawElement(element, options)) continue
 
@@ -337,7 +368,9 @@ export class CircuitToCanvasDrawer {
             hole: element as PcbHole,
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
-            soldermaskMargin: element.soldermask_margin,
+            soldermaskMargin: renderTopSoldermask
+              ? element.soldermask_margin
+              : undefined,
             drawSoldermask: renderTopSoldermask,
           })
         }
@@ -351,7 +384,9 @@ export class CircuitToCanvasDrawer {
             hole: element as PcbPlatedHole,
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
-            soldermaskMargin: (element as PcbPlatedHole).soldermask_margin,
+            soldermaskMargin: renderTopSoldermask
+              ? (element as PcbPlatedHole).soldermask_margin
+              : undefined,
             drawSoldermask: renderTopSoldermask,
             layer,
           })
@@ -381,7 +416,26 @@ export class CircuitToCanvasDrawer {
       })
     }
 
-    // Step 5: Draw silkscreen (on soldermask, under top copper layers)
+    // Step 5: Draw top solder paste on soldermask/copper, under silkscreen.
+    if (renderTopSolderPaste) {
+      for (const element of elements) {
+        if (
+          element.type !== "pcb_solder_paste" ||
+          element.layer !== "top" ||
+          !isSolderPasteLayerVisible(element, options.layers)
+        ) {
+          continue
+        }
+
+        drawPcbSolderPaste({
+          ctx: this.ctx,
+          solderPaste: element,
+          realToCanvasMat: this.realToCanvasMat,
+        })
+      }
+    }
+
+    // Step 6: Draw silkscreen (on soldermask, under top copper layers)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
@@ -449,11 +503,11 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 6: Draw copper pour and traces (on top of soldermask and silkscreen)
+    // Step 7: Draw copper pour and traces (on top of soldermask and silkscreen)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
-      if (element.type === "pcb_trace" && !renderTopSoldermask) {
+      if (element.type === "pcb_trace" && !renderTopLayerOverlay) {
         drawPcbTrace({
           ctx: this.ctx,
           trace: element as PcbTrace,
@@ -465,11 +519,11 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 7: Draw holes (drill) on top of copper and soldermask
+    // Step 8: Draw holes (drill) on top of copper and soldermask
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
-      if (element.type === "pcb_hole" && !renderTopSoldermask) {
+      if (element.type === "pcb_hole" && !renderTopLayerOverlay) {
         drawPcbHole({
           ctx: this.ctx,
           hole: element as PcbHole,
@@ -483,13 +537,13 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 8: Draw plated holes, vias (copper ring + drill hole on top of soldermask)
+    // Step 9: Draw plated holes, vias (copper ring + drill hole on top of soldermask)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
       if (
         element.type === "pcb_plated_hole" &&
-        !renderTopSoldermask &&
+        !renderTopLayerOverlay &&
         isOnCopperLayer(element, layer)
       ) {
         drawPcbPlatedHole({
@@ -507,7 +561,7 @@ export class CircuitToCanvasDrawer {
 
       if (
         element.type === "pcb_via" &&
-        !renderTopSoldermask &&
+        !renderTopLayerOverlay &&
         isOnCopperLayer(element, layer)
       ) {
         drawPcbVia({
@@ -532,7 +586,26 @@ export class CircuitToCanvasDrawer {
       })
     }
 
-    // Step 9: Draw cutouts (these punch through everything)
+    // Bottom paste is drawn after bottom soldermask so it remains visible.
+    if (renderBottomSolderPaste) {
+      for (const element of elements) {
+        if (
+          element.type !== "pcb_solder_paste" ||
+          element.layer !== "bottom" ||
+          !isSolderPasteLayerVisible(element, options.layers)
+        ) {
+          continue
+        }
+
+        drawPcbSolderPaste({
+          ctx: this.ctx,
+          solderPaste: element,
+          realToCanvasMat: this.realToCanvasMat,
+        })
+      }
+    }
+
+    // Step 10: Draw cutouts (these punch through everything)
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
@@ -546,7 +619,7 @@ export class CircuitToCanvasDrawer {
       }
     }
 
-    // Step 10: Draw other annotations
+    // Step 11: Draw other annotations
     for (const element of elements) {
       if (!shouldDrawElement(element, options)) continue
 
