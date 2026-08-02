@@ -49,7 +49,6 @@ export function drawPcbSolderPaste(params: DrawPcbSolderPasteParams): void {
       center,
       width: solderPaste.width,
       height: solderPaste.height,
-      radius: solderPaste.radius,
       fill: SOLDER_PASTE_COLOR,
       realToCanvasMat,
     })

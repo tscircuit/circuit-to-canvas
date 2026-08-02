@@ -7,8 +7,6 @@ export interface DrawPillParams {
   center: { x: number; y: number }
   width: number
   height: number
-  /** Corner radius. Defaults to half of the shorter side. */
-  radius?: number
   fill?: string
   realToCanvasMat: Matrix
   rotation?: number
@@ -22,7 +20,6 @@ export function drawPill(params: DrawPillParams): void {
     center,
     width,
     height,
-    radius,
     fill,
     realToCanvasMat,
     rotation = 0,
@@ -33,14 +30,6 @@ export function drawPill(params: DrawPillParams): void {
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
   const scaledWidth = width * Math.abs(realToCanvasMat.a)
   const scaledHeight = height * Math.abs(realToCanvasMat.a)
-  const scaledRadius = Math.max(
-    0,
-    Math.min(
-      (radius ?? Math.min(width, height) / 2) * Math.abs(realToCanvasMat.a),
-      scaledWidth / 2,
-      scaledHeight / 2,
-    ),
-  )
   const scaledStrokeWidth = strokeWidth
     ? strokeWidth * Math.abs(realToCanvasMat.a)
     : undefined
@@ -54,39 +43,29 @@ export function drawPill(params: DrawPillParams): void {
 
   ctx.beginPath()
 
-  if (scaledRadius > 0) {
-    const x = -scaledWidth / 2
-    const y = -scaledHeight / 2
+  if (scaledWidth > scaledHeight) {
+    // Horizontal pill
+    const radius = scaledHeight / 2
+    const straightLength = scaledWidth - scaledHeight
 
-    ctx.moveTo(x + scaledRadius, y)
-    ctx.lineTo(x + scaledWidth - scaledRadius, y)
-    ctx.arcTo(
-      x + scaledWidth,
-      y,
-      x + scaledWidth,
-      y + scaledRadius,
-      scaledRadius,
-    )
-    ctx.lineTo(x + scaledWidth, y + scaledHeight - scaledRadius)
-    ctx.arcTo(
-      x + scaledWidth,
-      y + scaledHeight,
-      x + scaledWidth - scaledRadius,
-      y + scaledHeight,
-      scaledRadius,
-    )
-    ctx.lineTo(x + scaledRadius, y + scaledHeight)
-    ctx.arcTo(
-      x,
-      y + scaledHeight,
-      x,
-      y + scaledHeight - scaledRadius,
-      scaledRadius,
-    )
-    ctx.lineTo(x, y + scaledRadius)
-    ctx.arcTo(x, y, x + scaledRadius, y, scaledRadius)
+    ctx.moveTo(-straightLength / 2, -radius)
+    ctx.lineTo(straightLength / 2, -radius)
+    ctx.arc(straightLength / 2, 0, radius, -Math.PI / 2, Math.PI / 2)
+    ctx.lineTo(-straightLength / 2, radius)
+    ctx.arc(-straightLength / 2, 0, radius, Math.PI / 2, -Math.PI / 2)
+  } else if (scaledHeight > scaledWidth) {
+    // Vertical pill
+    const radius = scaledWidth / 2
+    const straightLength = scaledHeight - scaledWidth
+
+    ctx.moveTo(radius, -straightLength / 2)
+    ctx.lineTo(radius, straightLength / 2)
+    ctx.arc(0, straightLength / 2, radius, 0, Math.PI)
+    ctx.lineTo(-radius, -straightLength / 2)
+    ctx.arc(0, -straightLength / 2, radius, Math.PI, 0)
   } else {
-    ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
+    // Circle (width === height)
+    ctx.arc(0, 0, scaledWidth / 2, 0, Math.PI * 2)
   }
 
   ctx.closePath()
