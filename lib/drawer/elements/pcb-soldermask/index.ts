@@ -91,11 +91,16 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   }
 
   for (const board of boards) {
+    // Board color props apply only to the base soldermask surface. Copper under
+    // soldermask keeps using soldermaskOverCopper for realistic pad/hole color.
+    const boardSoldermaskColor =
+      (board as PcbBoard & { solder_mask_color?: string }).solder_mask_color ??
+      soldermaskColor
     drawBoardSoldermask({
       ctx: soldermaskCtx,
       board,
       realToCanvasMat,
-      soldermaskColor,
+      soldermaskColor: boardSoldermaskColor,
     })
   }
 
