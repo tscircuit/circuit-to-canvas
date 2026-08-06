@@ -233,6 +233,81 @@ function drawRing(
   }
 }
 
+/**
+ * Appends the pour outline (including brep inner rings) as subpaths to the
+ * current path without beginning or filling it. Shared by the pour fill and
+ * the clip path that hides trace portions inside same-net pours, so both
+ * always use the same geometry. Fill or clip with the "evenodd" rule so
+ * inner rings become holes.
+ */
+export function addCopperPourPath(
+  ctx: CanvasContext,
+  pour: PcbCopperPour,
+  realToCanvasMat: Matrix,
+): void {
+  if (pour.shape === "rect") {
+    const rotationRad = ((pour.rotation ?? 0) * Math.PI) / 180
+    const cosR = Math.cos(rotationRad)
+    const sinR = Math.sin(rotationRad)
+    const halfWidth = pour.width / 2
+    const halfHeight = pour.height / 2
+
+    const realCorners: Array<[number, number]> = [
+      [-halfWidth, -halfHeight],
+      [halfWidth, -halfHeight],
+      [halfWidth, halfHeight],
+      [-halfWidth, halfHeight],
+    ].map(([dx, dy]) => [
+      pour.center.x + dx! * cosR - dy! * sinR,
+      pour.center.y + dx! * sinR + dy! * cosR,
+    ])
+
+    const canvasCorners = realCorners.map((corner) =>
+      applyToPoint(realToCanvasMat, corner),
+    )
+    const firstCorner = canvasCorners[0]
+    if (!firstCorner) return
+
+    ctx.moveTo(firstCorner[0], firstCorner[1])
+    for (let i = 1; i < canvasCorners.length; i++) {
+      const corner = canvasCorners[i]
+      if (!corner) continue
+      ctx.lineTo(corner[0], corner[1])
+    }
+    ctx.closePath()
+    return
+  }
+
+  if (pour.shape === "polygon") {
+    if (!pour.points || pour.points.length < 3) return
+
+    const canvasPoints = pour.points.map((p: { x: number; y: number }) =>
+      applyToPoint(realToCanvasMat, [p.x, p.y]),
+    )
+    const firstPoint = canvasPoints[0]
+    if (!firstPoint) return
+
+    ctx.moveTo(firstPoint[0], firstPoint[1])
+    for (let i = 1; i < canvasPoints.length; i++) {
+      const point = canvasPoints[i]
+      if (!point) continue
+      ctx.lineTo(point[0], point[1])
+    }
+    ctx.closePath()
+    return
+  }
+
+  if (pour.shape === "brep") {
+    // Outer ring plus inner rings (holes) - rely on the evenodd rule
+    drawRing(ctx, pour.brep_shape.outer_ring, realToCanvasMat)
+    if (pour.brep_shape.inner_rings) {
+      for (const innerRing of pour.brep_shape.inner_rings) {
+        drawRing(ctx, innerRing, realToCanvasMat)
+      }
+    }
+  }
+}
+
 export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   const { ctx, pour, realToCanvasMat, colorMap } = params
 
@@ -243,77 +318,9 @@ export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
   ctx.save()
   ctx.globalAlpha = opacity
 
-  if (pour.shape === "rect") {
-    // Draw the copper pour rectangle
-    const [cx, cy] = applyToPoint(realToCanvasMat, [
-      pour.center.x,
-      pour.center.y,
-    ])
-    const scaledWidth = pour.width * Math.abs(realToCanvasMat.a)
-    const scaledHeight = pour.height * Math.abs(realToCanvasMat.a)
-
-    ctx.translate(cx, cy)
-
-    if (pour.rotation) {
-      ctx.rotate(-pour.rotation * (Math.PI / 180))
-    }
-
-    ctx.beginPath()
-    ctx.rect(-scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight)
-    ctx.fillStyle = color
-    ctx.fill()
-    ctx.restore()
-    return
-  }
-
-  if (pour.shape === "polygon") {
-    if (pour.points && pour.points.length >= 3) {
-      const canvasPoints = pour.points.map((p: { x: number; y: number }) =>
-        applyToPoint(realToCanvasMat, [p.x, p.y]),
-      )
-
-      const firstPoint = canvasPoints[0]
-      if (!firstPoint) {
-        ctx.restore()
-        return
-      }
-
-      ctx.beginPath()
-      const [firstX, firstY] = firstPoint
-      ctx.moveTo(firstX, firstY)
-
-      for (let i = 1; i < canvasPoints.length; i++) {
-        const point = canvasPoints[i]
-        if (!point) continue
-        const [x, y] = point
-        ctx.lineTo(x, y)
-      }
-
-      ctx.closePath()
-      ctx.fillStyle = color
-      ctx.fill()
-    }
-    ctx.restore()
-    return
-  }
-
-  if (pour.shape === "brep") {
-    ctx.beginPath()
-    // Draw outer ring
-    drawRing(ctx, pour.brep_shape.outer_ring, realToCanvasMat)
-
-    // Draw inner rings (holes) - use evenodd fill rule to create holes
-    if (pour.brep_shape.inner_rings) {
-      for (const innerRing of pour.brep_shape.inner_rings) {
-        drawRing(ctx, innerRing, realToCanvasMat)
-      }
-    }
-
-    ctx.fillStyle = color
-    ctx.fill("evenodd")
-    ctx.restore()
-    return
-  }
-
+  ctx.beginPath()
+  addCopperPourPath(ctx, pour, realToCanvasMat)
+  ctx.fillStyle = color
+  ctx.fill("evenodd")
   ctx.restore()
 }
