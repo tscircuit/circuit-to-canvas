@@ -1,4 +1,9 @@
-import type { PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
+import type {
+  PcbCopperPour,
+  PcbPlatedHole,
+  PcbTrace,
+  PcbVia,
+} from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawLine } from "../../shapes/line"
 import { drawPolygon } from "../../shapes/polygon"
@@ -8,6 +13,7 @@ import { collectTraceSegments } from "./collect-trace-segments"
 import { cutTraceDestinationsAtDrills } from "./cut-trace-destination-drills"
 import { hasVariableWidth } from "./has-variable-width"
 import { layerToColor } from "./layer-to-color"
+import { applySameNetPourClip } from "./same-net-pour-clip"
 
 export interface DrawPcbTraceParams {
   ctx: CanvasContext
@@ -16,11 +22,16 @@ export interface DrawPcbTraceParams {
   colorMap: PcbColorMap
   vias?: PcbVia[]
   platedHoles?: PcbPlatedHole[]
+  /**
+   * Copper pours on the same net as this trace. When provided, the portions
+   * of the trace inside these pours are not painted.
+   */
+  clipToSameNetPours?: PcbCopperPour[]
 }
 
 // Draws a PCB trace route as lines or a filled polygon when widths vary.
 export function drawPcbTrace(params: DrawPcbTraceParams): void {
-  const { ctx, trace, realToCanvasMat, colorMap } = params
+  const { ctx, trace, realToCanvasMat, colorMap, clipToSameNetPours } = params
 
   if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2) {
     return
@@ -33,6 +44,15 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
     if (!layer) continue
     const color = layerToColor(layer, colorMap)
 
+    const clipped = clipToSameNetPours?.length
+      ? applySameNetPourClip({
+          ctx,
+          pours: clipToSameNetPours,
+          layer,
+          realToCanvasMat,
+        })
+      : false
+
     if (hasVariableWidth(segment)) {
       const polygonPoints = buildTracePolygon(segment)
       drawPolygon({
@@ -41,26 +61,29 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
         fill: color,
         realToCanvasMat,
       })
-      continue
+    } else {
+      for (let i = 0; i < segment.length - 1; i++) {
+        const start = segment[i]
+        const end = segment[i + 1]
+        if (!start || !end) continue
+        if (start.is_inside_copper_pour && end.is_inside_copper_pour) {
+          continue
+        }
+
+        drawLine({
+          ctx,
+          start: { x: start.x, y: start.y },
+          end: { x: end.x, y: end.y },
+          strokeWidth: start.width,
+          stroke: color,
+          realToCanvasMat,
+          lineCap: "round",
+        })
+      }
     }
 
-    for (let i = 0; i < segment.length - 1; i++) {
-      const start = segment[i]
-      const end = segment[i + 1]
-      if (!start || !end) continue
-      if (start.is_inside_copper_pour && end.is_inside_copper_pour) {
-        continue
-      }
-
-      drawLine({
-        ctx,
-        start: { x: start.x, y: start.y },
-        end: { x: end.x, y: end.y },
-        strokeWidth: start.width,
-        stroke: color,
-        realToCanvasMat,
-        lineCap: "round",
-      })
+    if (clipped) {
+      ctx.restore()
     }
   }
 

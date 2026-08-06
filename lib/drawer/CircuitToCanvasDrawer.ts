@@ -66,6 +66,7 @@ import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTrace } from "./elements/pcb-trace/pcb-trace"
+import { getSameNetCopperPoursForTrace } from "./elements/pcb-trace/same-net-pour-clip"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
 import {
@@ -96,6 +97,18 @@ export interface DrawElementsOptions {
   minBoardOutlineStrokePx?: number
   /** Whether to render pcb_note elements. Defaults to true. */
   showPcbNotes?: boolean
+  /**
+   * Hide the portions of traces that are inside a copper pour of the same
+   * net, so opaque trace strokes don't show through the semi-transparent
+   * pour fill. Defaults to false.
+   */
+  clipTracesInsideSameNetPours?: boolean
+  /**
+   * Elements used to look up copper pours and net membership for
+   * clipTracesInsideSameNetPours when the drawn `elements` are a filtered
+   * subset (e.g. only traces). Defaults to the drawn elements.
+   */
+  clipContextElements?: AnyCircuitElement[]
 }
 
 interface CanvasLike {
@@ -351,6 +364,12 @@ export class CircuitToCanvasDrawer {
             colorMap: this.colorMap,
             vias: drawableVias,
             platedHoles: drawablePlatedHoles,
+            clipToSameNetPours: options.clipTracesInsideSameNetPours
+              ? getSameNetCopperPoursForTrace(
+                  element as PcbTrace,
+                  options.clipContextElements ?? elements,
+                )
+              : undefined,
           })
         }
       }
@@ -507,6 +526,12 @@ export class CircuitToCanvasDrawer {
           colorMap: this.colorMap,
           vias: drawableVias,
           platedHoles: drawablePlatedHoles,
+          clipToSameNetPours: options.clipTracesInsideSameNetPours
+            ? getSameNetCopperPoursForTrace(
+                element as PcbTrace,
+                options.clipContextElements ?? elements,
+              )
+            : undefined,
         })
       }
     }
