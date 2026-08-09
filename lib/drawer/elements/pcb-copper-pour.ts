@@ -80,7 +80,7 @@ export function appendPcbCopperPourPath(params: {
 
   if (pour.shape !== "brep") return
 
-  addBrepShapeToPath(ctx, pour.brep_shape, realToCanvasMat)
+  addBrepShapeToPath({ ctx, shape: pour.brep_shape, realToCanvasMat })
 }
 
 export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {

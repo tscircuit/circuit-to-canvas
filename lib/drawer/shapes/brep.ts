@@ -8,13 +8,25 @@ export interface BrepShape {
   inner_rings?: Ring[]
 }
 
-function computeArcFromBulge(
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number,
-  bulge: number,
-): { centerX: number; centerY: number; radius: number } | null {
+interface ComputeArcFromBulgeParams {
+  startX: number
+  startY: number
+  endX: number
+  endY: number
+  bulge: number
+}
+
+function computeArcFromBulge({
+  startX,
+  startY,
+  endX,
+  endY,
+  bulge,
+}: ComputeArcFromBulgeParams): {
+  centerX: number
+  centerY: number
+  radius: number
+} | null {
   if (Math.abs(bulge) < 1e-10) return null
 
   const chordX = endX - startX
@@ -39,28 +51,38 @@ function computeArcFromBulge(
   }
 }
 
-function addArcFromBulgeToPath(
-  ctx: CanvasContext,
-  realStartX: number,
-  realStartY: number,
-  realEndX: number,
-  realEndY: number,
-  bulge: number,
-  realToCanvasMat: Matrix,
-): void {
+interface AddArcFromBulgeToPathParams {
+  ctx: CanvasContext
+  realStartX: number
+  realStartY: number
+  realEndX: number
+  realEndY: number
+  bulge: number
+  realToCanvasMat: Matrix
+}
+
+function addArcFromBulgeToPath({
+  ctx,
+  realStartX,
+  realStartY,
+  realEndX,
+  realEndY,
+  bulge,
+  realToCanvasMat,
+}: AddArcFromBulgeToPathParams): void {
   if (Math.abs(bulge) < 1e-10) {
     const [endX, endY] = applyToPoint(realToCanvasMat, [realEndX, realEndY])
     ctx.lineTo(endX, endY)
     return
   }
 
-  const arc = computeArcFromBulge(
-    realStartX,
-    realStartY,
-    realEndX,
-    realEndY,
+  const arc = computeArcFromBulge({
+    startX: realStartX,
+    startY: realStartY,
+    endX: realEndX,
+    endY: realEndY,
     bulge,
-  )
+  })
   if (!arc) {
     const [endX, endY] = applyToPoint(realToCanvasMat, [realEndX, realEndY])
     ctx.lineTo(endX, endY)
@@ -107,11 +129,17 @@ function addArcFromBulgeToPath(
   )
 }
 
-export function addBrepRingToPath(
-  ctx: CanvasContext,
-  ring: Ring,
-  realToCanvasMat: Matrix,
-): void {
+export interface AddBrepRingToPathParams {
+  ctx: CanvasContext
+  ring: Ring
+  realToCanvasMat: Matrix
+}
+
+export function addBrepRingToPath({
+  ctx,
+  ring,
+  realToCanvasMat,
+}: AddBrepRingToPathParams): void {
   if (ring.vertices.length < 2) return
 
   if (ring.vertices.length === 2) {
@@ -124,8 +152,24 @@ export function addBrepRingToPath(
     ) {
       const [x0, y0] = applyToPoint(realToCanvasMat, [v0.x, v0.y])
       ctx.moveTo(x0, y0)
-      addArcFromBulgeToPath(ctx, v0.x, v0.y, v1.x, v1.y, 1, realToCanvasMat)
-      addArcFromBulgeToPath(ctx, v1.x, v1.y, v0.x, v0.y, 1, realToCanvasMat)
+      addArcFromBulgeToPath({
+        ctx,
+        realStartX: v0.x,
+        realStartY: v0.y,
+        realEndX: v1.x,
+        realEndY: v1.y,
+        bulge: 1,
+        realToCanvasMat,
+      })
+      addArcFromBulgeToPath({
+        ctx,
+        realStartX: v1.x,
+        realStartY: v1.y,
+        realEndX: v0.x,
+        realEndY: v0.y,
+        bulge: 1,
+        realToCanvasMat,
+      })
       return
     }
   }
@@ -143,25 +187,31 @@ export function addBrepRingToPath(
     const nextVertex = ring.vertices[(i + 1) % ring.vertices.length]
     if (!currentVertex || !nextVertex) continue
 
-    addArcFromBulgeToPath(
+    addArcFromBulgeToPath({
       ctx,
-      currentVertex.x,
-      currentVertex.y,
-      nextVertex.x,
-      nextVertex.y,
-      currentVertex.bulge ?? 0,
+      realStartX: currentVertex.x,
+      realStartY: currentVertex.y,
+      realEndX: nextVertex.x,
+      realEndY: nextVertex.y,
+      bulge: currentVertex.bulge ?? 0,
       realToCanvasMat,
-    )
+    })
   }
 }
 
-export function addBrepShapeToPath(
-  ctx: CanvasContext,
-  shape: BrepShape,
-  realToCanvasMat: Matrix,
-): void {
-  addBrepRingToPath(ctx, shape.outer_ring, realToCanvasMat)
+export interface AddBrepShapeToPathParams {
+  ctx: CanvasContext
+  shape: BrepShape
+  realToCanvasMat: Matrix
+}
+
+export function addBrepShapeToPath({
+  ctx,
+  shape,
+  realToCanvasMat,
+}: AddBrepShapeToPathParams): void {
+  addBrepRingToPath({ ctx, ring: shape.outer_ring, realToCanvasMat })
   for (const innerRing of shape.inner_rings ?? []) {
-    addBrepRingToPath(ctx, innerRing, realToCanvasMat)
+    addBrepRingToPath({ ctx, ring: innerRing, realToCanvasMat })
   }
 }

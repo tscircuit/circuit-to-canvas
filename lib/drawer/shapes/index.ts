@@ -1,5 +1,7 @@
 export { type DrawArrowParams, drawArrow } from "./arrow"
 export {
+  type AddBrepRingToPathParams,
+  type AddBrepShapeToPathParams,
   addBrepRingToPath,
   addBrepShapeToPath,
   type BrepShape,

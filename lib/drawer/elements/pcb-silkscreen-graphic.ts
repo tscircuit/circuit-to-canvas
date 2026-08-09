@@ -20,7 +20,7 @@ export function drawPcbSilkscreenGraphic(
       : colorMap.silkscreen.top
 
   ctx.beginPath()
-  addBrepShapeToPath(ctx, graphic.brep_shape, realToCanvasMat)
+  addBrepShapeToPath({ ctx, shape: graphic.brep_shape, realToCanvasMat })
   ctx.fillStyle = color
   ctx.fill("evenodd")
 }
