@@ -104,6 +104,8 @@ export interface DrawElementsOptions {
   minBoardOutlineStrokePx?: number
   /** Whether to render pcb_note elements. Defaults to true. */
   showPcbNotes?: boolean
+  /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
+  clearDrillHoles?: boolean
 }
 
 interface CanvasLike {
@@ -120,6 +122,22 @@ function getCopperLayer(layers?: PcbRenderLayer[]): LayerRef {
 
 const isOnCopperLayer = (element: PcbVia | PcbPlatedHole, layer: LayerRef) =>
   element.layers?.includes(layer) ?? true
+
+const drawAsCutout = (
+  ctx: CanvasContext,
+  enabled: boolean,
+  draw: () => void,
+) => {
+  if (!enabled) {
+    draw()
+    return
+  }
+
+  ctx.save()
+  ctx.globalCompositeOperation = "destination-out"
+  draw()
+  ctx.restore()
+}
 
 export class CircuitToCanvasDrawer {
   private ctx: CanvasContext
@@ -207,6 +225,13 @@ export class CircuitToCanvasDrawer {
     options: DrawElementsOptions = {},
   ): void {
     const layer = getCopperLayer(options.layers)
+    const clearDrillHoles = options.clearDrillHoles ?? false
+    const transparentDrillColorMap = clearDrillHoles
+      ? { ...this.colorMap, drill: "rgba(0,0,0,0)" }
+      : this.colorMap
+    const opaqueDrillColorMap = clearDrillHoles
+      ? { ...this.colorMap, drill: "#000" }
+      : this.colorMap
 
     // Find the board or panel element
     const board = elements.find((el) => el.type === "pcb_board") as
@@ -373,15 +398,17 @@ export class CircuitToCanvasDrawer {
         if (!shouldDrawElement(element, options)) continue
 
         if (element.type === "pcb_hole") {
-          drawPcbHole({
-            ctx: this.ctx,
-            hole: element as PcbHole,
-            realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
-            soldermaskMargin: renderTopSoldermask
-              ? element.soldermask_margin
-              : undefined,
-            drawSoldermask: renderTopSoldermask,
+          drawAsCutout(this.ctx, clearDrillHoles, () => {
+            drawPcbHole({
+              ctx: this.ctx,
+              hole: element as PcbHole,
+              realToCanvasMat: this.realToCanvasMat,
+              colorMap: opaqueDrillColorMap,
+              soldermaskMargin: renderTopSoldermask
+                ? element.soldermask_margin
+                : undefined,
+              drawSoldermask: renderTopSoldermask,
+            })
           })
         }
 
@@ -393,7 +420,7 @@ export class CircuitToCanvasDrawer {
             ctx: this.ctx,
             hole: element as PcbPlatedHole,
             realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
+            colorMap: transparentDrillColorMap,
             soldermaskMargin: renderTopSoldermask
               ? (element as PcbPlatedHole).soldermask_margin
               : undefined,
@@ -407,7 +434,7 @@ export class CircuitToCanvasDrawer {
             ctx: this.ctx,
             via: element as PcbVia,
             realToCanvasMat: this.realToCanvasMat,
-            colorMap: this.colorMap,
+            colorMap: transparentDrillColorMap,
             layer,
           })
         }
@@ -537,15 +564,17 @@ export class CircuitToCanvasDrawer {
       if (!shouldDrawElement(element, options)) continue
 
       if (element.type === "pcb_hole" && !renderTopLayerOverlay) {
-        drawPcbHole({
-          ctx: this.ctx,
-          hole: element as PcbHole,
-          realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
-          soldermaskMargin: renderTopSoldermask
-            ? element.soldermask_margin
-            : undefined,
-          drawSoldermask: renderTopSoldermask,
+        drawAsCutout(this.ctx, clearDrillHoles, () => {
+          drawPcbHole({
+            ctx: this.ctx,
+            hole: element as PcbHole,
+            realToCanvasMat: this.realToCanvasMat,
+            colorMap: opaqueDrillColorMap,
+            soldermaskMargin: renderTopSoldermask
+              ? element.soldermask_margin
+              : undefined,
+            drawSoldermask: renderTopSoldermask,
+          })
         })
       }
     }
@@ -563,7 +592,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           hole: element as PcbPlatedHole,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap: transparentDrillColorMap,
           soldermaskMargin: renderTopSoldermask
             ? (element as PcbPlatedHole).soldermask_margin
             : undefined,
@@ -581,7 +610,7 @@ export class CircuitToCanvasDrawer {
           ctx: this.ctx,
           via: element as PcbVia,
           realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+          colorMap: transparentDrillColorMap,
           layer,
         })
       }
@@ -619,11 +648,13 @@ export class CircuitToCanvasDrawer {
       if (!shouldDrawElement(element, options)) continue
 
       if (element.type === "pcb_cutout") {
-        drawPcbCutout({
-          ctx: this.ctx,
-          cutout: element as PcbCutout,
-          realToCanvasMat: this.realToCanvasMat,
-          colorMap: this.colorMap,
+        drawAsCutout(this.ctx, clearDrillHoles, () => {
+          drawPcbCutout({
+            ctx: this.ctx,
+            cutout: element as PcbCutout,
+            realToCanvasMat: this.realToCanvasMat,
+            colorMap: opaqueDrillColorMap,
+          })
         })
       }
     }
