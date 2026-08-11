@@ -1,7 +1,9 @@
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawLine } from "../../shapes/line"
+import { drawPolygon } from "../../shapes/polygon"
 import type { CanvasContext, PcbColorMap } from "../../types"
+import { buildTracePolygon } from "./build-trace-polygon"
 import { collectTraceSegments } from "./collect-trace-segments"
 import { cutTraceDestinationsAtDrills } from "./cut-trace-destination-drills"
 import { layerToColor } from "./layer-to-color"
@@ -32,8 +34,18 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
     if (layerFilter && layer !== layerFilter) continue
     const color = layerToColor(layer, colorMap)
 
-    // Draw every width independently with round caps, matching circuit-to-svg.
-    // The caps overlap at route points without introducing polygon miters.
+    if (trace.route_thickness_mode === "interpolated") {
+      drawPolygon({
+        ctx,
+        points: buildTracePolygon(segment),
+        fill: color,
+        realToCanvasMat,
+      })
+      continue
+    }
+
+    // Constant or unspecified modes use each segment width independently.
+    // Round caps overlap at route points without introducing polygon miters.
     for (let i = 0; i < segment.length - 1; i++) {
       const start = segment[i]
       const end = segment[i + 1]

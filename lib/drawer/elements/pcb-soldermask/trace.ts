@@ -2,6 +2,8 @@ import type { PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import { drawLine } from "../../shapes/line"
+import { drawPolygon } from "../../shapes/polygon"
+import { buildTracePolygon } from "../pcb-trace/build-trace-polygon"
 import { collectTraceSegments } from "../pcb-trace/collect-trace-segments"
 import { cutTraceDestinationsAtDrills } from "../pcb-trace/cut-trace-destination-drills"
 
@@ -26,7 +28,17 @@ export function processTraceSoldermask(params: {
     const segmentLayer = segment[0]?.layer
     if (segmentLayer !== layer) continue
 
-    // Round-capped segments preserve smooth joins when trace widths change.
+    if (trace.route_thickness_mode === "interpolated") {
+      drawPolygon({
+        ctx,
+        points: buildTracePolygon(segment),
+        fill: soldermaskOverCopperColor,
+        realToCanvasMat,
+      })
+      continue
+    }
+
+    // Constant or unspecified modes use round-capped segment widths.
     for (let i = 0; i < segment.length - 1; i++) {
       const start = segment[i]
       const end = segment[i + 1]
