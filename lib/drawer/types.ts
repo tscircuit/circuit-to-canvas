@@ -65,6 +65,8 @@ export type CopperLayerName =
   | "inner4"
   | "inner5"
   | "inner6"
+  | "inner7"
+  | "inner8"
 
 export type CopperColorMap = Record<CopperLayerName, string> & {
   [layer: string]: string
@@ -115,6 +117,8 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
     inner4: "rgb(64, 224, 208)",
     inner5: "rgb(138, 43, 226)",
     inner6: "rgb(255, 105, 180)",
+    inner7: "rgb(232, 178, 167)",
+    inner8: "rgb(242, 237, 161)",
     bottom: "rgb(77, 127, 196)",
   },
   copperPour: {
