@@ -16,6 +16,7 @@ export interface DrawPcbDebugObjectParams {
   ctx: CanvasContext
   debugObject: PcbDebugObject
   realToCanvasMat: Matrix
+  labelStackIndex?: number
 }
 
 function getDebugObjectStyle(ctx: CanvasContext): PcbDebugObjectStyle {
@@ -60,6 +61,7 @@ export function drawPcbDebugObject({
   ctx,
   debugObject,
   realToCanvasMat,
+  labelStackIndex = 0,
 }: DrawPcbDebugObjectParams): void {
   const style = getDebugObjectStyle(ctx)
 
@@ -89,7 +91,10 @@ export function drawPcbDebugObject({
       ctx,
       label: debugObject.label,
       x: left,
-      y: top - style.labelGap,
+      y:
+        top -
+        style.labelGap -
+        labelStackIndex * (style.fontSize + style.labelGap),
       style,
     })
     ctx.restore()

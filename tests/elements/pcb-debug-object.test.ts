@@ -92,3 +92,27 @@ test("places rectangle labels above the top-left corner", () => {
 
   expect(fillTextCalls).toEqual([{ text: "phase 1 bounds", x: 80, y: 66.5 }])
 })
+
+test("stacks labels for overlapping rectangles", () => {
+  const canvas = createCanvas(400, 300)
+  const ctx = canvas.getContext("2d")
+  const fillTextCalls: Array<{ text: string; x: number; y: number }> = []
+  ctx.fillText = (text: string, x: number, y: number) => {
+    fillTextCalls.push({ text, x, y })
+  }
+
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
+  drawer.drawElements(
+    [
+      debugObjects[0]!,
+      { ...debugObjects[0]!, pcb_debug_object_id: "rect_2", label: "phase 2" },
+    ],
+    { showDebugObjects: true },
+  )
+
+  expect(fillTextCalls).toEqual([
+    { text: "phase 1 bounds", x: 80, y: 66.5 },
+    { text: "phase 2", x: 80, y: 53 },
+  ])
+})

@@ -764,13 +764,23 @@ export class CircuitToCanvasDrawer {
     }
 
     if (options.showDebugObjects) {
+      const rectLabelCounts = new Map<string, number>()
       for (const element of elements) {
         if (element.type !== "pcb_debug_object") continue
+        const rectKey =
+          element.shape === "rect"
+            ? `${element.center.x}:${element.center.y}:${element.size.width}:${element.size.height}`
+            : undefined
+        const labelStackIndex = rectKey
+          ? (rectLabelCounts.get(rectKey) ?? 0)
+          : 0
         drawPcbDebugObject({
           ctx: this.ctx,
           debugObject: element as PcbDebugObject,
           realToCanvasMat: this.realToCanvasMat,
+          labelStackIndex,
         })
+        if (rectKey) rectLabelCounts.set(rectKey, labelStackIndex + 1)
       }
     }
   }
