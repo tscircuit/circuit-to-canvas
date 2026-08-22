@@ -45,20 +45,6 @@ const createDebugCanvas = (showDebugObjects: boolean) => {
 const createDebugSvg = () => {
   const canvas = createCanvas(400, 300, SvgExportFlag.NoPrettyXML)
   const ctx = canvas.getContext("2d")
-  const labels: Array<{
-    text: string
-    x: number
-    y: number
-    textAnchor: "start" | "middle"
-  }> = []
-  ctx.fillText = (text: string, x: number, y: number) => {
-    labels.push({
-      text,
-      x,
-      y,
-      textAnchor: ctx.textAlign === "center" ? "middle" : "start",
-    })
-  }
   const drawer = new CircuitToCanvasDrawer(ctx)
 
   ctx.fillStyle = "#000"
@@ -66,17 +52,7 @@ const createDebugSvg = () => {
   drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
   drawer.drawElements(debugObjects, { showDebugObjects: true })
 
-  const labelSvg = labels
-    .map(
-      ({ text, x, y, textAnchor }) =>
-        `<text x="${x}" y="${y}" fill="#FF4D4D" font-family="monospace" font-size="12" font-weight="600" text-anchor="${textAnchor}">${text}</text>`,
-    )
-    .join("")
-
-  return canvas
-    .getContent()
-    .toString("utf8")
-    .replace("</svg>", `${labelSvg}</svg>`)
+  return canvas.getContent().toString("utf8")
 }
 
 test("PCB debug objects are opt-in", () => {
@@ -94,52 +70,52 @@ test("PCB debug objects are opt-in", () => {
 test("draws labeled PCB debug objects", () => {
   const canvas = createCanvas(400, 300)
   const ctx = canvas.getContext("2d")
-  const labels: string[] = []
-  const originalFillText = ctx.fillText.bind(ctx)
-  ctx.fillText = (text: string, x: number, y: number, maxWidth?: number) => {
-    labels.push(text)
-    if (maxWidth === undefined) originalFillText(text, x, y)
-    else originalFillText(text, x, y, maxWidth)
+  const labelPositions: Array<{ x: number; y: number }> = []
+  const originalTranslate = ctx.translate.bind(ctx)
+  ctx.translate = (x: number, y: number) => {
+    labelPositions.push({ x, y })
+    originalTranslate(x, y)
   }
 
   const drawer = new CircuitToCanvasDrawer(ctx)
   drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
   drawer.drawElements(debugObjects, { showDebugObjects: true })
 
-  expect(labels).toEqual(["phase 1 bounds", "candidate route", "breakout"])
+  expect(labelPositions).toHaveLength(3)
   expect(canvas.toBuffer("image/png")).not.toEqual(
     createCanvas(400, 300).toBuffer("image/png"),
   )
 })
 
-test("matches the labeled PCB debug object snapshot", () => {
-  expect(createDebugSvg()).toMatchSnapshot()
+test("matches the labeled PCB debug object visual snapshot", async () => {
+  await expect(createDebugSvg()).toMatchSvgSnapshot(import.meta.path)
 })
 
 test("places rectangle labels above the top-left corner", () => {
   const canvas = createCanvas(400, 300)
   const ctx = canvas.getContext("2d")
-  const fillTextCalls: Array<{ text: string; x: number; y: number }> = []
-  const originalFillText = ctx.fillText.bind(ctx)
-  ctx.fillText = (text: string, x: number, y: number, maxWidth?: number) => {
-    fillTextCalls.push({ text, x, y })
-    if (maxWidth === undefined) originalFillText(text, x, y)
-    else originalFillText(text, x, y, maxWidth)
+  const labelPositions: Array<{ x: number; y: number }> = []
+  const originalTranslate = ctx.translate.bind(ctx)
+  ctx.translate = (x: number, y: number) => {
+    labelPositions.push({ x, y })
+    originalTranslate(x, y)
   }
 
   const drawer = new CircuitToCanvasDrawer(ctx)
   drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
   drawer.drawElements([debugObjects[0]!], { showDebugObjects: true })
 
-  expect(fillTextCalls).toEqual([{ text: "phase 1 bounds", x: 80, y: 66.5 }])
+  expect(labelPositions).toEqual([{ x: 80, y: 66.5 }])
 })
 
 test("stacks labels for overlapping rectangles", () => {
   const canvas = createCanvas(400, 300)
   const ctx = canvas.getContext("2d")
-  const fillTextCalls: Array<{ text: string; x: number; y: number }> = []
-  ctx.fillText = (text: string, x: number, y: number) => {
-    fillTextCalls.push({ text, x, y })
+  const labelPositions: Array<{ x: number; y: number }> = []
+  const originalTranslate = ctx.translate.bind(ctx)
+  ctx.translate = (x: number, y: number) => {
+    labelPositions.push({ x, y })
+    originalTranslate(x, y)
   }
 
   const drawer = new CircuitToCanvasDrawer(ctx)
@@ -152,8 +128,8 @@ test("stacks labels for overlapping rectangles", () => {
     { showDebugObjects: true },
   )
 
-  expect(fillTextCalls).toEqual([
-    { text: "phase 1 bounds", x: 80, y: 66.5 },
-    { text: "phase 2", x: 80, y: 53 },
+  expect(labelPositions).toEqual([
+    { x: 80, y: 66.5 },
+    { x: 80, y: 53 },
   ])
 })

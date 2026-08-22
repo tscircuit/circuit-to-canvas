@@ -1,8 +1,10 @@
 import type { PcbDebugObject } from "circuit-json"
 import { applyToPoint, type Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../types"
+import { drawText } from "../shapes/text"
 
 const DEBUG_COLOR = "#ff4d4d"
+const IDENTITY_MATRIX: Matrix = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }
 
 interface PcbDebugObjectStyle {
   fontSize: number
@@ -50,11 +52,17 @@ function drawLabel({
 }): void {
   if (!label) return
 
-  ctx.fillStyle = DEBUG_COLOR
-  ctx.font = `600 ${style.fontSize}px monospace`
-  ctx.textAlign = align
-  ctx.textBaseline = "bottom"
-  ctx.fillText(label, x, y)
+  ctx.setLineDash([])
+  drawText({
+    ctx,
+    text: label,
+    x,
+    y,
+    fontSize: style.fontSize,
+    color: DEBUG_COLOR,
+    realToCanvasMat: IDENTITY_MATRIX,
+    anchorAlignment: align === "center" ? "bottom_center" : "bottom_left",
+  })
 }
 
 export function drawPcbDebugObject({
