@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { GlobalFonts, createCanvas } from "@napi-rs/canvas"
+import { GlobalFonts, SvgExportFlag, createCanvas } from "@napi-rs/canvas"
 import type { PcbDebugObject } from "circuit-json"
 import path from "node:path"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
@@ -51,6 +51,19 @@ const createDebugCanvas = (showDebugObjects: boolean) => {
   return canvas
 }
 
+const createDebugSvg = () => {
+  const canvas = createCanvas(400, 300, SvgExportFlag.NoPrettyXML)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+
+  ctx.fillStyle = "#000"
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
+  drawer.drawElements(debugObjects, { showDebugObjects: true })
+
+  return canvas.getContent().toString("utf8")
+}
+
 test("PCB debug objects are opt-in", () => {
   const hiddenCanvas = createDebugCanvas(false)
   const blankCanvas = createCanvas(400, 300)
@@ -85,9 +98,7 @@ test("draws labeled PCB debug objects", () => {
 })
 
 test("matches the labeled PCB debug object snapshot", async () => {
-  await expect(
-    createDebugCanvas(true).toBuffer("image/png"),
-  ).toMatchPngSnapshot(import.meta.path)
+  await expect(createDebugSvg()).toMatchSvgSnapshot(import.meta.path)
 })
 
 test("places rectangle labels above the top-left corner", () => {
