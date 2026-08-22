@@ -1,7 +1,16 @@
 import { expect, test } from "bun:test"
-import { createCanvas } from "@napi-rs/canvas"
+import { GlobalFonts, createCanvas } from "@napi-rs/canvas"
 import type { PcbDebugObject } from "circuit-json"
+import path from "node:path"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
+
+GlobalFonts.registerFromPath(
+  path.join(
+    import.meta.dir,
+    "../../node_modules/@tscircuit/alphabet/dist/TscircuitAlphabet.ttf",
+  ),
+  "TscircuitAlphabet",
+)
 
 const debugObjects: PcbDebugObject[] = [
   {
@@ -73,6 +82,12 @@ test("draws labeled PCB debug objects", () => {
   expect(canvas.toBuffer("image/png")).not.toEqual(
     createCanvas(400, 300).toBuffer("image/png"),
   )
+})
+
+test("matches the labeled PCB debug object snapshot", async () => {
+  await expect(
+    createDebugCanvas(true).toBuffer("image/png"),
+  ).toMatchPngSnapshot(import.meta.path)
 })
 
 test("places rectangle labels above the top-left corner", () => {
