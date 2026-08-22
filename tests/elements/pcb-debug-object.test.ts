@@ -1,16 +1,7 @@
 import { expect, test } from "bun:test"
-import { GlobalFonts, SvgExportFlag, createCanvas } from "@napi-rs/canvas"
+import { SvgExportFlag, createCanvas } from "@napi-rs/canvas"
 import type { PcbDebugObject } from "circuit-json"
-import path from "node:path"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
-
-GlobalFonts.registerFromPath(
-  path.join(
-    import.meta.dir,
-    "../../node_modules/@tscircuit/alphabet/dist/TscircuitAlphabet.ttf",
-  ),
-  "TscircuitAlphabet",
-)
 
 const debugObjects: PcbDebugObject[] = [
   {
@@ -54,6 +45,20 @@ const createDebugCanvas = (showDebugObjects: boolean) => {
 const createDebugSvg = () => {
   const canvas = createCanvas(400, 300, SvgExportFlag.NoPrettyXML)
   const ctx = canvas.getContext("2d")
+  const labels: Array<{
+    text: string
+    x: number
+    y: number
+    textAnchor: "start" | "middle"
+  }> = []
+  ctx.fillText = (text: string, x: number, y: number) => {
+    labels.push({
+      text,
+      x,
+      y,
+      textAnchor: ctx.textAlign === "center" ? "middle" : "start",
+    })
+  }
   const drawer = new CircuitToCanvasDrawer(ctx)
 
   ctx.fillStyle = "#000"
@@ -61,7 +66,17 @@ const createDebugSvg = () => {
   drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
   drawer.drawElements(debugObjects, { showDebugObjects: true })
 
-  return canvas.getContent().toString("utf8")
+  const labelSvg = labels
+    .map(
+      ({ text, x, y, textAnchor }) =>
+        `<text x="${x}" y="${y}" fill="#FF4D4D" font-family="monospace" font-size="12" font-weight="600" text-anchor="${textAnchor}">${text}</text>`,
+    )
+    .join("")
+
+  return canvas
+    .getContent()
+    .toString("utf8")
+    .replace("</svg>", `${labelSvg}</svg>`)
 }
 
 test("PCB debug objects are opt-in", () => {
@@ -97,8 +112,8 @@ test("draws labeled PCB debug objects", () => {
   )
 })
 
-test("matches the labeled PCB debug object snapshot", async () => {
-  await expect(createDebugSvg()).toMatchSvgSnapshot(import.meta.path)
+test("matches the labeled PCB debug object snapshot", () => {
+  expect(createDebugSvg()).toMatchSnapshot()
 })
 
 test("places rectangle labels above the top-left corner", () => {

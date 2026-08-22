@@ -51,7 +51,7 @@ function drawLabel({
   if (!label) return
 
   ctx.fillStyle = DEBUG_COLOR
-  ctx.font = `600 ${style.fontSize}px "TscircuitAlphabet", monospace`
+  ctx.font = `600 ${style.fontSize}px monospace`
   ctx.textAlign = align
   ctx.textBaseline = "bottom"
   ctx.fillText(label, x, y)
