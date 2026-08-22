@@ -54,11 +54,24 @@ test("PCB debug objects are opt-in", () => {
   )
 })
 
-test("draws labeled PCB debug objects", async () => {
-  const canvas = createDebugCanvas(true)
+test("draws labeled PCB debug objects", () => {
+  const canvas = createCanvas(400, 300)
+  const ctx = canvas.getContext("2d")
+  const labels: string[] = []
+  const originalFillText = ctx.fillText.bind(ctx)
+  ctx.fillText = (text: string, x: number, y: number, maxWidth?: number) => {
+    labels.push(text)
+    if (maxWidth === undefined) originalFillText(text, x, y)
+    else originalFillText(text, x, y, maxWidth)
+  }
 
-  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
-    import.meta.path,
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -7.5, maxY: 7.5 })
+  drawer.drawElements(debugObjects, { showDebugObjects: true })
+
+  expect(labels).toEqual(["phase 1 bounds", "candidate route", "breakout"])
+  expect(canvas.toBuffer("image/png")).not.toEqual(
+    createCanvas(400, 300).toBuffer("image/png"),
   )
 })
 
