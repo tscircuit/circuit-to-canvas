@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
-import type { AnyCircuitElement } from "circuit-json"
+import type { PcbDebugObject } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-const debugObjects: AnyCircuitElement[] = [
+const debugObjects: PcbDebugObject[] = [
   {
     type: "pcb_debug_object",
     pcb_debug_object_id: "pcb_debug_object_rect",
