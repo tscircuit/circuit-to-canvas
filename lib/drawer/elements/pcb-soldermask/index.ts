@@ -178,6 +178,8 @@ function processElementSoldermask(params: {
       ctx,
       via: element,
       realToCanvasMat,
+      layer,
+      soldermaskOverCopperColor,
     })
   } else if (element.type === "pcb_cutout") {
     processCutoutSoldermask({
