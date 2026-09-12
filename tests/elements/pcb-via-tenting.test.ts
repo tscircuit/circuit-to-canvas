@@ -2,6 +2,8 @@ import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import { identity } from "transformation-matrix"
+import { drawText } from "../../lib/drawer/shapes/text"
 import { DEFAULT_PCB_COLOR_MAP } from "../../lib/drawer/types"
 
 test("via soldermask respects per-side tenting, legacy overrides, and physical layers", async () => {
@@ -102,13 +104,16 @@ test("via soldermask respects per-side tenting, legacy overrides, and physical l
                 const col = Number(top) * 2 + Number(bottom)
                 const row = layer === "top" ? 0 : 1
                 overviewCtx.drawImage(canvas, col * 100, row * 120)
-                overviewCtx.fillStyle = "white"
-                overviewCtx.font = "10px sans-serif"
-                overviewCtx.fillText(
-                  `${layer}: T=${Number(top)} B=${Number(bottom)}`,
-                  col * 100 + 2,
-                  row * 120 + 113,
-                )
+                drawText({
+                  ctx: overviewCtx,
+                  text: `${layer}: T=${Number(top)} B=${Number(bottom)}`,
+                  x: col * 100 + 50,
+                  y: row * 120 + 110,
+                  fontSize: 8,
+                  color: "white",
+                  realToCanvasMat: identity(),
+                  anchorAlignment: "center",
+                })
               }
             }
           }
