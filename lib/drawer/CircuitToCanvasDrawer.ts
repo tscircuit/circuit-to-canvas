@@ -70,6 +70,7 @@ import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTracesClippedToCopperPours } from "./elements/pcb-trace/draw-pcb-traces-clipped-to-copper-pours"
+import { getViasFromTraces } from "./elements/pcb-trace/get-vias-from-traces"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
 import {
@@ -213,6 +214,10 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
+    elements = [
+      ...elements,
+      ...getViasFromTraces(elements, options.clipContextElements),
+    ]
     const layer = getCopperLayer(options.layers)
 
     // Find the board or panel element
@@ -258,12 +263,9 @@ export class CircuitToCanvasDrawer {
       options.drawSolderPasteBottom !== undefined
     const renderTopSoldermask =
       drawSoldermask &&
-      (board !== undefined || panel !== undefined) &&
       (options.drawSoldermaskTop ?? !hasExplicitSoldermaskLayers)
     const renderBottomSoldermask =
-      drawSoldermask &&
-      (board !== undefined || panel !== undefined) &&
-      (options.drawSoldermaskBottom ?? false)
+      drawSoldermask && (options.drawSoldermaskBottom ?? false)
     const renderTopSolderPaste =
       drawSolderPaste &&
       (options.drawSolderPasteTop ?? !hasExplicitSolderPasteLayers) &&

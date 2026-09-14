@@ -1,4 +1,4 @@
-import type { PcbVia, PcbViaInput } from "circuit-json"
+import type { PcbBoard, PcbVia, PcbViaInput } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
@@ -11,17 +11,22 @@ import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 export function processViaSoldermask(params: {
   ctx: CanvasContext
   via: PcbVia
+  board?: PcbBoard
   realToCanvasMat: Matrix
   layer: "top" | "bottom"
   soldermaskOverCopperColor: string
 }): void {
-  const { ctx, via, realToCanvasMat, layer, soldermaskOverCopperColor } = params
+  const { ctx, via, board, realToCanvasMat, layer, soldermaskOverCopperColor } =
+    params
   if (!via.layers.includes(layer)) return
 
   const tenting: PcbViaInput = via
   const isTented =
     (layer === "top" ? tenting.tented_on_top : tenting.tented_on_bottom) ??
-    tenting.is_tented
+    tenting.is_tented ??
+    (layer === "top"
+      ? board?.default_via_tented_on_top
+      : board?.default_via_tented_on_bottom)
   // Vias typically have soldermask openings to expose the copper ring.
   const [cx, cy] = applyToPoint(realToCanvasMat, [via.x, via.y])
   const scaledRadius = (via.outer_diameter / 2) * Math.abs(realToCanvasMat.a)
