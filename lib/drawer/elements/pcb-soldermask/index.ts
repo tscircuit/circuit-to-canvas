@@ -9,6 +9,7 @@ import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
+import { getPcbBoardForVia } from "../../get-pcb-board-for-via"
 import { drawBoardSoldermask } from "./board"
 import { drawPanelSoldermask } from "./panel"
 import { processCutoutSoldermask } from "./cutout"
@@ -129,7 +130,10 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     processElementSoldermask({
       ctx: soldermaskCtx,
       element,
-      board: boards[0],
+      board:
+        element.type === "pcb_via"
+          ? getPcbBoardForVia(element, elements)
+          : undefined,
       realToCanvasMat,
       soldermaskOverCopperColor,
       layer,

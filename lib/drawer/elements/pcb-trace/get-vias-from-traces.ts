@@ -1,13 +1,11 @@
-import type { AnyCircuitElement, PcbBoard, PcbVia } from "circuit-json"
+import type { AnyCircuitElement, PcbVia } from "circuit-json"
+import { getPcbBoardForVia } from "../../get-pcb-board-for-via"
 
 export function getViasFromTraces(
   elements: AnyCircuitElement[],
   contextElements: AnyCircuitElement[] = [],
 ): PcbVia[] {
   const allElements = [...elements, ...contextElements]
-  const board = allElements.find(
-    (element): element is PcbBoard => element.type === "pcb_board",
-  )
   const viaPositions = new Set(
     allElements
       .filter((element): element is PcbVia => element.type === "pcb_via")
@@ -23,10 +21,20 @@ export function getViasFromTraces(
       if (viaPositions.has(position)) continue
       viaPositions.add(position)
 
+      const board = getPcbBoardForVia(
+        {
+          ...point,
+          subcircuit_id: element.subcircuit_id,
+          pcb_group_id: element.pcb_group_id,
+        },
+        allElements,
+      )
       vias.push({
         type: "pcb_via",
         pcb_via_id: `${element.pcb_trace_id}_route_via_${index}`,
         pcb_trace_id: element.pcb_trace_id,
+        subcircuit_id: element.subcircuit_id,
+        pcb_group_id: element.pcb_group_id,
         x: point.x,
         y: point.y,
         layers: [point.from_layer, point.to_layer],
