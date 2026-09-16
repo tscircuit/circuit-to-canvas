@@ -9,7 +9,7 @@ import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
-import { getPcbBoardForVia } from "../../get-pcb-board-for-via"
+import type { AnyCircuitJsonId } from "../../create-board-owner-map"
 import { drawBoardSoldermask } from "./board"
 import { drawPanelSoldermask } from "./panel"
 import { processCutoutSoldermask } from "./cutout"
@@ -23,6 +23,7 @@ import { processViaSoldermask } from "./via"
 export interface DrawPcbSoldermaskParams {
   ctx: CanvasContext
   elements: AnyCircuitElement[]
+  boardOwnerMap?: Map<AnyCircuitJsonId, PcbBoard | undefined>
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   layer: "top" | "bottom"
@@ -42,7 +43,14 @@ export interface DrawPcbSoldermaskParams {
  * 3. For elements with is_covered_with_soldermask: draw soldermask-over-copper on top
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
-  const { ctx, realToCanvasMat, colorMap, layer, drawSoldermask } = params
+  const {
+    ctx,
+    realToCanvasMat,
+    colorMap,
+    layer,
+    drawSoldermask,
+    boardOwnerMap,
+  } = params
   let { elements } = params
 
   if (!drawSoldermask) return
@@ -130,10 +138,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     processElementSoldermask({
       ctx: soldermaskCtx,
       element,
-      board:
-        element.type === "pcb_via"
-          ? getPcbBoardForVia(element, elements)
-          : undefined,
+      boardOwnerMap,
       realToCanvasMat,
       soldermaskOverCopperColor,
       layer,
@@ -150,7 +155,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
 function processElementSoldermask(params: {
   ctx: CanvasContext
   element: AnyCircuitElement
-  board?: PcbBoard
+  boardOwnerMap?: Map<AnyCircuitJsonId, PcbBoard | undefined>
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
   layer: "top" | "bottom"
@@ -158,7 +163,7 @@ function processElementSoldermask(params: {
   const {
     ctx,
     element,
-    board,
+    boardOwnerMap,
     realToCanvasMat,
     soldermaskOverCopperColor,
     layer,
@@ -188,10 +193,13 @@ function processElementSoldermask(params: {
       soldermaskOverCopperColor,
     })
   } else if (element.type === "pcb_via") {
+    const boardOwnerId = boardOwnerMap?.has(element.pcb_via_id)
+      ? element.pcb_via_id
+      : (element.pcb_trace_id ?? element.pcb_via_id)
     processViaSoldermask({
       ctx,
       via: element,
-      board,
+      board: boardOwnerMap?.get(boardOwnerId),
       realToCanvasMat,
       layer,
       soldermaskOverCopperColor,

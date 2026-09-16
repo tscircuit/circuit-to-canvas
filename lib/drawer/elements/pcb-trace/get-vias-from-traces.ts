@@ -1,8 +1,9 @@
-import type { AnyCircuitElement, PcbVia } from "circuit-json"
-import { getPcbBoardForVia } from "../../get-pcb-board-for-via"
+import type { AnyCircuitElement, PcbBoard, PcbVia } from "circuit-json"
+import type { AnyCircuitJsonId } from "../../create-board-owner-map"
 
 export function getViasFromTraces(
   elements: AnyCircuitElement[],
+  boardOwnerMap: Map<AnyCircuitJsonId, PcbBoard | undefined>,
   contextElements: AnyCircuitElement[] = [],
 ): PcbVia[] {
   const allElements = [...elements, ...contextElements]
@@ -21,14 +22,7 @@ export function getViasFromTraces(
       if (viaPositions.has(position)) continue
       viaPositions.add(position)
 
-      const board = getPcbBoardForVia(
-        {
-          ...point,
-          subcircuit_id: element.subcircuit_id,
-          pcb_group_id: element.pcb_group_id,
-        },
-        allElements,
-      )
+      const board = boardOwnerMap.get(element.pcb_trace_id)
       vias.push({
         type: "pcb_via",
         pcb_via_id: `${element.pcb_trace_id}_route_via_${index}`,

@@ -37,6 +37,7 @@ import type {
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { compose, identity, scale, translate } from "transformation-matrix"
+import { createBoardOwnerMap } from "./create-board-owner-map"
 import { drawPcbBoard } from "./elements/pcb-board"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
@@ -214,9 +215,17 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
+    const boardOwnerMap = createBoardOwnerMap([
+      ...elements,
+      ...(options.clipContextElements ?? []),
+    ])
     elements = [
       ...elements,
-      ...getViasFromTraces(elements, options.clipContextElements),
+      ...getViasFromTraces(
+        elements,
+        boardOwnerMap,
+        options.clipContextElements,
+      ),
     ]
     const layer = getCopperLayer(options.layers)
 
@@ -428,6 +437,7 @@ export class CircuitToCanvasDrawer {
       drawPcbSoldermask({
         ctx: this.ctx,
         elements,
+        boardOwnerMap,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "top",
@@ -601,6 +611,7 @@ export class CircuitToCanvasDrawer {
       drawPcbSoldermask({
         ctx: this.ctx,
         elements,
+        boardOwnerMap,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "bottom",

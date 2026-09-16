@@ -2,7 +2,10 @@ import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
 import { applyToPoint } from "transformation-matrix"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
-import { getViaTentingPanel } from "./pcb-via-board-tenting.fixture"
+import {
+  boardViaTentingCircuit,
+  boardViaTentingViewLabel,
+} from "./pcb-via-board-tenting.fixture"
 
 test("panel vias inherit their own board defaults and preserve explicit overrides", async () => {
   function render(layer: "top" | "bottom") {
@@ -10,7 +13,13 @@ test("panel vias inherit their own board defaults and preserve explicit override
     const ctx = canvas.getContext("2d")
     const drawer = new CircuitToCanvasDrawer(ctx)
     drawer.setCameraBounds({ minX: -114, maxX: 114, minY: -43, maxY: 43 })
-    const circuit = getViaTentingPanel(layer)
+    const circuit = [
+      ...boardViaTentingCircuit,
+      {
+        ...boardViaTentingViewLabel,
+        text: `${layer.toUpperCase()} VIEW - soldermask ON`,
+      },
+    ]
     const original = structuredClone(circuit)
     drawer.drawElements(circuit, {
       layers:
@@ -41,14 +50,16 @@ test("panel vias inherit their own board defaults and preserve explicit override
   expect(top.pixel(18, 5)).toEqual(exposed)
   expect(bottom.pixel(-96, 5)).toEqual(exposed)
   expect(bottom.pixel(18, 5)).toEqual(tented)
-  expect(top.pixel(-96, -19)).toEqual(tented)
-  expect(top.pixel(18, -19)).toEqual(exposed)
-  expect(bottom.pixel(-96, -19)).toEqual(exposed)
-  expect(bottom.pixel(18, -19)).toEqual(tented)
+  expect(top.pixel(-96, -24)).toEqual(tented)
+  expect(top.pixel(18, -24)).toEqual(exposed)
+  expect(bottom.pixel(-96, -24)).toEqual(exposed)
+  expect(bottom.pixel(18, -24)).toEqual(tented)
   expect(top.pixel(-70, 5)).toEqual(exposed)
-  expect(bottom.pixel(70, -19)).toEqual(tented)
-  expect(top.pixel(-18, -19)).toEqual(exposed)
-  expect(bottom.pixel(96, -19)).toEqual(exposed)
+  expect(bottom.pixel(70, -24)).toEqual(tented)
+  expect(top.pixel(-18, -24)).toEqual(exposed)
+  expect(bottom.pixel(96, -24)).toEqual(exposed)
+  expect(top.pixel(96, 5)).toEqual(exposed)
+  expect(bottom.pixel(96, 5)).toEqual(tented)
 
   const snapshot = createCanvas(1440, 1080)
   snapshot.getContext("2d").drawImage(top.canvas, 0, 0)
