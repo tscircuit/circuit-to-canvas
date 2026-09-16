@@ -1,29 +1,43 @@
 import type { AnyCircuitElement, PcbBoard, PcbVia } from "circuit-json"
 import type { AnyCircuitJsonId } from "../../create-board-owner-map"
 
+type ViaPositionKey = string
+
 export function getViasFromTraces(
   elements: AnyCircuitElement[],
   boardOwnerMap: Map<AnyCircuitJsonId, PcbBoard | undefined>,
   contextElements: AnyCircuitElement[] = [],
 ): PcbVia[] {
   const allElements = [...elements, ...contextElements]
-  const viaPositions = new Set(
-    allElements
-      .filter((element): element is PcbVia => element.type === "pcb_via")
-      .map((via) => `${via.x}:${via.y}`),
-  )
+  const viasByPosition = new Map<ViaPositionKey, PcbVia[]>()
+  for (const element of allElements) {
+    if (element.type !== "pcb_via") continue
+    const board = boardOwnerMap.get(element.pcb_via_id)
+    const position = `${board?.pcb_board_id ?? ""}:${element.x}:${element.y}`
+    const existingVias = viasByPosition.get(position) ?? []
+    existingVias.push(element)
+    viasByPosition.set(position, existingVias)
+  }
   const vias: PcbVia[] = []
 
   for (const element of elements) {
     if (element.type !== "pcb_trace") continue
+    const board = boardOwnerMap.get(element.pcb_trace_id)
     for (const [index, point] of element.route.entries()) {
       if (point.route_type !== "via") continue
-      const position = `${point.x}:${point.y}`
-      if (viaPositions.has(position)) continue
-      viaPositions.add(position)
+      const position = `${board?.pcb_board_id ?? ""}:${point.x}:${point.y}`
+      const existingVias = viasByPosition.get(position) ?? []
+      if (
+        existingVias.some(
+          (via) =>
+            via.layers.includes(point.from_layer) &&
+            via.layers.includes(point.to_layer),
+        )
+      ) {
+        continue
+      }
 
-      const board = boardOwnerMap.get(element.pcb_trace_id)
-      vias.push({
+      const via: PcbVia = {
         type: "pcb_via",
         pcb_via_id: `${element.pcb_trace_id}_route_via_${index}`,
         pcb_trace_id: element.pcb_trace_id,
@@ -38,7 +52,10 @@ export function getViasFromTraces(
           point.outer_diameter ?? board?.min_via_pad_diameter ?? 0.6,
         tented_on_top: point.tented_on_top,
         tented_on_bottom: point.tented_on_bottom,
-      })
+      }
+      vias.push(via)
+      existingVias.push(via)
+      viasByPosition.set(position, existingVias)
     }
   }
 

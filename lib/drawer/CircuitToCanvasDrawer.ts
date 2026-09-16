@@ -85,9 +85,10 @@ import {
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /**
-   * Elements used only to find copper pours when clipping traces. This is
+   * Elements used to find copper pours when clipping traces. This is
    * useful when `elements` is a filtered subset, such as a trace-only render
    * pass in an interactive viewer. Defaults to `elements`.
+   * Also supplies board ownership and existing vias for subset rendering.
    */
   clipContextElements?: AnyCircuitElement[]
   /** Whether to render the soldermask layer. Defaults to false. */
@@ -216,8 +217,8 @@ export class CircuitToCanvasDrawer {
     options: DrawElementsOptions = {},
   ): void {
     const boardOwnerMap = createBoardOwnerMap([
-      ...elements,
       ...(options.clipContextElements ?? []),
+      ...elements,
     ])
     elements = [
       ...elements,

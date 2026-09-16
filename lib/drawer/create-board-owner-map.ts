@@ -5,12 +5,13 @@ export type AnyCircuitJsonId = string
 export function createBoardOwnerMap(circuitJson: AnyCircuitElement[]) {
   const boardOwnerMap = new Map<AnyCircuitJsonId, PcbBoard | undefined>()
   const parentById = new Map<AnyCircuitJsonId, AnyCircuitJsonId | undefined>()
-  const boards = circuitJson.filter(
-    (element): element is PcbBoard => element.type === "pcb_board",
-  )
+  const boardsById = new Map<AnyCircuitJsonId, PcbBoard>()
 
   for (const element of circuitJson) {
     switch (element.type) {
+      case "pcb_board":
+        boardsById.set(element.pcb_board_id, element)
+        break
       case "source_group":
         parentById.set(
           element.source_group_id,
@@ -54,22 +55,20 @@ export function createBoardOwnerMap(circuitJson: AnyCircuitElement[]) {
     }
   }
 
-  for (const board of boards) {
+  for (const board of boardsById.values()) {
     boardOwnerMap.set(board.pcb_board_id, board)
     if (board.subcircuit_id) boardOwnerMap.set(board.subcircuit_id, board)
   }
 
+  const defaultBoard =
+    boardsById.size === 1 ? boardsById.values().next().value : undefined
   const resolving = new Set<AnyCircuitJsonId>()
   function resolveBoard(id: AnyCircuitJsonId): PcbBoard | undefined {
     if (boardOwnerMap.has(id)) return boardOwnerMap.get(id)
     if (resolving.has(id) || !parentById.has(id)) return undefined
     resolving.add(id)
     const parentId = parentById.get(id)
-    const board = parentId
-      ? resolveBoard(parentId)
-      : boards.length === 1
-        ? boards[0]
-        : undefined
+    const board = parentId ? resolveBoard(parentId) : defaultBoard
     boardOwnerMap.set(id, board)
     resolving.delete(id)
     return board
