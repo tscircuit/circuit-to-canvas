@@ -193,13 +193,15 @@ function processElementSoldermask(params: {
       soldermaskOverCopperColor,
     })
   } else if (element.type === "pcb_via") {
-    const boardOwnerId = boardOwnerMap?.has(element.pcb_via_id)
-      ? element.pcb_via_id
-      : (element.pcb_trace_id ?? element.pcb_via_id)
+    let board = boardOwnerMap?.get(element.pcb_via_id)
+    if (!boardOwnerMap?.has(element.pcb_via_id) && element.pcb_trace_id) {
+      board = boardOwnerMap?.get(element.pcb_trace_id)
+    }
+
     processViaSoldermask({
       ctx,
       via: element,
-      board: boardOwnerMap?.get(boardOwnerId),
+      board,
       realToCanvasMat,
       layer,
       soldermaskOverCopperColor,
