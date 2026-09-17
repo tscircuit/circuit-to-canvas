@@ -8,41 +8,45 @@ export function getViasFromTraces(
   ctx: CanvasContext,
   contextElements: AnyCircuitElement[] = [],
 ): PcbVia[] {
-  const allElements = [...elements, ...contextElements]
+  const standaloneVias = [...elements, ...contextElements].filter(
+    (element) => element.type === "pcb_via",
+  )
   const viasByPosition = new Map<ViaPositionKey, PcbVia[]>()
-  for (const element of allElements) {
-    if (element.type !== "pcb_via") continue
-    const board = ctx.boardOwnerMap?.get(element.pcb_via_id)
-    const position = `${board?.pcb_board_id ?? ""}:${element.x}:${element.y}`
-    const existingVias = viasByPosition.get(position) ?? []
-    existingVias.push(element)
-    viasByPosition.set(position, existingVias)
-  }
-  const vias: PcbVia[] = []
 
-  for (const element of elements) {
-    if (element.type !== "pcb_trace") continue
-    const board = ctx.boardOwnerMap?.get(element.pcb_trace_id)
-    for (const [index, point] of element.route.entries()) {
+  for (const via of standaloneVias) {
+    const board = ctx.boardOwnerMap?.get(via.pcb_via_id)
+    const positionKey = `${board?.pcb_board_id ?? ""}:${via.x}:${via.y}`
+    const viasAtPosition = viasByPosition.get(positionKey) ?? []
+
+    viasAtPosition.push(via)
+    viasByPosition.set(positionKey, viasAtPosition)
+  }
+
+  const traces = elements.filter((element) => element.type === "pcb_trace")
+  const routeVias: PcbVia[] = []
+
+  for (const trace of traces) {
+    const board = ctx.boardOwnerMap?.get(trace.pcb_trace_id)
+
+    for (const [routeIndex, point] of trace.route.entries()) {
       if (point.route_type !== "via") continue
-      const position = `${board?.pcb_board_id ?? ""}:${point.x}:${point.y}`
-      const existingVias = viasByPosition.get(position) ?? []
-      if (
-        existingVias.some(
-          (via) =>
-            via.layers.includes(point.from_layer) &&
-            via.layers.includes(point.to_layer),
-        )
-      ) {
-        continue
-      }
+
+      const positionKey = `${board?.pcb_board_id ?? ""}:${point.x}:${point.y}`
+      const viasAtPosition = viasByPosition.get(positionKey) ?? []
+      const hasMatchingVia = viasAtPosition.some(
+        (via) =>
+          via.layers.includes(point.from_layer) &&
+          via.layers.includes(point.to_layer),
+      )
+
+      if (hasMatchingVia) continue
 
       const via: PcbVia = {
         type: "pcb_via",
-        pcb_via_id: `${element.pcb_trace_id}_route_via_${index}`,
-        pcb_trace_id: element.pcb_trace_id,
-        subcircuit_id: element.subcircuit_id,
-        pcb_group_id: element.pcb_group_id,
+        pcb_via_id: `${trace.pcb_trace_id}_route_via_${routeIndex}`,
+        pcb_trace_id: trace.pcb_trace_id,
+        subcircuit_id: trace.subcircuit_id,
+        pcb_group_id: trace.pcb_group_id,
         x: point.x,
         y: point.y,
         layers: [point.from_layer, point.to_layer],
@@ -53,11 +57,12 @@ export function getViasFromTraces(
         tented_on_top: point.tented_on_top,
         tented_on_bottom: point.tented_on_bottom,
       }
-      vias.push(via)
-      existingVias.push(via)
-      viasByPosition.set(position, existingVias)
+
+      routeVias.push(via)
+      viasAtPosition.push(via)
+      viasByPosition.set(positionKey, viasAtPosition)
     }
   }
 
-  return vias
+  return routeVias
 }
