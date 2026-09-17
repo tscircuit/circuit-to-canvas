@@ -1,11 +1,13 @@
-import type { LayerRef } from "circuit-json"
+import type { LayerRef, PcbBoard } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
+import type { AnyCircuitJsonId } from "./create-board-owner-map"
 
 /**
  * Canvas context type that works with both browser and node-canvas.
  * Uses a subset of CanvasRenderingContext2D methods that are common to both.
  */
 export interface CanvasContext {
+  boardOwnerMap?: Map<AnyCircuitJsonId, PcbBoard | undefined>
   beginPath(): void
   closePath(): void
   arc(

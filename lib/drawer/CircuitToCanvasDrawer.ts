@@ -37,6 +37,7 @@ import type {
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { compose, identity, scale, translate } from "transformation-matrix"
+import { createBoardOwnerMap } from "./create-board-owner-map"
 import { drawPcbBoard } from "./elements/pcb-board"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
@@ -70,6 +71,7 @@ import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTracesClippedToCopperPours } from "./elements/pcb-trace/draw-pcb-traces-clipped-to-copper-pours"
+import { getViasFromTraces } from "./elements/pcb-trace/get-vias-from-traces"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
 import {
@@ -83,9 +85,10 @@ import {
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /**
-   * Elements used only to find copper pours when clipping traces. This is
+   * Elements used to find copper pours when clipping traces. This is
    * useful when `elements` is a filtered subset, such as a trace-only render
    * pass in an interactive viewer. Defaults to `elements`.
+   * Also supplies board ownership and existing vias for subset rendering.
    */
   clipContextElements?: AnyCircuitElement[]
   /** Whether to render the soldermask layer. Defaults to false. */
@@ -213,6 +216,14 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
+    this.ctx.boardOwnerMap = createBoardOwnerMap([
+      ...(options.clipContextElements ?? []),
+      ...elements,
+    ])
+    elements = [
+      ...elements,
+      ...getViasFromTraces(elements, this.ctx, options.clipContextElements),
+    ]
     const layer = getCopperLayer(options.layers)
 
     // Find the board or panel element
@@ -258,12 +269,9 @@ export class CircuitToCanvasDrawer {
       options.drawSolderPasteBottom !== undefined
     const renderTopSoldermask =
       drawSoldermask &&
-      (board !== undefined || panel !== undefined) &&
       (options.drawSoldermaskTop ?? !hasExplicitSoldermaskLayers)
     const renderBottomSoldermask =
-      drawSoldermask &&
-      (board !== undefined || panel !== undefined) &&
-      (options.drawSoldermaskBottom ?? false)
+      drawSoldermask && (options.drawSoldermaskBottom ?? false)
     const renderTopSolderPaste =
       drawSolderPaste &&
       (options.drawSolderPasteTop ?? !hasExplicitSolderPasteLayers) &&
@@ -821,10 +829,12 @@ export class CircuitToCanvasDrawer {
 
     this.ctx.save()
     this.ctx.globalCompositeOperation = "destination-out"
+    const boardOwnerMap = this.ctx.boardOwnerMap
     apertureDrawer.drawElements(apertures, {
       layers: [`${layer}_copper` as PcbRenderLayer],
       showPcbNotes: false,
     })
+    this.ctx.boardOwnerMap = boardOwnerMap
     this.ctx.restore()
   }
 }

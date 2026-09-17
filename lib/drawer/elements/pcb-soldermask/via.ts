@@ -18,10 +18,20 @@ export function processViaSoldermask(params: {
   const { ctx, via, realToCanvasMat, layer, soldermaskOverCopperColor } = params
   if (!via.layers.includes(layer)) return
 
+  let board = ctx.boardOwnerMap?.get(via.pcb_via_id)
+  if (!ctx.boardOwnerMap?.has(via.pcb_via_id) && via.pcb_trace_id) {
+    board = ctx.boardOwnerMap?.get(via.pcb_trace_id)
+  }
+
   const tenting: PcbViaInput = via
-  const isTented =
-    (layer === "top" ? tenting.tented_on_top : tenting.tented_on_bottom) ??
-    tenting.is_tented
+  const viaTenting =
+    layer === "top" ? tenting.tented_on_top : tenting.tented_on_bottom
+  const boardDefaultTenting =
+    layer === "top"
+      ? board?.default_via_tented_on_top
+      : board?.default_via_tented_on_bottom
+  const isTented = viaTenting ?? tenting.is_tented ?? boardDefaultTenting
+
   // Vias typically have soldermask openings to expose the copper ring.
   const [cx, cy] = applyToPoint(realToCanvasMat, [via.x, via.y])
   const scaledRadius = (via.outer_diameter / 2) * Math.abs(realToCanvasMat.a)
