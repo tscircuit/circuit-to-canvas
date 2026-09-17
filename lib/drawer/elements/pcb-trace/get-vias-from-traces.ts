@@ -1,18 +1,18 @@
-import type { AnyCircuitElement, PcbBoard, PcbVia } from "circuit-json"
-import type { AnyCircuitJsonId } from "../../create-board-owner-map"
+import type { AnyCircuitElement, PcbVia } from "circuit-json"
+import type { CanvasContext } from "../../types"
 
 type ViaPositionKey = string
 
 export function getViasFromTraces(
   elements: AnyCircuitElement[],
-  boardOwnerMap: Map<AnyCircuitJsonId, PcbBoard | undefined>,
+  ctx: CanvasContext,
   contextElements: AnyCircuitElement[] = [],
 ): PcbVia[] {
   const allElements = [...elements, ...contextElements]
   const viasByPosition = new Map<ViaPositionKey, PcbVia[]>()
   for (const element of allElements) {
     if (element.type !== "pcb_via") continue
-    const board = boardOwnerMap.get(element.pcb_via_id)
+    const board = ctx.boardOwnerMap?.get(element.pcb_via_id)
     const position = `${board?.pcb_board_id ?? ""}:${element.x}:${element.y}`
     const existingVias = viasByPosition.get(position) ?? []
     existingVias.push(element)
@@ -22,7 +22,7 @@ export function getViasFromTraces(
 
   for (const element of elements) {
     if (element.type !== "pcb_trace") continue
-    const board = boardOwnerMap.get(element.pcb_trace_id)
+    const board = ctx.boardOwnerMap?.get(element.pcb_trace_id)
     for (const [index, point] of element.route.entries()) {
       if (point.route_type !== "via") continue
       const position = `${board?.pcb_board_id ?? ""}:${point.x}:${point.y}`

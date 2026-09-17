@@ -50,5 +50,9 @@ export function createDrawingLayerContext(
   }
 
   if (!layerCanvas) return null
-  return layerCanvas.getContext("2d")
+  const layerCtx = layerCanvas.getContext("2d")
+  if (layerCtx) {
+    layerCtx.boardOwnerMap = baseCtx.boardOwnerMap
+  }
+  return layerCtx
 }

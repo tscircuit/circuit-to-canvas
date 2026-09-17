@@ -216,17 +216,13 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    const boardOwnerMap = createBoardOwnerMap([
+    this.ctx.boardOwnerMap = createBoardOwnerMap([
       ...(options.clipContextElements ?? []),
       ...elements,
     ])
     elements = [
       ...elements,
-      ...getViasFromTraces(
-        elements,
-        boardOwnerMap,
-        options.clipContextElements,
-      ),
+      ...getViasFromTraces(elements, this.ctx, options.clipContextElements),
     ]
     const layer = getCopperLayer(options.layers)
 
@@ -438,7 +434,6 @@ export class CircuitToCanvasDrawer {
       drawPcbSoldermask({
         ctx: this.ctx,
         elements,
-        boardOwnerMap,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "top",
@@ -612,7 +607,6 @@ export class CircuitToCanvasDrawer {
       drawPcbSoldermask({
         ctx: this.ctx,
         elements,
-        boardOwnerMap,
         realToCanvasMat: this.realToCanvasMat,
         colorMap: this.colorMap,
         layer: "bottom",
@@ -835,10 +829,12 @@ export class CircuitToCanvasDrawer {
 
     this.ctx.save()
     this.ctx.globalCompositeOperation = "destination-out"
+    const boardOwnerMap = this.ctx.boardOwnerMap
     apertureDrawer.drawElements(apertures, {
       layers: [`${layer}_copper` as PcbRenderLayer],
       showPcbNotes: false,
     })
+    this.ctx.boardOwnerMap = boardOwnerMap
     this.ctx.restore()
   }
 }

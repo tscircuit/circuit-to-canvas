@@ -42,4 +42,16 @@ test("repeated board context preserves the rendered board's tenting defaults", (
   expect(Array.from(ctx.getImageData(50, 50, 1, 1).data)).toEqual([
     52, 135, 73, 255,
   ])
+
+  ctx.clearRect(0, 0, 100, 100)
+  drawer.drawElements(
+    elements.filter((element) => element.type === "pcb_via"),
+    {
+      layers: ["top_copper"],
+      drawSoldermask: true,
+    },
+  )
+  expect(Array.from(ctx.getImageData(50, 50, 1, 1).data)).toEqual([
+    255, 38, 226, 255,
+  ])
 })

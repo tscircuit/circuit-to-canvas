@@ -1,4 +1,4 @@
-import type { PcbBoard, PcbVia, PcbViaInput } from "circuit-json"
+import type { PcbVia, PcbViaInput } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
@@ -11,14 +11,17 @@ import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 export function processViaSoldermask(params: {
   ctx: CanvasContext
   via: PcbVia
-  board?: PcbBoard
   realToCanvasMat: Matrix
   layer: "top" | "bottom"
   soldermaskOverCopperColor: string
 }): void {
-  const { ctx, via, board, realToCanvasMat, layer, soldermaskOverCopperColor } =
-    params
+  const { ctx, via, realToCanvasMat, layer, soldermaskOverCopperColor } = params
   if (!via.layers.includes(layer)) return
+
+  let board = ctx.boardOwnerMap?.get(via.pcb_via_id)
+  if (!ctx.boardOwnerMap?.has(via.pcb_via_id) && via.pcb_trace_id) {
+    board = ctx.boardOwnerMap?.get(via.pcb_trace_id)
+  }
 
   const tenting: PcbViaInput = via
   const viaTenting =
