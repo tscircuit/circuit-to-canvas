@@ -26,6 +26,8 @@ export function drawPcbSilkscreenText(
 ): void {
   const { ctx, text, realToCanvasMat, colorMap } = params
 
+  if ("is_hidden" in text && text.is_hidden === true) return
+
   const content = text.text ?? ""
   if (!content) return
 
