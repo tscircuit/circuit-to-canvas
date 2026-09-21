@@ -17,7 +17,7 @@ import { processHoleSoldermask } from "./hole"
 import { processPlatedHoleSoldermask } from "./plated-hole"
 import { processSmtPadSoldermask } from "./smt-pad"
 import { processTraceSoldermask } from "./trace"
-import { processViaSoldermask } from "./via"
+import { isViaTented, processViaSoldermask } from "./via"
 
 export interface DrawPcbSoldermaskParams {
   ctx: CanvasContext
@@ -126,6 +126,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
 
   // Tent vias before opening pads and holes, so their openings remain exposed.
   for (const via of vias) {
+    if (!isViaTented(via, layer, soldermaskCtx)) continue
     processViaSoldermask({
       ctx: soldermaskCtx,
       via,
@@ -184,6 +185,15 @@ function processElementSoldermask(params: {
       ctx,
       hole: element,
       realToCanvasMat,
+      soldermaskOverCopperColor,
+    })
+  } else if (element.type === "pcb_via") {
+    if (isViaTented(element, layer, ctx)) return
+    processViaSoldermask({
+      ctx,
+      via: element,
+      realToCanvasMat,
+      layer,
       soldermaskOverCopperColor,
     })
   } else if (element.type === "pcb_cutout") {
