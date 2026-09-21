@@ -124,6 +124,17 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     }
   }
 
+  // Tent vias before opening pads and holes, so their openings remain exposed.
+  for (const via of vias) {
+    processViaSoldermask({
+      ctx: soldermaskCtx,
+      via,
+      realToCanvasMat,
+      layer,
+      soldermaskOverCopperColor,
+    })
+  }
+
   // Step 3: Process remaining elements - draw cutouts and openings as needed
   for (const element of elements) {
     processElementSoldermask({
@@ -173,14 +184,6 @@ function processElementSoldermask(params: {
       ctx,
       hole: element,
       realToCanvasMat,
-      soldermaskOverCopperColor,
-    })
-  } else if (element.type === "pcb_via") {
-    processViaSoldermask({
-      ctx,
-      via: element,
-      realToCanvasMat,
-      layer,
       soldermaskOverCopperColor,
     })
   } else if (element.type === "pcb_cutout") {
