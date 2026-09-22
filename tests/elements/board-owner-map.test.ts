@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { PcbBoard, PcbComponent, PcbVia, SourceGroup } from "circuit-json"
-import { createBoardOwnerMap } from "../../lib/drawer/create-board-owner-map"
+import { createBoardOwnerMap } from "../../lib"
 import { boardViaTentingCircuit } from "./pcb-via-board-tenting.fixture"
 
 test("board ownership is precomputed from IDs regardless of positions or element order", () => {
