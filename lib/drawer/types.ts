@@ -1,6 +1,6 @@
+import type { AnyCircuitJsonId } from "@tscircuit/circuit-json-util"
 import type { LayerRef, PcbBoard } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { AnyCircuitJsonId } from "./create-board-owner-map"
 
 /**
  * Canvas context type that works with both browser and node-canvas.
