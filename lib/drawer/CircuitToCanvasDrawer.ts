@@ -1,3 +1,4 @@
+import { createBoardOwnerMap } from "@tscircuit/circuit-json-util"
 import type {
   AnyCircuitElement,
   LayerRef,
@@ -37,7 +38,6 @@ import type {
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { compose, identity, scale, translate } from "transformation-matrix"
-import { createBoardOwnerMap } from "./create-board-owner-map"
 import { drawPcbBoard } from "./elements/pcb-board"
 import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
