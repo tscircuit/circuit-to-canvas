@@ -31,7 +31,7 @@
   },
   "peerDependencies": {
     "@tscircuit/alphabet": "*",
-    "@tscircuit/circuit-json-util": ">=0.0.116",
+    "@tscircuit/circuit-json-util": "*",
     "typescript": "^5"
   },
   "dependencies": {
