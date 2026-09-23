@@ -55,7 +55,7 @@ test("soldermask includes standalone taper copper", () => {
         end: { x: 6, y: 0 },
         start_width: 2,
         end_width: 0.5,
-        width_interpolation_mode: "smoothstep",
+        width_interpolation_mode: "linear",
         layer: "top",
       },
     ],
