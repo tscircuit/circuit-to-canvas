@@ -47,9 +47,22 @@ export function cutTraceDestinationsAtDrills(params: {
   layer?: LayerRef
 }): void {
   const { ctx, trace, realToCanvasMat, vias, platedHoles, layer } = params
-  if (!trace.route || trace.route.length < 2) return
+  if (!trace.route || trace.route.length === 0) return
 
   const segments = collectTraceSegments(trace.route)
+  for (const point of trace.route) {
+    if (point.route_type !== "teardrop") continue
+    for (const end of [point.start, point.end]) {
+      segments.push([
+        {
+          route_type: "wire",
+          ...end,
+          layer: point.layer,
+          width: point.end_width,
+        },
+      ])
+    }
+  }
   if (segments.length === 0) return
 
   const cutouts = new Map<string, TraceDrillCutout>()

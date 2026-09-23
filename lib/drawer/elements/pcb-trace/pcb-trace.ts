@@ -1,3 +1,4 @@
+import { getTeardropPolygon } from "./get-teardrop-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawLine } from "../../shapes/line"
@@ -22,8 +23,20 @@ export interface DrawPcbTraceParams {
 export function drawPcbTrace(params: DrawPcbTraceParams): void {
   const { ctx, trace, realToCanvasMat, colorMap, layer: layerFilter } = params
 
-  if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2) {
+  if (!trace.route || !Array.isArray(trace.route) || trace.route.length === 0) {
     return
+  }
+
+  for (const point of trace.route) {
+    if (point.route_type !== "teardrop") continue
+    if (layerFilter && point.layer !== layerFilter) continue
+    if (point.is_inside_copper_pour) continue
+    drawPolygon({
+      ctx,
+      points: getTeardropPolygon(point),
+      fill: layerToColor(point.layer, colorMap),
+      realToCanvasMat,
+    })
   }
 
   const segments = collectTraceSegments(trace.route)
