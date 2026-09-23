@@ -1,3 +1,4 @@
+import { getWireTaperSegments } from "./get-wire-taper-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
@@ -50,8 +51,7 @@ export function cutTraceDestinationsAtDrills(params: {
   if (!trace.route || trace.route.length === 0) return
 
   const segments = collectTraceSegments(trace.route)
-  for (const point of trace.route) {
-    if (point.route_type !== "teardrop") continue
+  for (const point of getWireTaperSegments(trace.route)) {
     for (const end of [point.start, point.end]) {
       segments.push([
         {

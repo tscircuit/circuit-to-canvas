@@ -1,4 +1,7 @@
-import { getTeardropPolygon } from "./get-teardrop-polygon"
+import {
+  getWireTaperPolygon,
+  getWireTaperSegments,
+} from "./get-wire-taper-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawLine } from "../../shapes/line"
@@ -27,13 +30,12 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
     return
   }
 
-  for (const point of trace.route) {
-    if (point.route_type !== "teardrop") continue
+  for (const point of getWireTaperSegments(trace.route)) {
     if (layerFilter && point.layer !== layerFilter) continue
     if (point.is_inside_copper_pour) continue
     drawPolygon({
       ctx,
-      points: getTeardropPolygon(point),
+      points: getWireTaperPolygon(point),
       fill: layerToColor(point.layer, colorMap),
       realToCanvasMat,
     })

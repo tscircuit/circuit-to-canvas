@@ -1,3 +1,4 @@
+import { collectTraceSegments } from "../../lib/drawer/elements/pcb-trace/collect-trace-segments"
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
@@ -50,14 +51,18 @@ test("soldermask includes standalone taper copper", () => {
     pcb_trace_id: "mask",
     route: [
       {
-        route_type: "teardrop",
-        start: { x: -6, y: 0 },
-        end: { x: 6, y: 0 },
-        start_width: 2,
-        end_width: 0.5,
-        width_interpolation_mode: "linear",
+        route_type: "wire",
+        x: -6,
+        y: 0,
+        width: 2,
+        ...{
+          start_width: 2,
+          end_width: 0.5,
+          width_interpolation_mode: "linear",
+        },
         layer: "top",
       },
+      { route_type: "wire", x: 6, y: 0, width: 0.5, layer: "top" },
     ],
   }
   processTraceSoldermask({
@@ -79,14 +84,14 @@ test("standalone taper clears drills at both ends", () => {
     pcb_trace_id: "drills",
     route: [
       {
-        route_type: "teardrop",
-        start: { x: -6, y: 0 },
-        end: { x: 6, y: 0 },
-        start_width: 2,
-        end_width: 1,
-        width_interpolation_mode: "linear",
+        route_type: "wire",
+        x: -6,
+        y: 0,
+        width: 2,
+        ...{ start_width: 2, end_width: 1, width_interpolation_mode: "linear" },
         layer: "top",
       },
+      { route_type: "wire", x: 6, y: 0, width: 1, layer: "top" },
     ],
   }
   drawPcbTrace({
@@ -107,4 +112,27 @@ test("standalone taper clears drills at both ends", () => {
   expect(ctx.getImageData(360, 300, 1, 1).data[3]).toBe(255)
   expect(ctx.getImageData(192, 300, 1, 1).data[3]).toBe(0)
   expect(ctx.getImageData(528, 300, 1, 1).data[3]).toBe(0)
+})
+
+test("ordinary segments before and after a taper are preserved without a duplicate stroke", () => {
+  const tapered = {
+    route_type: "wire" as const,
+    x: 0,
+    y: 0,
+    width: 0.6,
+    layer: "top" as const,
+    start_width: 0.6,
+    end_width: 0.2,
+    width_interpolation_mode: "quadratic" as const,
+  }
+  const route: PcbTrace["route"] = [
+    { route_type: "wire", x: -1, y: 0, width: 0.6, layer: "top" },
+    tapered,
+    { route_type: "wire", x: 1, y: 0, width: 0.2, layer: "top" },
+    { route_type: "wire", x: 2, y: 0, width: 0.2, layer: "top" },
+  ]
+  expect(collectTraceSegments(route).map((s) => s.map((p) => p.x))).toEqual([
+    [-1, 0],
+    [1, 2],
+  ])
 })

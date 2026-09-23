@@ -148,11 +148,7 @@ function getTraceLayers(
   const layers = new Set<LayerRef>()
   for (const trace of traces) {
     for (const point of trace.route ?? []) {
-      if (
-        (point.route_type !== "wire" && point.route_type !== "teardrop") ||
-        !point.layer
-      )
-        continue
+      if (point.route_type !== "wire" || !point.layer) continue
       if (
         renderLayers?.length &&
         !renderLayers.includes(`${point.layer}_copper` as PcbRenderLayer)

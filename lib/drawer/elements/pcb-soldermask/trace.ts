@@ -1,4 +1,7 @@
-import { getTeardropPolygon } from "../pcb-trace/get-teardrop-polygon"
+import {
+  getWireTaperPolygon,
+  getWireTaperSegments,
+} from "../pcb-trace/get-wire-taper-polygon"
 import type { PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
@@ -23,13 +26,12 @@ export function processTraceSoldermask(params: {
     return
   }
 
-  for (const point of trace.route) {
-    if (point.route_type !== "teardrop") continue
+  for (const point of getWireTaperSegments(trace.route)) {
     if (layer && point.layer !== layer) continue
     if (point.is_inside_copper_pour) continue
     drawPolygon({
       ctx,
-      points: getTeardropPolygon(point),
+      points: getWireTaperPolygon(point),
       fill: soldermaskOverCopperColor,
       realToCanvasMat,
     })
