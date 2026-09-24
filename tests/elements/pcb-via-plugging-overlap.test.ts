@@ -12,7 +12,7 @@ test("plugging preserves pad openings and overlapping silkscreen text on both fa
     drawer.configure({
       colorOverrides: { silkscreen: { top: "#fff", bottom: "#fff" } },
     })
-    drawer.setCameraBounds({ minX: -10, maxX: 10, minY: -6, maxY: 6 })
+    drawer.setCameraBounds({ minX: -2.5, maxX: 2.5, minY: -1.5, maxY: 1.5 })
     drawer.drawElements(
       circuit.map((element) =>
         element.type === "pcb_note_text" && element.pcb_note_text_id === "view"
@@ -45,13 +45,13 @@ test("plugging preserves pad openings and overlapping silkscreen text on both fa
   const top = render("top")
   const bottom = render("bottom")
   for (const view of [top, bottom]) {
-    expect(view.pixel(-5.1, -0.5)).toEqual([201, 162, 110, 255])
-    expect(view.pixel(-5.7, -0.5)).toEqual(view.pixel(-6, -0.5))
-    expect(view.pixel(5, -0.5)).toEqual([255, 255, 255, 255])
+    expect(view.pixel(-1.275, -0.125)).toEqual([12, 55, 33, 255])
+    expect(view.pixel(-1.425, -0.125)).toEqual(view.pixel(-1.5, -0.125))
+    expect(view.pixel(1.25, -0.125)).toEqual([255, 255, 255, 255])
   }
-  expect(top.pixel(-4.8, -0.5)).toEqual(top.pixel(-3.8, -0.5))
-  expect(bottom.pixel(-4.8, -0.5)).toEqual([201, 162, 110, 255])
-  expect(bottom.pixel(-3.8, -0.5)).toEqual(bottom.pixel(-6, -0.5))
+  expect(top.pixel(-1.2, -0.125)).toEqual(top.pixel(-0.95, -0.125))
+  expect(bottom.pixel(-1.2, -0.125)).toEqual([12, 55, 33, 255])
+  expect(bottom.pixel(-0.95, -0.125)).toEqual(bottom.pixel(-1.5, -0.125))
   const snapshot = createCanvas(1200, 1440)
   snapshot.getContext("2d").drawImage(top.canvas, 0, 0)
   snapshot.getContext("2d").drawImage(bottom.canvas, 0, 720)

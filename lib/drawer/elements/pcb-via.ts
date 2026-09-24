@@ -46,7 +46,7 @@ export function drawPcbVia(params: DrawPcbViaParams): void {
     ctx,
     center: { x: via.x, y: via.y },
     radius: via.hole_diameter / 2,
-    fill: isPlugged ? colorMap.substrate : colorMap.drill,
+    fill: isPlugged ? colorMap.soldermask[layer] : colorMap.drill,
     realToCanvasMat,
   })
 }
