@@ -1,3 +1,4 @@
+import { hasWireTaper } from "./get-wire-taper-polygon"
 import type { LayerRef, PcbTrace, PcbTraceRoutePointWire } from "circuit-json"
 
 // Splits a trace route into contiguous wire segments by layer.
@@ -34,6 +35,12 @@ export function collectTraceSegments(
 
     currentLayer = layer
     current.push(routePoint)
+    if (hasWireTaper(routePoint)) {
+      // Keep the incoming ordinary segment, but split before the tapered one.
+      if (current.length >= 2) segments.push(current)
+      current = []
+      currentLayer = null
+    }
   }
 
   if (current.length >= 2) segments.push(current)

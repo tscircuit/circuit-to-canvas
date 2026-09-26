@@ -1,3 +1,7 @@
+import {
+  getWireTaperPolygon,
+  getWireTaperSegments,
+} from "./get-wire-taper-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawLine } from "../../shapes/line"
@@ -22,8 +26,19 @@ export interface DrawPcbTraceParams {
 export function drawPcbTrace(params: DrawPcbTraceParams): void {
   const { ctx, trace, realToCanvasMat, colorMap, layer: layerFilter } = params
 
-  if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2) {
+  if (!trace.route || !Array.isArray(trace.route) || trace.route.length === 0) {
     return
+  }
+
+  for (const point of getWireTaperSegments(trace.route)) {
+    if (layerFilter && point.layer !== layerFilter) continue
+    if (point.is_inside_copper_pour) continue
+    drawPolygon({
+      ctx,
+      points: getWireTaperPolygon(point),
+      fill: layerToColor(point.layer, colorMap),
+      realToCanvasMat,
+    })
   }
 
   const segments = collectTraceSegments(trace.route)

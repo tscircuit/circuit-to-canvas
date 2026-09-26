@@ -1,3 +1,7 @@
+import {
+  getWireTaperPolygon,
+  getWireTaperSegments,
+} from "../pcb-trace/get-wire-taper-polygon"
 import type { PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
@@ -18,8 +22,19 @@ export function processTraceSoldermask(params: {
 }): void {
   const { ctx, trace, realToCanvasMat, soldermaskOverCopperColor, layer } =
     params
-  if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2) {
+  if (!trace.route || !Array.isArray(trace.route) || trace.route.length === 0) {
     return
+  }
+
+  for (const point of getWireTaperSegments(trace.route)) {
+    if (layer && point.layer !== layer) continue
+    if (point.is_inside_copper_pour) continue
+    drawPolygon({
+      ctx,
+      points: getWireTaperPolygon(point),
+      fill: soldermaskOverCopperColor,
+      realToCanvasMat,
+    })
   }
 
   const segments = collectTraceSegments(trace.route)

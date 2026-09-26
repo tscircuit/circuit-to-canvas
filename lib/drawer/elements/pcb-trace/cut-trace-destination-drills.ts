@@ -1,3 +1,4 @@
+import { getWireTaperSegments } from "./get-wire-taper-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
@@ -47,9 +48,21 @@ export function cutTraceDestinationsAtDrills(params: {
   layer?: LayerRef
 }): void {
   const { ctx, trace, realToCanvasMat, vias, platedHoles, layer } = params
-  if (!trace.route || trace.route.length < 2) return
+  if (!trace.route || trace.route.length === 0) return
 
   const segments = collectTraceSegments(trace.route)
+  for (const point of getWireTaperSegments(trace.route)) {
+    for (const end of [point.start, point.end]) {
+      segments.push([
+        {
+          route_type: "wire",
+          ...end,
+          layer: point.layer,
+          width: point.end_width,
+        },
+      ])
+    }
+  }
   if (segments.length === 0) return
 
   const cutouts = new Map<string, TraceDrillCutout>()
