@@ -16,6 +16,8 @@ export interface DrawPcbSolderPasteParams {
 
 export function drawPcbSolderPaste(params: DrawPcbSolderPasteParams): void {
   const { ctx, solderPaste, realToCanvasMat } = params
+  // Polygon apertures have no center and are not rendered by this drawer yet.
+  if (solderPaste.shape === "polygon") return
   const center = { x: solderPaste.x, y: solderPaste.y }
 
   if (solderPaste.shape === "rect") {
