@@ -116,3 +116,56 @@ test("fabrication path fill modes visual snapshot", async () => {
     "fabrication-path-fill",
   )
 })
+
+test("fabrication joins, crossings, retraces and filled edges retain one alpha", () => {
+  const canvas = createCanvas(100, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  const path: PcbFabricationNotePath = {
+    type: "pcb_fabrication_note_path",
+    pcb_fabrication_note_path_id: "overlap",
+    pcb_component_id: "component",
+    layer: "top",
+    color: "rgba(255,0,0,0.5)",
+    stroke_width: 10,
+    route: [
+      { x: 20, y: 20 },
+      { x: 80, y: 20 },
+      { x: 80, y: 80 },
+      { x: 20, y: 20 },
+      { x: 80, y: 80 },
+    ],
+  }
+  for (const alpha of [1, 0.5]) {
+    ctx.globalAlpha = alpha
+    for (const mirrored of [false, true]) {
+      drawer.realToCanvasMat = {
+        a: mirrored ? -1 : 1,
+        b: 0,
+        c: 0,
+        d: 1,
+        e: mirrored ? 100 : 0,
+        f: 0,
+      }
+      for (const is_filled of [false, true]) {
+        ctx.clearRect(0, 0, 100, 100)
+        drawer.drawElements([{ ...path, is_filled }])
+        for (const [x, y] of [
+          [50, 20],
+          [80, 20],
+          [50, 50],
+          [20, 20],
+        ]) {
+          const pixel = ctx.getImageData(
+            mirrored ? 100 - x! : x!,
+            y!,
+            1,
+            1,
+          ).data
+          expect(pixel[0]).toBe(255)
+          expect(Math.abs(pixel[3]! - 127 * alpha)).toBeLessThanOrEqual(1)
+        }
+      }
+    }
+  }
+})
