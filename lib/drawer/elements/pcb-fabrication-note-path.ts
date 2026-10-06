@@ -1,7 +1,4 @@
-import type {
-  PcbFabricationNotePath,
-  PcbFabricationNoteRect,
-} from "circuit-json"
+import type { PcbFabricationNotePath } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
 import { drawPolygon } from "../shapes/polygon"
@@ -9,9 +6,7 @@ import { drawLine } from "../shapes/line"
 
 export interface DrawPcbFabricationNotePathParams {
   ctx: CanvasContext
-  // Accept the additive flags before the next circuit-json release.
-  path: PcbFabricationNotePath &
-    Pick<PcbFabricationNoteRect, "is_filled" | "has_stroke">
+  path: PcbFabricationNotePath
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
