@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
-import type { PcbFabricationNotePath } from "circuit-json"
+import type { CircuitJson, PcbFabricationNotePath } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import visualFixture from "../fixtures/fabrication-path-fill.circuit.json"
 
 test("draw fabrication note path", async () => {
   const canvas = createCanvas(100, 100)
@@ -100,4 +101,18 @@ test("filled fabrication paths close their outline and zero-width strokes do not
   expect(ctx.getImageData(16, 50, 1, 1).data[3]).toBe(0)
   expect(ctx.getImageData(40, 50, 1, 1).data[3]).toBe(255)
   expect(() => drawer.drawElements([{ ...path, route: [] }])).not.toThrow()
+})
+
+test("fabrication path fill modes visual snapshot", async () => {
+  const canvas = createCanvas(800, 600)
+  const ctx = canvas.getContext("2d")
+  ctx.fillStyle = "#000000"
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  drawer.realToCanvasMat = { a: 14, b: 0, c: 0, d: -14, e: 400, f: 300 }
+  drawer.drawElements(visualFixture as CircuitJson)
+  await expect(canvas.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "fabrication-path-fill",
+  )
 })
