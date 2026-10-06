@@ -1,4 +1,5 @@
 import { createBoardOwnerMap } from "@tscircuit/circuit-json-util"
+import { isViaTented } from "./elements/pcb-soldermask/via"
 import type {
   AnyCircuitElement,
   LayerRef,
@@ -421,6 +422,7 @@ export class CircuitToCanvasDrawer {
           drawPcbVia({
             ctx: this.ctx,
             via: element as PcbVia,
+            clearDrillHole: options.clearDrillHoles,
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
             layer,
@@ -595,6 +597,7 @@ export class CircuitToCanvasDrawer {
         drawPcbVia({
           ctx: this.ctx,
           via: element as PcbVia,
+          clearDrillHole: options.clearDrillHoles,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
           layer,
@@ -768,7 +771,12 @@ export class CircuitToCanvasDrawer {
     }
 
     if (options.clearDrillHoles) {
-      this.clearDrillHoles(elements, layer)
+      this.clearDrillHoles(
+        elements,
+        layer,
+        (layer === "top" && renderTopSoldermask) ||
+          (layer === "bottom" && renderBottomSoldermask),
+      )
     }
 
     if (options.showDebugObjects) {
@@ -796,12 +804,18 @@ export class CircuitToCanvasDrawer {
   private clearDrillHoles(
     elements: AnyCircuitElement[],
     layer: LayerRef,
+    preserveTenting: boolean,
   ): void {
     const apertures = elements.filter(
       (element) =>
         element.type === "pcb_hole" ||
         element.type === "pcb_plated_hole" ||
-        element.type === "pcb_via" ||
+        (element.type === "pcb_via" &&
+          !(
+            preserveTenting &&
+            (layer === "top" || layer === "bottom") &&
+            isViaTented(element, layer, this.ctx)
+          )) ||
         element.type === "pcb_cutout",
     )
     if (apertures.length === 0) return
