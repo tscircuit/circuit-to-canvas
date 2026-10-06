@@ -1,11 +1,17 @@
-import type { PcbFabricationNotePath } from "circuit-json"
+import type {
+  PcbFabricationNotePath,
+  PcbFabricationNoteRect,
+} from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
+import { drawPolygon } from "../shapes/polygon"
 import { drawLine } from "../shapes/line"
 
 export interface DrawPcbFabricationNotePathParams {
   ctx: CanvasContext
-  path: PcbFabricationNotePath
+  // Accept the additive flags before the next circuit-json release.
+  path: PcbFabricationNotePath &
+    Pick<PcbFabricationNoteRect, "is_filled" | "has_stroke">
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
@@ -22,10 +28,23 @@ export function drawPcbFabricationNotePath(
 
   if (!path.route || path.route.length < 2) return
 
+  if (path.is_filled) {
+    drawPolygon({ ctx, points: path.route, fill: color, realToCanvasMat })
+  }
+  if (path.has_stroke === false || path.stroke_width <= 0) return
+
+  // Filled polygons also close their stroked outline.
+  const first = path.route[0]!
+  const last = path.route[path.route.length - 1]!
+  const route =
+    path.is_filled && (first.x !== last.x || first.y !== last.y)
+      ? [...path.route, first]
+      : path.route
+
   // Draw each segment of the path
-  for (let i = 0; i < path.route.length - 1; i++) {
-    const start = path.route[i]
-    const end = path.route[i + 1]
+  for (let i = 0; i < route.length - 1; i++) {
+    const start = route[i]
+    const end = route[i + 1]
 
     if (!start || !end) continue
 
