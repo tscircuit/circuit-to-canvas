@@ -1,4 +1,8 @@
+import { createCanvas } from "@napi-rs/canvas"
 import type { AnyCircuitElement, PcbVia } from "circuit-json"
+import { applyToPoint } from "transformation-matrix"
+import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import { DEFAULT_PCB_COLOR_MAP, type PcbColorMap } from "../../lib/drawer/types"
 
 const via: PcbVia = {
   type: "pcb_via",
@@ -110,3 +114,84 @@ export const circuit: AnyCircuitElement[] = [
     text: "VIA TENTING",
   },
 ]
+
+export function renderViaDarkCenter(
+  layer: "top" | "bottom",
+  drawSoldermask = true,
+  colorOverrides?: Partial<PcbColorMap>,
+) {
+  const canvas = createCanvas(600, 600)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  drawer.setCameraBounds({ minX: -5, maxX: 5, minY: -5, maxY: 5 })
+  if (colorOverrides) {
+    drawer.configure({ colorOverrides })
+  }
+  drawer.drawElements(circuit, {
+    layers:
+      layer === "top"
+        ? ["top_copper", "top_silkscreen"]
+        : ["bottom_copper", "bottom_silkscreen"],
+    drawSoldermask,
+    drawSoldermaskTop: layer === "top",
+    drawSoldermaskBottom: layer === "bottom",
+  })
+  return {
+    canvas,
+    pixel(x: number, y: number) {
+      const [cx, cy] = applyToPoint(drawer.realToCanvasMat, [x, y])
+      return Array.from(
+        ctx.getImageData(Math.round(cx), Math.round(cy), 1, 1).data,
+      )
+    },
+  }
+}
+
+export function renderTranslucentVia(layer: "top" | "bottom") {
+  const canvas = createCanvas(200, 200)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  drawer.setCameraBounds({ minX: -2, maxX: 2, minY: -2, maxY: 2 })
+  drawer.configure({
+    colorOverrides: {
+      copper: {
+        ...DEFAULT_PCB_COLOR_MAP.copper,
+        top: "transparent",
+        bottom: "transparent",
+      },
+      drill: "transparent",
+      soldermaskOverCopper: {
+        top: "rgba(128,192,240,0.5)",
+        bottom: "rgba(128,192,240,0.5)",
+      },
+      soldermaskOverHole: {
+        top: "rgba(64,96,120,0.5)",
+        bottom: "rgba(64,96,120,0.5)",
+      },
+    },
+  })
+  drawer.drawElements(
+    [
+      {
+        type: "pcb_via",
+        pcb_via_id: "translucent_via",
+        x: 0,
+        y: 0,
+        outer_diameter: 2,
+        hole_diameter: 1,
+        layers: ["top", "bottom"],
+        tented_on_top: true,
+        tented_on_bottom: true,
+      },
+    ],
+    {
+      layers: [layer === "top" ? "top_copper" : "bottom_copper"],
+      drawSoldermask: true,
+      drawSoldermaskTop: layer === "top",
+      drawSoldermaskBottom: layer === "bottom",
+    },
+  )
+  const center = Array.from(ctx.getImageData(100, 100, 1, 1).data)
+  const ring = Array.from(ctx.getImageData(140, 100, 1, 1).data)
+  return { center, ring }
+}
