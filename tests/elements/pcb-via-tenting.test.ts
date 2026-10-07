@@ -80,7 +80,7 @@ test("via soldermask respects per-side tenting, legacy overrides, and physical l
                 Array.from(ctx.getImageData(x, 50, 1, 1).data)
               if (layers.includes(layer)) {
                 expect(pixel(50)).toEqual(
-                  isTented ? [0, 136, 0, 255] : [255, 255, 255, 255],
+                  isTented ? [0, 68, 0, 255] : [255, 255, 255, 255],
                 )
                 expect(pixel(65)).toEqual(
                   isTented

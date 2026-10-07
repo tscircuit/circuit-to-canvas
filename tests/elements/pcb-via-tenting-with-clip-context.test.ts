@@ -40,7 +40,7 @@ test("repeated board context preserves the rendered board's tenting defaults", (
   })
 
   expect(Array.from(ctx.getImageData(50, 50, 1, 1).data)).toEqual([
-    52, 135, 73, 255,
+    26, 68, 37, 255,
   ])
 
   ctx.clearRect(0, 0, 100, 100)

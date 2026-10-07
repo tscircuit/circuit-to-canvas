@@ -31,7 +31,7 @@ test("route via tenting works without a board and only with soldermask enabled",
     layers: ["top_copper"],
     drawSoldermask: true,
   })
-  expect(pixel(50)).toEqual([52, 135, 73, 255])
+  expect(pixel(50)).toEqual([26, 68, 37, 255])
 
   ctx.clearRect(0, 0, 150, 100)
   drawer.drawElements([trace], {

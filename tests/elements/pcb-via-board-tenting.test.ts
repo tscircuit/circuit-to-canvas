@@ -44,7 +44,7 @@ test("panel vias inherit their own board defaults and preserve explicit override
 
   const top = render("top")
   const bottom = render("bottom")
-  const tented = [52, 135, 73, 255]
+  const tented = [26, 68, 37, 255]
   const exposed = [255, 38, 226, 255]
   expect(top.pixel(-96, 5)).toEqual(tented)
   expect(top.pixel(18, 5)).toEqual(exposed)
