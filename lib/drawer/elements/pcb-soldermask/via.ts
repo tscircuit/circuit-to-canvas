@@ -1,5 +1,4 @@
 import type { PcbVia, PcbViaInput } from "circuit-json"
-import Color from "color"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
@@ -15,8 +14,16 @@ export function processViaSoldermask(params: {
   realToCanvasMat: Matrix
   layer: "top" | "bottom"
   soldermaskOverCopperColor: string
+  soldermaskOverHoleColor: string
 }): void {
-  const { ctx, via, realToCanvasMat, layer, soldermaskOverCopperColor } = params
+  const {
+    ctx,
+    via,
+    realToCanvasMat,
+    layer,
+    soldermaskOverCopperColor,
+    soldermaskOverHoleColor,
+  } = params
   if (!via.layers.includes(layer)) return
 
   const isTented = isViaTented(via, layer, ctx)
@@ -37,14 +44,8 @@ export function processViaSoldermask(params: {
     ctx.fillStyle = soldermaskOverCopperColor
     ctx.fill("evenodd")
 
-    const maskColor = Color(soldermaskOverCopperColor)
-    const holeColor = Color.rgb(
-      maskColor.red() / 2,
-      maskColor.green() / 2,
-      maskColor.blue() / 2,
-    ).alpha(maskColor.alpha())
     // Shade the hole beneath the mask without changing the drill geometry.
-    ctx.fillStyle = holeColor.string()
+    ctx.fillStyle = soldermaskOverHoleColor
     ctx.beginPath()
     ctx.arc(cx, cy, holeRadius, 0, Math.PI * 2)
     ctx.fill()

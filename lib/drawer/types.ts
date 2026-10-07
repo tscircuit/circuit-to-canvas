@@ -96,6 +96,10 @@ export interface PcbColorMap {
     top: string
     bottom: string
   }
+  soldermaskOverHole: {
+    top: string
+    bottom: string
+  }
   substrate: string
   courtyard: {
     top: string
@@ -136,6 +140,10 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
   soldermaskOverCopper: {
     top: "rgb(52, 135, 73)",
     bottom: "rgb(52, 135, 73)",
+  },
+  soldermaskOverHole: {
+    top: "rgb(26, 68, 37)",
+    bottom: "rgb(26, 68, 37)",
   },
   substrate: "rgb(201, 162, 110)",
   drill: "#FF26E2",

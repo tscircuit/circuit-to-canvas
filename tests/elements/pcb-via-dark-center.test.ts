@@ -2,24 +2,20 @@ import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
 import { applyToPoint } from "transformation-matrix"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
-import { DEFAULT_PCB_COLOR_MAP } from "../../lib/drawer/types"
+import { DEFAULT_PCB_COLOR_MAP, type PcbColorMap } from "../../lib/drawer/types"
 import { circuit } from "./pcb-via-dark-center.fixture"
 
 function render(
   layer: "top" | "bottom",
   drawSoldermask = true,
-  maskColor?: string,
+  colorOverrides?: Partial<PcbColorMap>,
 ) {
   const canvas = createCanvas(600, 600)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
   drawer.setCameraBounds({ minX: -5, maxX: 5, minY: -5, maxY: 5 })
-  if (maskColor) {
-    drawer.configure({
-      colorOverrides: {
-        soldermaskOverCopper: { top: maskColor, bottom: maskColor },
-      },
-    })
+  if (colorOverrides) {
+    drawer.configure({ colorOverrides })
   }
   drawer.drawElements(circuit, {
     layers:
@@ -71,22 +67,23 @@ for (const layer of ["top", "bottom"] as const) {
   })
 }
 
-test("center shading follows custom mask colors", () => {
-  for (const color of ["#80c0f0", "#ffffff", "#202020"]) {
-    const view = render("top", true, color)
-    const center = view.pixel(-2, 1.5)
-    const ring = view.pixel(-1.25, 1.5)
-    for (let channel = 0; channel < 3; channel++) {
-      expect(
-        Math.abs(center[channel]! - ring[channel]! / 2),
-      ).toBeLessThanOrEqual(1)
-    }
-    expect(center[3]).toBe(255)
+test("center shading uses per-side color overrides", () => {
+  const colorOverrides = {
+    soldermaskOverHole: { top: "#204060", bottom: "#604020" },
   }
+  const top = render("top", true, colorOverrides)
+  const bottom = render("bottom", true, colorOverrides)
+  expect(top.pixel(-2, 1.5)).toEqual([32, 64, 96, 255])
+  expect(bottom.pixel(2, 1.5)).toEqual([96, 64, 32, 255])
+  expect(top.pixel(-1.25, 1.5)).toEqual(render("top").pixel(-1.25, 1.5))
+  expect(bottom.pixel(2.75, 1.5)).toEqual(render("bottom").pixel(2.75, 1.5))
 })
 
 test("transparent mask colors do not add a dark center", () => {
-  const view = render("top", true, "transparent")
+  const view = render("top", true, {
+    soldermaskOverCopper: { top: "transparent", bottom: "transparent" },
+    soldermaskOverHole: { top: "transparent", bottom: "transparent" },
+  })
   const copper = render("top", false)
   const boardMask = view.pixel(0, 0)
   expect(view.pixel(-2, 1.5)).toEqual(boardMask)
@@ -110,6 +107,10 @@ for (const layer of ["top", "bottom"] as const) {
         soldermaskOverCopper: {
           top: "rgba(128,192,240,0.5)",
           bottom: "rgba(128,192,240,0.5)",
+        },
+        soldermaskOverHole: {
+          top: "rgba(64,96,120,0.5)",
+          bottom: "rgba(64,96,120,0.5)",
         },
       },
     })

@@ -27,6 +27,7 @@ test("via soldermask respects per-side tenting, legacy overrides, and physical l
                 colorOverrides: {
                   soldermask: { top: "#00ff00", bottom: "#00ff00" },
                   soldermaskOverCopper: { top: "#008800", bottom: "#008800" },
+                  soldermaskOverHole: { top: "#004400", bottom: "#004400" },
                   copper: {
                     ...DEFAULT_PCB_COLOR_MAP.copper,
                     top: "#ff0000",
