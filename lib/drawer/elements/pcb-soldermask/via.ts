@@ -33,36 +33,26 @@ export function processViaSoldermask(params: {
     ctx.fillStyle = soldermaskOverCopperColor
     ctx.fill()
 
-    if (!getViaBoard(via, ctx)?.default_via_plugged) {
-      const maskColor = Color(soldermaskOverCopperColor)
-      const holeColor = Color.rgb(
-        maskColor.red() / 2,
-        maskColor.green() / 2,
-        maskColor.blue() / 2,
-      ).alpha(maskColor.alpha())
-      // Shade the hole beneath the mask without changing the drill geometry.
-      ctx.fillStyle = holeColor.string()
-      ctx.beginPath()
-      ctx.arc(
-        cx,
-        cy,
-        (via.hole_diameter / 2) * Math.abs(realToCanvasMat.a),
-        0,
-        Math.PI * 2,
-      )
-      ctx.fill()
-    }
+    const maskColor = Color(soldermaskOverCopperColor)
+    const holeColor = Color.rgb(
+      maskColor.red() / 2,
+      maskColor.green() / 2,
+      maskColor.blue() / 2,
+    ).alpha(maskColor.alpha())
+    // Shade the hole beneath the mask without changing the drill geometry.
+    ctx.fillStyle = holeColor.string()
+    ctx.beginPath()
+    ctx.arc(
+      cx,
+      cy,
+      (via.hole_diameter / 2) * Math.abs(realToCanvasMat.a),
+      0,
+      Math.PI * 2,
+    )
+    ctx.fill()
   } else {
     cutPathFromSoldermask(ctx)
   }
-}
-
-function getViaBoard(via: PcbVia, ctx: CanvasContext) {
-  let board = ctx.boardOwnerMap?.get(via.pcb_via_id)
-  if (!ctx.boardOwnerMap?.has(via.pcb_via_id) && via.pcb_trace_id) {
-    board = ctx.boardOwnerMap?.get(via.pcb_trace_id)
-  }
-  return board
 }
 
 export function isViaTented(
@@ -70,7 +60,11 @@ export function isViaTented(
   layer: "top" | "bottom",
   ctx: CanvasContext,
 ): boolean {
-  const board = getViaBoard(via, ctx)
+  let board = ctx.boardOwnerMap?.get(via.pcb_via_id)
+  if (!ctx.boardOwnerMap?.has(via.pcb_via_id) && via.pcb_trace_id) {
+    board = ctx.boardOwnerMap?.get(via.pcb_trace_id)
+  }
+
   const tenting: PcbViaInput = via
   const viaTenting =
     layer === "top" ? tenting.tented_on_top : tenting.tented_on_bottom
