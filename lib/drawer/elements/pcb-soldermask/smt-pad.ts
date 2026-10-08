@@ -44,8 +44,16 @@ export function processSmtPadSoldermask(params: {
     ctx.fill()
   } else if (ml < 0 || mr < 0 || mt < 0 || mb < 0) {
     // Negative margin: open the inner copper area, then draw mask-over-copper ring
-    drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
-    cutPathFromSoldermask(ctx)
+    const hasOpening = drawPadShapePath({
+      ctx,
+      pad,
+      realToCanvasMat,
+      ml,
+      mr,
+      mt,
+      mb,
+    })
+    if (hasOpening) cutPathFromSoldermask(ctx)
 
     // Draw light green ring for negative margin
     drawNegativeMarginRingForPad({
@@ -77,7 +85,7 @@ function drawPadShapePath(params: {
   mr: number
   mt: number
   mb: number
-}): void {
+}): boolean {
   const { ctx, pad, realToCanvasMat, ml, mr, mt, mb } = params
   const rotation =
     pad.shape === "rotated_rect" || pad.shape === "rotated_pill"
@@ -99,6 +107,7 @@ function drawPadShapePath(params: {
     const scaledWidth = (pad.width + ml + mr) * Math.abs(realToCanvasMat.a)
     const scaledHeight = (pad.height + mt + mb) * Math.abs(realToCanvasMat.a)
     const scaledRadius = borderRadius * Math.abs(realToCanvasMat.a)
+    if (scaledWidth <= 0 || scaledHeight <= 0) return false
 
     ctx.save()
     ctx.translate(cx, cy)
@@ -116,14 +125,17 @@ function drawPadShapePath(params: {
       radius: scaledRadius,
     })
     ctx.restore()
+    return true
   } else if (pad.shape === "circle") {
     const avgMargin = (ml + mr + mt + mb) / 4
     const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
     const scaledRadius = (pad.radius + avgMargin) * Math.abs(realToCanvasMat.a)
+    if (scaledRadius <= 0) return false
 
     ctx.beginPath()
     ctx.arc(cx, cy, scaledRadius, 0, Math.PI * 2)
     ctx.closePath()
+    return true
   } else if (pad.shape === "pill" || pad.shape === "rotated_pill") {
     const avgMargin = (ml + mr) / 2
     const [cx, cy] = applyToPoint(realToCanvasMat, [pad.x, pad.y])
@@ -131,6 +143,7 @@ function drawPadShapePath(params: {
       (pad.width + avgMargin * 2) * Math.abs(realToCanvasMat.a)
     const scaledHeight =
       (pad.height + avgMargin * 2) * Math.abs(realToCanvasMat.a)
+    if (scaledWidth <= 0 || scaledHeight <= 0) return false
 
     ctx.save()
     ctx.translate(cx, cy)
@@ -147,6 +160,7 @@ function drawPadShapePath(params: {
       height: scaledHeight,
     })
     ctx.restore()
+    return true
   } else if (pad.shape === "polygon" && pad.points && pad.points.length >= 3) {
     const avgMargin = (ml + mr + mt + mb) / 4
     const points =
@@ -158,7 +172,10 @@ function drawPadShapePath(params: {
 
     ctx.beginPath()
     drawPolygonPath({ ctx, points: canvasPoints })
+    return true
   }
+
+  return false
 }
 
 function drawNegativeMarginRingForPad(params: {
