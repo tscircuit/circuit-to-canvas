@@ -184,6 +184,10 @@ export class CircuitToCanvasDrawer {
           ...this.colorMap.soldermaskOverCopper,
           ...config.colorOverrides.soldermaskOverCopper,
         },
+        soldermaskOverHole: {
+          ...this.colorMap.soldermaskOverHole,
+          ...config.colorOverrides.soldermaskOverHole,
+        },
       }
     }
   }

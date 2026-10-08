@@ -14,8 +14,16 @@ export function processViaSoldermask(params: {
   realToCanvasMat: Matrix
   layer: "top" | "bottom"
   soldermaskOverCopperColor: string
+  soldermaskOverHoleColor: string
 }): void {
-  const { ctx, via, realToCanvasMat, layer, soldermaskOverCopperColor } = params
+  const {
+    ctx,
+    via,
+    realToCanvasMat,
+    layer,
+    soldermaskOverCopperColor,
+    soldermaskOverHoleColor,
+  } = params
   if (!via.layers.includes(layer)) return
 
   const isTented = isViaTented(via, layer, ctx)
@@ -28,8 +36,18 @@ export function processViaSoldermask(params: {
   ctx.arc(cx, cy, scaledRadius, 0, Math.PI * 2)
   ctx.closePath()
   if (isTented) {
-    // Restore mask over the entire via, including drill cutouts from traces.
+    const holeRadius = (via.hole_diameter / 2) * Math.abs(realToCanvasMat.a)
+    // Paint the ring and center separately so translucent mask alpha is applied once.
+    ctx.moveTo(cx + holeRadius, cy)
+    ctx.arc(cx, cy, holeRadius, 0, Math.PI * 2)
+    ctx.closePath()
     ctx.fillStyle = soldermaskOverCopperColor
+    ctx.fill("evenodd")
+
+    // Shade the hole beneath the mask without changing the drill geometry.
+    ctx.fillStyle = soldermaskOverHoleColor
+    ctx.beginPath()
+    ctx.arc(cx, cy, holeRadius, 0, Math.PI * 2)
     ctx.fill()
   } else {
     cutPathFromSoldermask(ctx)

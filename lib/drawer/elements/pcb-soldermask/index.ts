@@ -58,6 +58,8 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   const soldermaskColor = colorMap.soldermask[layer] ?? colorMap.soldermask.top
   const soldermaskOverCopperColor =
     colorMap.soldermaskOverCopper[layer] ?? colorMap.soldermaskOverCopper.top
+  const soldermaskOverHoleColor =
+    colorMap.soldermaskOverHole[layer] ?? colorMap.soldermaskOverHole.top
   const vias = elements.filter((el): el is PcbVia => el.type === "pcb_via")
   const platedHoles = elements.filter(
     (el): el is PcbPlatedHole => el.type === "pcb_plated_hole",
@@ -133,6 +135,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       realToCanvasMat,
       layer,
       soldermaskOverCopperColor,
+      soldermaskOverHoleColor,
     })
   }
 
@@ -143,6 +146,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       element,
       realToCanvasMat,
       soldermaskOverCopperColor,
+      soldermaskOverHoleColor,
       layer,
     })
   }
@@ -159,10 +163,17 @@ function processElementSoldermask(params: {
   element: AnyCircuitElement
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
+  soldermaskOverHoleColor: string
   layer: "top" | "bottom"
 }): void {
-  const { ctx, element, realToCanvasMat, soldermaskOverCopperColor, layer } =
-    params
+  const {
+    ctx,
+    element,
+    realToCanvasMat,
+    soldermaskOverCopperColor,
+    soldermaskOverHoleColor,
+    layer,
+  } = params
 
   if (element.type === "pcb_smtpad") {
     processSmtPadSoldermask({
@@ -195,6 +206,7 @@ function processElementSoldermask(params: {
       realToCanvasMat,
       layer,
       soldermaskOverCopperColor,
+      soldermaskOverHoleColor,
     })
   } else if (element.type === "pcb_cutout") {
     processCutoutSoldermask({

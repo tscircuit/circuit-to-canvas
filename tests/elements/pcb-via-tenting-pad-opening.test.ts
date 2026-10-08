@@ -41,11 +41,11 @@ test("pad openings clip via tenting regardless of element order", async () => {
   const top = render("top")
   const bottom = render("bottom")
   expect(top.pixel(1.75, -0.5)).toEqual(top.pixel(1, -0.5))
-  expect(top.pixel(2.35, -0.5)).toEqual(top.pixel(-3.5, -0.5))
+  expect(top.pixel(2.35, -0.5)).toEqual(top.pixel(-3.15, -0.5))
   expect(top.pixel(2.1, -0.5)).toEqual(top.pixel(-3.5, -0.5))
   expect(top.pixel(1, -0.5)).not.toEqual(top.pixel(-3.5, -0.5))
   expect(bottom.pixel(1.75, -0.5)).toEqual(bottom.pixel(1, -0.5))
-  expect(bottom.pixel(2.35, -0.5)).toEqual(bottom.pixel(-3.5, -0.5))
+  expect(bottom.pixel(2.35, -0.5)).toEqual(bottom.pixel(-3.15, -0.5))
   expect(bottom.pixel(2.1, -0.5)).toEqual(bottom.pixel(-3.5, -0.5))
   expect(bottom.pixel(1, -0.5)).not.toEqual(bottom.pixel(-3.5, -0.5))
   expect(render("top", circuit.toReversed()).pixel(1.75, -0.5)).toEqual(

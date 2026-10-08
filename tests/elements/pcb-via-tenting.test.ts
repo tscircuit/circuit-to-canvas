@@ -27,6 +27,7 @@ test("via soldermask respects per-side tenting, legacy overrides, and physical l
                 colorOverrides: {
                   soldermask: { top: "#00ff00", bottom: "#00ff00" },
                   soldermaskOverCopper: { top: "#008800", bottom: "#008800" },
+                  soldermaskOverHole: { top: "#004400", bottom: "#004400" },
                   copper: {
                     ...DEFAULT_PCB_COLOR_MAP.copper,
                     top: "#ff0000",
@@ -80,7 +81,7 @@ test("via soldermask respects per-side tenting, legacy overrides, and physical l
                 Array.from(ctx.getImageData(x, 50, 1, 1).data)
               if (layers.includes(layer)) {
                 expect(pixel(50)).toEqual(
-                  isTented ? [0, 136, 0, 255] : [255, 255, 255, 255],
+                  isTented ? [0, 68, 0, 255] : [255, 255, 255, 255],
                 )
                 expect(pixel(65)).toEqual(
                   isTented
