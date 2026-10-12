@@ -14,6 +14,8 @@ export interface DrawPcbViaParams {
 export function drawPcbVia(params: DrawPcbViaParams): void {
   const { ctx, via, realToCanvasMat, colorMap, layer } = params
 
+  if (layer && !via.layers.includes(layer)) return
+
   // Draw outer copper ring
   drawCircle({
     ctx,

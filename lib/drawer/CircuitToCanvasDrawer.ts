@@ -291,11 +291,16 @@ export class CircuitToCanvasDrawer {
           element.type === "pcb_solder_paste" && element.layer === "bottom",
       )
     const renderTopLayerOverlay = renderTopSoldermask || renderTopSolderPaste
+    // An unfiltered copper view includes every via, including buried vias.
+    // Keep the default top color separate from physical layer visibility.
+    const viaLayer = options.layers?.length ? layer : undefined
+    const isViaVisible = (via: PcbVia) =>
+      !viaLayer || isOnCopperLayer(via, viaLayer)
     const drawableVias = elements.filter(
       (el): el is PcbVia =>
         shouldDrawElement(el, options) &&
         el.type === "pcb_via" &&
-        isOnCopperLayer(el, layer),
+        isViaVisible(el),
     )
     const drawableHoles = elements.filter(
       (el): el is PcbHole =>
@@ -421,13 +426,13 @@ export class CircuitToCanvasDrawer {
           })
         }
 
-        if (element.type === "pcb_via" && isOnCopperLayer(element, layer)) {
+        if (element.type === "pcb_via" && isViaVisible(element)) {
           drawPcbVia({
             ctx: this.ctx,
             via: element as PcbVia,
             realToCanvasMat: this.realToCanvasMat,
             colorMap: this.colorMap,
-            layer,
+            layer: viaLayer,
           })
         }
       }
@@ -594,14 +599,14 @@ export class CircuitToCanvasDrawer {
       if (
         element.type === "pcb_via" &&
         !renderTopLayerOverlay &&
-        isOnCopperLayer(element, layer)
+        isViaVisible(element)
       ) {
         drawPcbVia({
           ctx: this.ctx,
           via: element as PcbVia,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
-          layer,
+          layer: viaLayer,
         })
       }
     }
