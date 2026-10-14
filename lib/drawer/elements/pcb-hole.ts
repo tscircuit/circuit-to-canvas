@@ -41,6 +41,13 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
       ? Math.abs(soldermaskMargin)
       : 0
 
+  const minDimension =
+    "hole_diameter" in hole
+      ? hole.hole_diameter
+      : Math.min(hole.hole_width, hole.hole_height)
+  // A fully inset hole has no opening; negative dimensions are invalid in Canvas.
+  if (minDimension <= holeInset * 2) return
+
   if (hole.hole_shape === "circle") {
     drawCircle({
       ctx,

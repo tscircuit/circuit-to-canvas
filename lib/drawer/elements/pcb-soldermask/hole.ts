@@ -68,6 +68,15 @@ function drawHoleShapePath(params: {
   const { ctx, hole, realToCanvasMat, margin } = params
   const rotation = getHoleRotation(hole)
 
+  // Leave an empty path when the inset closes the opening, so callers cannot
+  // accidentally fill or cut the preceding element's path.
+  ctx.beginPath()
+  const minDimension =
+    "hole_diameter" in hole
+      ? hole.hole_diameter
+      : Math.min(hole.hole_width, hole.hole_height)
+  if (minDimension + margin * 2 <= 0) return
+
   if (hole.hole_shape === "circle") {
     const [cx, cy] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const scaledRadius =

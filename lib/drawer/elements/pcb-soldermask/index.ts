@@ -139,7 +139,22 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     })
   }
 
-  // Step 3: Process remaining elements - draw cutouts and openings as needed
+  // Step 3: Draw pad masks before drill openings. Negative and mixed margins
+  // paint opaque copper, which must not cover an earlier hole or exposed via.
+  for (const element of elements) {
+    if (element.type !== "pcb_smtpad") continue
+    processSmtPadSoldermask({
+      ctx: soldermaskCtx,
+      pad: element,
+      realToCanvasMat,
+      soldermaskOverCopperColor,
+      copperColor: colorMap.copper[layer],
+      substrateColor: colorMap.substrate,
+      layer,
+    })
+  }
+
+  // Step 4: Apply hole, exposed-via, and cutout openings after all pad fills.
   for (const element of elements) {
     processElementSoldermask({
       ctx: soldermaskCtx,
@@ -147,7 +162,6 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       realToCanvasMat,
       soldermaskOverCopperColor,
       soldermaskOverHoleColor,
-      copperColor: colorMap.copper[layer],
       substrateColor: colorMap.substrate,
       layer,
     })
@@ -166,7 +180,6 @@ function processElementSoldermask(params: {
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
   soldermaskOverHoleColor: string
-  copperColor: string
   substrateColor: string
   layer: "top" | "bottom"
 }): void {
@@ -176,22 +189,11 @@ function processElementSoldermask(params: {
     realToCanvasMat,
     soldermaskOverCopperColor,
     soldermaskOverHoleColor,
-    copperColor,
     substrateColor,
     layer,
   } = params
 
-  if (element.type === "pcb_smtpad") {
-    processSmtPadSoldermask({
-      ctx,
-      pad: element,
-      substrateColor,
-      copperColor,
-      realToCanvasMat,
-      soldermaskOverCopperColor,
-      layer,
-    })
-  } else if (element.type === "pcb_plated_hole") {
+  if (element.type === "pcb_plated_hole") {
     processPlatedHoleSoldermask({
       ctx,
       hole: element,
