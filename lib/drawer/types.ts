@@ -131,7 +131,7 @@ export const DEFAULT_PCB_COLOR_MAP: PcbColorMap = {
   },
   soldermaskWithCopperUnderneath: {
     top: "rgb(18, 82, 50)",
-    bottom: "rgb(18, 82, 50)",
+    bottom: "rgb(77, 127, 196)",
   },
   soldermask: {
     top: "rgb(12, 55, 33)",

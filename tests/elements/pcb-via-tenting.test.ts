@@ -91,7 +91,7 @@ test("via soldermask respects per-side tenting, legacy overrides, and physical l
                       : [0, 0, 255, 255],
                 )
               } else {
-                expect(pixel(65)).toEqual([0, 255, 0, 204])
+                expect(pixel(65)).toEqual([0, 255, 0, 255])
               }
               if (
                 layers.length === 2 &&

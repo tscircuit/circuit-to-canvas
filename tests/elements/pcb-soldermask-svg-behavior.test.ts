@@ -4,6 +4,8 @@ import { Resvg } from "@resvg/resvg-js"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import { drawText } from "../../lib/drawer/shapes/text"
+import { identity } from "transformation-matrix"
 
 const viewport = { minX: -2, maxX: 2, minY: -2, maxY: 2 }
 const board: AnyCircuitElement = {
@@ -188,18 +190,44 @@ for (const kind of kinds) {
   })
 }
 
-test("base board mask and covered copper use SVG's opacity and colors", async () => {
-  const { canvas, reference } = await renderPair(
-    [board, { ...element("pad", "top"), is_covered_with_solder_mask: true }],
-    "top",
-  )
-  for (const x of [200, 340]) {
-    const actual = canvas.getContext("2d").getImageData(x, 200, 1, 1).data
-    const expected = reference.getContext("2d").getImageData(x, 200, 1, 1).data
-    for (let channel = 0; channel < 4; channel++)
+test("coverage and margins preserve Canvas colors and opaque board masks", async () => {
+  for (const layer of ["top", "bottom"] as const) {
+    for (const drawBoardMaterial of [false, true]) {
+      for (const kind of kinds) {
+        const { canvas } = await renderPair(
+          [
+            board,
+            {
+              ...element(kind, layer),
+              is_covered_with_solder_mask: true,
+              soldermask_margin: -0.25,
+            },
+          ],
+          layer,
+          true,
+          drawBoardMaterial,
+        )
+        const ctx = canvas.getContext("2d")
+        expect(Array.from(ctx.getImageData(290, 200, 1, 1).data)).toEqual([
+          52, 135, 73, 255,
+        ])
+        expect(Array.from(ctx.getImageData(340, 200, 1, 1).data)).toEqual([
+          12, 55, 33, 255,
+        ])
+      }
+      const { canvas } = await renderPair(
+        [
+          board,
+          { ...element("pad", layer), is_covered_with_solder_mask: true },
+        ],
+        layer,
+        true,
+        drawBoardMaterial,
+      )
       expect(
-        Math.abs(actual[channel]! - expected[channel]!),
-      ).toBeLessThanOrEqual(1)
+        Array.from(canvas.getContext("2d").getImageData(200, 200, 1, 1).data),
+      ).toEqual([52, 135, 73, 255])
+    }
   }
 })
 
@@ -497,14 +525,23 @@ test("soldermask flag and margin comparison against published circuit-to-svg", a
   const ctx = comparison.getContext("2d")
   ctx.fillStyle = "#171c22"
   ctx.fillRect(0, 0, comparison.width, comparison.height)
-  ctx.fillStyle = "white"
-  ctx.font = "24px sans-serif"
-  ctx.fillText("circuit-to-svg 0.0.450 (published)", 30, 38)
-  ctx.fillText("circuit-to-canvas", 750, 38)
-  ctx.font = "18px sans-serif"
+  // Stroke the bundled alphabet so snapshots do not depend on OS fonts.
+  const label = (text: string, x: number, y: number, fontSize = 18) =>
+    drawText({
+      ctx,
+      text,
+      x,
+      y,
+      fontSize,
+      color: "white",
+      realToCanvasMat: identity(),
+      anchorAlignment: "bottom_left",
+    })
+  label("circuit-to-svg 0.0.450 (published)", 30, 38, 24)
+  label("circuit-to-canvas", 750, 38, 24)
   for (const [column, margin] of [-0.25, 0, 0.25].entries()) {
     for (const offset of [0, 720])
-      ctx.fillText(
+      label(
         `${margin > 0 ? "+" : ""}${margin} mm`,
         offset + 230 + column * 160,
         76,
@@ -514,8 +551,8 @@ test("soldermask flag and margin comparison against published circuit-to-svg", a
     for (const [flagIndex, covered] of [undefined, false, true].entries()) {
       const y = 95 + (kindIndex * 3 + flagIndex) * 110
       for (const offset of [0, 720]) {
-        ctx.fillText(kind, offset + 24, y + 40)
-        ctx.fillText(`flag: ${covered ?? "missing"}`, offset + 24, y + 66)
+        label(kind, offset + 24, y + 40)
+        label(`flag: ${covered ?? "missing"}`, offset + 24, y + 66)
       }
       for (const [column, margin] of [-0.25, 0, 0.25].entries()) {
         const item = {
@@ -532,11 +569,11 @@ test("soldermask flag and margin comparison against published circuit-to-svg", a
       }
     }
   }
-  ctx.font = "15px sans-serif"
-  ctx.fillText(
-    "Identical circuit JSON; soldermask enabled in both; no patched SVG reference.",
+  label(
+    "Same circuit JSON and soldermask behavior; each renderer keeps its own colors.",
     24,
     1105,
+    15,
   )
   await expect(comparison.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
