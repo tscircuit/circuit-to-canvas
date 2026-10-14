@@ -33,12 +33,13 @@ export function drawPcbHole(params: DrawPcbHoleParams): void {
     drawSoldermask = false,
   } = params
 
-  if (drawSoldermask && hole.is_covered_with_solder_mask === true) {
-    return
-  }
-
   // For negative margins, draw smaller hole (inset by margin amount)
-  const holeInset = soldermaskMargin < 0 ? Math.abs(soldermaskMargin) : 0
+  const holeInset =
+    drawSoldermask &&
+    hole.is_covered_with_solder_mask === true &&
+    soldermaskMargin < 0
+      ? Math.abs(soldermaskMargin)
+      : 0
 
   if (hole.hole_shape === "circle") {
     drawCircle({

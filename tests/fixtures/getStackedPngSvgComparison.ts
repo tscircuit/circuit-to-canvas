@@ -58,6 +58,7 @@ export async function getStackedPngSvgComparison(
     width,
     height,
     viewport,
+    showSolderMask: drawSoldermask,
   })
   const svgPng = svgToPng(svg)
 

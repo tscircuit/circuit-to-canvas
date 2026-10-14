@@ -28,17 +28,15 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
     drawSoldermask,
   } = params
 
-  // Skip holes that are fully covered with soldermask when soldermask is enabled,
-  // as they should have been handled by soldermask processing.
-  // When soldermask is disabled, fully covered holes should be drawn as normal copper.
-  if (hole.is_covered_with_solder_mask === true && drawSoldermask) {
-    return
-  }
-
   const copperColor = colorMap.copper[params.layer ?? "top"]
 
   // For negative margins, draw smaller copper (inset by margin amount)
-  const copperInset = soldermaskMargin < 0 ? Math.abs(soldermaskMargin) : 0
+  const copperInset =
+    drawSoldermask &&
+    hole.is_covered_with_solder_mask === true &&
+    soldermaskMargin < 0
+      ? Math.abs(soldermaskMargin)
+      : 0
 
   if (hole.shape === "circle") {
     // Draw outer copper ring (smaller if negative margin)

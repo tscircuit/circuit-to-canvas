@@ -15,22 +15,26 @@ export function processPlatedHoleSoldermask(params: {
   hole: PcbPlatedHole
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
+  substrateColor: string
   layer: "top" | "bottom"
 }): void {
-  const { ctx, hole, realToCanvasMat, soldermaskOverCopperColor, layer } =
-    params
+  const {
+    ctx,
+    hole,
+    realToCanvasMat,
+    soldermaskOverCopperColor,
+    substrateColor,
+    layer,
+  } = params
   // Check if this hole is on the current layer
   if (hole.layers && !hole.layers.includes(layer)) return
 
   const isCoveredWithSoldermask = hole.is_covered_with_solder_mask === true
-  const margin = hole.soldermask_margin ?? 0
+  // Like circuit-to-svg, holes only use margins when coverage is explicit.
+  // A zero margin leaves the hole exposed, even when the flag is true.
+  const margin = isCoveredWithSoldermask ? (hole.soldermask_margin ?? 0) : 0
 
-  if (isCoveredWithSoldermask) {
-    // Draw light green over the entire hole copper ring
-    ctx.fillStyle = soldermaskOverCopperColor
-    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    ctx.fill()
-  } else if (margin < 0) {
+  if (margin < 0) {
     // Negative margin: open the inner copper area, then draw mask-over-copper ring
     drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
     cutPathFromSoldermask(ctx)
@@ -43,8 +47,11 @@ export function processPlatedHoleSoldermask(params: {
       margin,
     })
   } else if (margin > 0) {
-    // Positive margin: cut larger opening from the soldermask.
+    // Preserve the substrate border even when board material is hidden.
+    ctx.fillStyle = substrateColor
     drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
+    ctx.fill()
+    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     cutPathFromSoldermask(ctx)
   } else {
     // Zero margin: cut pad opening from the soldermask.
@@ -109,7 +116,8 @@ function drawPlatedHoleShapePath(params: {
     const rectPadHeight =
       (hole.rect_pad_height + margin * 2) * Math.abs(realToCanvasMat.a)
     const rectPadCornerRadius =
-      (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
+      Math.max(0, (hole.rect_border_radius ?? 0) + margin) *
+      Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
     drawRoundedRectPath({
@@ -128,7 +136,8 @@ function drawPlatedHoleShapePath(params: {
     const rectPadHeight =
       (hole.rect_pad_height + margin * 2) * Math.abs(realToCanvasMat.a)
     const rectPadCornerRadius =
-      (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
+      Math.max(0, (hole.rect_border_radius ?? 0) + margin) *
+      Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
     drawRoundedRectPath({
@@ -146,7 +155,8 @@ function drawPlatedHoleShapePath(params: {
     const rectPadHeight =
       (hole.rect_pad_height + margin * 2) * Math.abs(realToCanvasMat.a)
     const rectPadCornerRadius =
-      (hole.rect_border_radius ?? 0) * Math.abs(realToCanvasMat.a)
+      Math.max(0, (hole.rect_border_radius ?? 0) + margin) *
+      Math.abs(realToCanvasMat.a)
 
     ctx.beginPath()
     drawRoundedRectPath({

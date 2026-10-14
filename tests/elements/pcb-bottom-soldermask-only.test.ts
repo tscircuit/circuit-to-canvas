@@ -43,6 +43,7 @@ test("render bottom soldermask layer with openings", async () => {
       width: 2.8,
       height: 1,
       radius: 0.5,
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.15,
     },
     {
@@ -64,6 +65,7 @@ test("render bottom soldermask layer with openings", async () => {
       outer_diameter: 2,
       hole_diameter: 1,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.15,
     },
     {
@@ -73,6 +75,7 @@ test("render bottom soldermask layer with openings", async () => {
       x: -4,
       y: -2,
       hole_diameter: 1.2,
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.1,
     },
     {
@@ -92,6 +95,7 @@ test("render bottom soldermask layer with openings", async () => {
       y: -2,
       width: 2,
       height: 1.2,
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.2,
     },
   ]

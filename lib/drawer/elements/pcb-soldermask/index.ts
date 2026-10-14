@@ -38,7 +38,7 @@ export interface DrawPcbSoldermaskParams {
  * 2. For each element that needs an opening:
  *    - If positive/zero margin: subtract opening shape from soldermask
  *    - If negative margin: subtract inner opening and draw soldermask-over-copper ring
- * 3. For elements with is_covered_with_soldermask: draw soldermask-over-copper on top
+ * 3. Covered SMT pads with zero margins remain fully masked; holes remain open.
  */
 export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   const { ctx, realToCanvasMat, colorMap, layer, drawSoldermask } = params
@@ -68,6 +68,10 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   const soldermaskCtx =
     createDrawingLayerContext(ctx, ctx.canvas.width, ctx.canvas.height) ?? ctx
 
+  // Match SVG's translucent board mask; element mask overlays remain opaque.
+  soldermaskCtx.save()
+  soldermaskCtx.globalAlpha = 0.8
+
   // Step 1: Draw base soldermask surfaces (panel and boards).
   if (panel) {
     drawPanelSoldermask({
@@ -82,6 +86,7 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
   if (panel && boards.length > 0) {
     soldermaskCtx.save()
     soldermaskCtx.globalCompositeOperation = "destination-out"
+    soldermaskCtx.globalAlpha = 1
     for (const board of boards) {
       drawBoardSoldermask({
         ctx: soldermaskCtx,
@@ -101,6 +106,8 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       soldermaskColor,
     })
   }
+
+  soldermaskCtx.restore()
 
   // Step 2: Draw soldermask over traces and pours first so pads can open over them.
   for (const element of elements) {
@@ -147,6 +154,11 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
       realToCanvasMat,
       soldermaskOverCopperColor,
       soldermaskOverHoleColor,
+      soldermaskWithCopperUnderneathColor:
+        colorMap.soldermaskWithCopperUnderneath[layer],
+      copperColor: colorMap.copper[layer],
+      substrateColor: colorMap.substrate,
+      soldermaskColor,
       layer,
     })
   }
@@ -164,6 +176,10 @@ function processElementSoldermask(params: {
   realToCanvasMat: Matrix
   soldermaskOverCopperColor: string
   soldermaskOverHoleColor: string
+  soldermaskWithCopperUnderneathColor: string
+  copperColor: string
+  substrateColor: string
+  soldermaskColor: string
   layer: "top" | "bottom"
 }): void {
   const {
@@ -172,6 +188,10 @@ function processElementSoldermask(params: {
     realToCanvasMat,
     soldermaskOverCopperColor,
     soldermaskOverHoleColor,
+    soldermaskWithCopperUnderneathColor,
+    copperColor,
+    substrateColor,
+    soldermaskColor,
     layer,
   } = params
 
@@ -179,24 +199,28 @@ function processElementSoldermask(params: {
     processSmtPadSoldermask({
       ctx,
       pad: element,
+      substrateColor,
+      copperColor,
       realToCanvasMat,
-      soldermaskOverCopperColor,
+      soldermaskOverCopperColor: soldermaskWithCopperUnderneathColor,
       layer,
     })
   } else if (element.type === "pcb_plated_hole") {
     processPlatedHoleSoldermask({
       ctx,
       hole: element,
+      substrateColor,
       realToCanvasMat,
-      soldermaskOverCopperColor,
+      soldermaskOverCopperColor: soldermaskWithCopperUnderneathColor,
       layer,
     })
   } else if (element.type === "pcb_hole") {
     processHoleSoldermask({
       ctx,
       hole: element,
+      substrateColor,
       realToCanvasMat,
-      soldermaskOverCopperColor,
+      soldermaskOverCopperColor: soldermaskColor,
     })
   } else if (element.type === "pcb_via") {
     if (isViaTented(element, layer, ctx)) return

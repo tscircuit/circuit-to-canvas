@@ -30,6 +30,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       hole_diameter: 1,
       layers: ["top", "bottom"],
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.2,
     },
     // Circle with negative margin (spacing around copper, copper visible)
@@ -43,6 +44,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       hole_diameter: 1,
       layers: ["top", "bottom"],
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.15,
     },
     // Oval with positive margin
@@ -59,6 +61,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       layers: ["top", "bottom"],
       ccw_rotation: 0,
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.15,
     },
     // Oval with negative margin
@@ -75,6 +78,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       layers: ["top", "bottom"],
       ccw_rotation: 0,
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.2,
     },
     // Pill with positive margin
@@ -91,6 +95,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       layers: ["top", "bottom"],
       ccw_rotation: 0,
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.1,
     },
     // Pill with negative margin
@@ -107,6 +112,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       layers: ["top", "bottom"],
       ccw_rotation: 0,
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.12,
     },
     // Rectangular pad with circular hole - positive margin
@@ -122,6 +128,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       hole_diameter: 1,
       layers: ["top", "bottom"],
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.15,
     },
     // Rectangular pad with circular hole - negative margin
@@ -137,6 +144,7 @@ test("draw plated holes with positive and negative soldermask margins", async ()
       hole_diameter: 1,
       layers: ["top", "bottom"],
 
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.1,
     },
     // Silkscreen labels for positive margin holes (top row)

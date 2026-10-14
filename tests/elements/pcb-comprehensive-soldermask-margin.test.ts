@@ -353,6 +353,7 @@ test("comprehensive soldermask margin test", async () => {
       height: 1,
       ccw_rotation: 30,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 2: Polygon SMT Pad
@@ -369,6 +370,7 @@ test("comprehensive soldermask margin test", async () => {
         { x: col.polygon - 1, y: row.positiveMargin + 3 },
         { x: col.polygon - 2, y: row.positiveMargin + 1 },
       ],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 3: Pill SMT Pad
@@ -382,6 +384,7 @@ test("comprehensive soldermask margin test", async () => {
       height: 1,
       radius: 0.5,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 4: Rotated Pill SMT Pad
@@ -396,6 +399,7 @@ test("comprehensive soldermask margin test", async () => {
       radius: 0.5,
       ccw_rotation: 30,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 5: Circle SMT Pad
@@ -407,6 +411,7 @@ test("comprehensive soldermask margin test", async () => {
       y: row.positiveMargin,
       radius: 1,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 6: Rect SMT Pad
@@ -419,6 +424,7 @@ test("comprehensive soldermask margin test", async () => {
       width: 2,
       height: 2,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 7: Circle Plated Hole
@@ -431,6 +437,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_diameter: 1,
       outer_diameter: 2,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 8: Oval Plated Hole
@@ -446,6 +453,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_height: 0.8,
       ccw_rotation: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 9: Pill Plated Hole
@@ -461,6 +469,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_height: 0.8,
       ccw_rotation: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 10: Circular Hole with Rect Pad
@@ -478,6 +487,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_x: 0,
       hole_offset_y: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 11: Pill Hole with Rect Pad
@@ -496,6 +506,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_x: 0,
       hole_offset_y: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 12: Rotated Pill Hole with Rect Pad
@@ -516,6 +527,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_x: 0,
       hole_offset_y: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 13: Hole with Polygon Pad
@@ -531,6 +543,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_y: 0,
       pad_outline: polyPadOutline,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 14: Circle Hole
@@ -541,6 +554,7 @@ test("comprehensive soldermask margin test", async () => {
       x: col.circleHole,
       y: row.positiveMargin,
       hole_diameter: 1,
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 15: Oval Hole
@@ -552,6 +566,7 @@ test("comprehensive soldermask margin test", async () => {
       y: row.positiveMargin,
       hole_width: 2,
       hole_height: 1,
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
     // Column 16: Pill Hole
@@ -563,6 +578,7 @@ test("comprehensive soldermask margin test", async () => {
       y: row.positiveMargin,
       hole_width: 2,
       hole_height: 1,
+      is_covered_with_solder_mask: true,
       soldermask_margin: 0.5,
     },
 
@@ -581,6 +597,7 @@ test("comprehensive soldermask margin test", async () => {
       height: 1,
       ccw_rotation: 30,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 2: Polygon SMT Pad
@@ -597,6 +614,7 @@ test("comprehensive soldermask margin test", async () => {
         { x: col.polygon - 1, y: row.negativeMargin + 3 },
         { x: col.polygon - 2, y: row.negativeMargin + 1 },
       ],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 3: Pill SMT Pad
@@ -610,6 +628,7 @@ test("comprehensive soldermask margin test", async () => {
       height: 1,
       radius: 0.5,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 4: Rotated Pill SMT Pad
@@ -624,6 +643,7 @@ test("comprehensive soldermask margin test", async () => {
       radius: 0.5,
       ccw_rotation: 30,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 5: Circle SMT Pad
@@ -635,6 +655,7 @@ test("comprehensive soldermask margin test", async () => {
       y: row.negativeMargin,
       radius: 1,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 6: Rect SMT Pad
@@ -647,6 +668,7 @@ test("comprehensive soldermask margin test", async () => {
       width: 2,
       height: 2,
       layer: "top",
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 7: Circle Plated Hole
@@ -659,6 +681,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_diameter: 1,
       outer_diameter: 2,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 8: Oval Plated Hole
@@ -674,6 +697,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_height: 0.8,
       ccw_rotation: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 9: Pill Plated Hole
@@ -689,6 +713,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_height: 0.8,
       ccw_rotation: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 10: Circular Hole with Rect Pad
@@ -706,6 +731,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_x: 0,
       hole_offset_y: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 11: Pill Hole with Rect Pad
@@ -724,6 +750,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_x: 0,
       hole_offset_y: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 12: Rotated Pill Hole with Rect Pad
@@ -744,6 +771,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_x: 0,
       hole_offset_y: 0,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 13: Hole with Polygon Pad
@@ -759,6 +787,7 @@ test("comprehensive soldermask margin test", async () => {
       hole_offset_y: 0,
       pad_outline: polyPadOutline,
       layers: ["top", "bottom"],
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 14: Circle Hole
@@ -769,6 +798,7 @@ test("comprehensive soldermask margin test", async () => {
       x: col.circleHole,
       y: row.negativeMargin,
       hole_diameter: 1,
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 15: Oval Hole
@@ -780,6 +810,7 @@ test("comprehensive soldermask margin test", async () => {
       y: row.negativeMargin,
       hole_width: 2,
       hole_height: 1,
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
     // Column 16: Pill Hole
@@ -791,6 +822,7 @@ test("comprehensive soldermask margin test", async () => {
       y: row.negativeMargin,
       hole_width: 2,
       hole_height: 1,
+      is_covered_with_solder_mask: true,
       soldermask_margin: -0.3,
     },
 
