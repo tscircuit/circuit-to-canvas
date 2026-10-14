@@ -49,11 +49,15 @@ const board: AnyCircuitElement = {
   material: "fr4",
 }
 
-function render(
-  elements: AnyCircuitElement[],
-  layer: "top" | "bottom",
+function render({
+  elements,
+  layer,
   drawSoldermask = true,
-) {
+}: {
+  elements: AnyCircuitElement[]
+  layer: "top" | "bottom"
+  drawSoldermask?: boolean
+}) {
   const ctx = createStrictContext(400, 400)
   const drawer = new CircuitToCanvasDrawer(ctx)
   drawer.setCameraBounds({ minX: -2, maxX: 2, minY: -2, maxY: 2 })
@@ -139,13 +143,17 @@ for (const layer of ["top", "bottom"] as const) {
         },
       ]
       for (const pad of pads) {
-        const openingFirst = render([opening, pad], layer)
-        const padFirst = render([pad, opening], layer)
-        const drill = render([opening], layer).pixel()
+        const openingFirst = render({ elements: [opening, pad], layer })
+        const padFirst = render({ elements: [pad, opening], layer })
+        const drill = render({ elements: [opening], layer }).pixel()
         expect(openingFirst.pixel()).toEqual(drill)
         expect(padFirst.pixel()).toEqual(drill)
         expect(openingFirst.pixel(-0.9)).toEqual([52, 135, 73, 255])
-        const copper = render([pad], layer, false).pixel(0.5)
+        const copper = render({
+          elements: [pad],
+          layer,
+          drawSoldermask: false,
+        }).pixel(0.5)
         expect(openingFirst.pixel(0.5)).toEqual(copper)
         if (pad.shape === "rect") {
           expect(openingFirst.pixel(1.1)).toEqual(copper)
@@ -226,19 +234,19 @@ for (const hole of holeShapes) {
           is_covered_with_solder_mask: true,
           soldermask_margin: margin,
         }
-        const image = render([covered], layer)
+        const image = render({ elements: [covered], layer })
         expect(image.pixel()).toEqual([52, 135, 73, 255])
         // A collapsed opening must not reuse the board's previous path.
         expect(image.pixel(1.5, 1.5)).toEqual([12, 55, 33, 255])
-        expect(render([covered], layer, false).pixel()).toEqual([
-          255, 38, 226, 255,
-        ])
+        expect(
+          render({ elements: [covered], layer, drawSoldermask: false }).pixel(),
+        ).toEqual([255, 38, 226, 255])
         for (const flag of [false, undefined]) {
           expect(
-            render(
-              [{ ...covered, is_covered_with_solder_mask: flag }],
+            render({
+              elements: [{ ...covered, is_covered_with_solder_mask: flag }],
               layer,
-            ).pixel(),
+            }).pixel(),
           ).toEqual([255, 38, 226, 255])
         }
       }
@@ -385,23 +393,27 @@ for (const hole of platedHoleShapes) {
     })
 
     test(`${layer} plated ${hole.shape}: collapsed openings render safely and obey coverage`, () => {
-      const exposed = render([hole], layer)
+      const exposed = render({ elements: [hole], layer })
       for (const margin of [-0.5, -0.75, -2]) {
         const covered = {
           ...hole,
           is_covered_with_solder_mask: true,
           soldermask_margin: margin,
         }
-        const image = render([covered], layer)
+        const image = render({ elements: [covered], layer })
         expect(image.pixel()).toEqual([52, 135, 73, 255])
         expect(image.pixel(1.5, 1.5)).toEqual([12, 55, 33, 255])
-        expect(render([covered], layer, false).pixels).toEqual(
-          render([hole], layer, false).pixels,
+        expect(
+          render({ elements: [covered], layer, drawSoldermask: false }).pixels,
+        ).toEqual(
+          render({ elements: [hole], layer, drawSoldermask: false }).pixels,
         )
         for (const flag of [false, undefined]) {
           expect(
-            render([{ ...covered, is_covered_with_solder_mask: flag }], layer)
-              .pixels,
+            render({
+              elements: [{ ...covered, is_covered_with_solder_mask: flag }],
+              layer,
+            }).pixels,
           ).toEqual(exposed.pixels)
         }
       }

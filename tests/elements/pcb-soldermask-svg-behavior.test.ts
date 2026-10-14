@@ -4,6 +4,7 @@ import { Resvg } from "@resvg/resvg-js"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import type { CanvasContext } from "../../lib/drawer/types"
 import { drawText } from "../../lib/drawer/shapes/text"
 import { identity } from "transformation-matrix"
 
@@ -61,12 +62,17 @@ function element(
   }
 }
 
-async function renderPair(
-  circuit: AnyCircuitElement[],
-  layer: "top" | "bottom",
+async function renderPair({
+  circuit,
+  layer,
   enabled = true,
   drawBoardMaterial = false,
-) {
+}: {
+  circuit: AnyCircuitElement[]
+  layer: "top" | "bottom"
+  enabled?: boolean
+  drawBoardMaterial?: boolean
+}) {
   const canvas = createCanvas(400, 400)
   const ctx = canvas.getContext("2d")
   ctx.fillStyle = "#000"
@@ -105,7 +111,15 @@ async function renderPair(
   return { canvas, reference }
 }
 
-function materialAt(canvas: Canvas, x: number, y = 0) {
+function materialAt({
+  canvas,
+  x,
+  y = 0,
+}: {
+  canvas: Canvas
+  x: number
+  y?: number
+}) {
   const [r = 0, g = 0, b = 0] = canvas
     .getContext("2d")
     .getImageData(
@@ -122,6 +136,32 @@ function materialAt(canvas: Canvas, x: number, y = 0) {
   return "background"
 }
 
+function label({
+  ctx,
+  text,
+  x,
+  y,
+  fontSize = 18,
+}: {
+  ctx: CanvasContext
+  text: string
+  x: number
+  y: number
+  fontSize?: number
+}) {
+  // Stroke the bundled alphabet so snapshots do not depend on OS fonts.
+  drawText({
+    ctx,
+    text,
+    x,
+    y,
+    fontSize,
+    color: "white",
+    realToCanvasMat: identity(),
+    anchorAlignment: "bottom_left",
+  })
+}
+
 for (const layer of ["top", "bottom"] as const) {
   for (const kind of kinds) {
     for (const covered of [undefined, false, true]) {
@@ -134,7 +174,10 @@ for (const layer of ["top", "bottom"] as const) {
               ? {}
               : { is_covered_with_solder_mask: covered }),
           }
-          const { canvas, reference } = await renderPair([board, item], layer)
+          const { canvas, reference } = await renderPair({
+            circuit: [board, item],
+            layer,
+          })
           const exposed = kind === "hole" ? "drill" : "copper"
           const fullyCovered =
             kind === "pad" && covered === true && margin === 0
@@ -143,9 +186,9 @@ for (const layer of ["top", "bottom"] as const) {
           const expectedOutside =
             covered === true && margin > 0 ? "substrate" : "mask"
           for (const image of [reference, canvas]) {
-            expect(materialAt(image, 0.9)).toBe(expectedEdge)
-            expect(materialAt(image, 1.1)).toBe(expectedOutside)
-            expect(materialAt(image, 0)).toBe(
+            expect(materialAt({ canvas: image, x: 0.9 })).toBe(expectedEdge)
+            expect(materialAt({ canvas: image, x: 1.1 })).toBe(expectedOutside)
+            expect(materialAt({ canvas: image, x: 0 })).toBe(
               kind === "pad" ? (fullyCovered ? "mask" : "copper") : "drill",
             )
           }
@@ -158,13 +201,13 @@ for (const layer of ["top", "bottom"] as const) {
         is_covered_with_solder_mask: true,
         soldermask_margin: -0.25,
       }
-      const { canvas, reference } = await renderPair(
-        [board, item],
+      const { canvas, reference } = await renderPair({
+        circuit: [board, item],
         layer,
-        false,
-      )
+        enabled: false,
+      })
       for (const image of [reference, canvas]) {
-        expect(materialAt(image, 0.9)).toBe(
+        expect(materialAt({ canvas: image, x: 0.9 })).toBe(
           kind === "hole" ? "drill" : "copper",
         )
       }
@@ -179,14 +222,14 @@ for (const kind of kinds) {
       is_covered_with_solder_mask: true,
       soldermask_margin: 0.25,
     }
-    const { canvas, reference } = await renderPair(
-      [board, item],
-      "top",
-      true,
-      false,
-    )
-    expect(materialAt(canvas, 1.1)).toBe("substrate")
-    expect(materialAt(reference, 1.1)).toBe("substrate")
+    const { canvas, reference } = await renderPair({
+      circuit: [board, item],
+      layer: "top",
+      enabled: true,
+      drawBoardMaterial: false,
+    })
+    expect(materialAt({ canvas, x: 1.1 })).toBe("substrate")
+    expect(materialAt({ canvas: reference, x: 1.1 })).toBe("substrate")
   })
 }
 
@@ -194,8 +237,8 @@ test("coverage and margins preserve Canvas colors and opaque board masks", async
   for (const layer of ["top", "bottom"] as const) {
     for (const drawBoardMaterial of [false, true]) {
       for (const kind of kinds) {
-        const { canvas } = await renderPair(
-          [
+        const { canvas } = await renderPair({
+          circuit: [
             board,
             {
               ...element(kind, layer),
@@ -204,9 +247,9 @@ test("coverage and margins preserve Canvas colors and opaque board masks", async
             },
           ],
           layer,
-          true,
+          enabled: true,
           drawBoardMaterial,
-        )
+        })
         const ctx = canvas.getContext("2d")
         expect(Array.from(ctx.getImageData(290, 200, 1, 1).data)).toEqual([
           52, 135, 73, 255,
@@ -215,15 +258,15 @@ test("coverage and margins preserve Canvas colors and opaque board masks", async
           12, 55, 33, 255,
         ])
       }
-      const { canvas } = await renderPair(
-        [
+      const { canvas } = await renderPair({
+        circuit: [
           board,
           { ...element("pad", layer), is_covered_with_solder_mask: true },
         ],
         layer,
-        true,
+        enabled: true,
         drawBoardMaterial,
-      )
+      })
       expect(
         Array.from(canvas.getContext("2d").getImageData(200, 200, 1, 1).data),
       ).toEqual([52, 135, 73, 255])
@@ -248,12 +291,21 @@ test("asymmetric rectangular margins obey coverage and explicit zero overrides",
       soldermask_margin_top: -0.25,
       soldermask_margin_bottom: 0.25,
     }
-    const { canvas, reference } = await renderPair([board, pad], "top")
+    const { canvas, reference } = await renderPair({
+      circuit: [board, pad],
+      layer: "top",
+    })
     for (const image of [reference, canvas]) {
-      expect(materialAt(image, -0.9)).toBe(covered ? "mask" : "copper")
-      expect(materialAt(image, 0, 0.9)).toBe(covered ? "mask" : "copper")
+      expect(materialAt({ canvas: image, x: -0.9 })).toBe(
+        covered ? "mask" : "copper",
+      )
+      expect(materialAt({ canvas: image, x: 0, y: 0.9 })).toBe(
+        covered ? "mask" : "copper",
+      )
       // SVG's mixed-margin opening is copper, including its expanded sides.
-      expect(materialAt(image, 1.1)).toBe(covered ? "copper" : "mask")
+      expect(materialAt({ canvas: image, x: 1.1 })).toBe(
+        covered ? "copper" : "mask",
+      )
     }
   }
   const pad: AnyCircuitElement = {
@@ -272,9 +324,12 @@ test("asymmetric rectangular margins obey coverage and explicit zero overrides",
     soldermask_margin_top: 0,
     soldermask_margin_bottom: 0,
   }
-  const { canvas, reference } = await renderPair([board, pad], "top")
+  const { canvas, reference } = await renderPair({
+    circuit: [board, pad],
+    layer: "top",
+  })
   for (const image of [reference, canvas])
-    expect(materialAt(image, 0)).toBe("mask")
+    expect(materialAt({ canvas: image, x: 0 })).toBe("mask")
 })
 
 const shapeCases: Array<{ item: AnyCircuitElement; rotation?: number }> = [
@@ -452,7 +507,10 @@ for (const { item, rotation = 0 } of shapeCases) {
               : { is_covered_with_solder_mask: covered }),
           },
         ]
-        const { canvas, reference } = await renderPair(circuit, "top")
+        const { canvas, reference } = await renderPair({
+          circuit,
+          layer: "top",
+        })
         for (const distance of [0.5, 0.9, 1.1, 1.4]) {
           const angle = (rotation * Math.PI) / 180
           const x = -distance * Math.sin(angle)
@@ -465,11 +523,13 @@ for (const { item, rotation = 0 } of shapeCases) {
             covered &&
             margin > 0
           ) {
-            expect(materialAt(canvas, x, y)).toBe(
+            expect(materialAt({ canvas, x, y })).toBe(
               distance < 1 ? "drill" : distance < 1.25 ? "substrate" : "mask",
             )
           } else {
-            expect(materialAt(canvas, x, y)).toBe(materialAt(reference, x, y))
+            expect(materialAt({ canvas, x, y })).toBe(
+              materialAt({ canvas: reference, x, y }),
+            )
           }
         }
       }
@@ -488,10 +548,13 @@ test("positive margins expand rounded pad corner radii like SVG", async () => {
       is_covered_with_solder_mask: true,
       soldermask_margin: 0.25,
     }
-    const { canvas, reference } = await renderPair([board, pad], "top")
+    const { canvas, reference } = await renderPair({
+      circuit: [board, pad],
+      layer: "top",
+    })
     const x = item.type === "pcb_smtpad" ? 1.12 : 1.62
-    expect(materialAt(reference, x, 1.12)).toBe("mask")
-    expect(materialAt(canvas, x, 1.12)).toBe("mask")
+    expect(materialAt({ canvas: reference, x, y: 1.12 })).toBe("mask")
+    expect(materialAt({ canvas, x, y: 1.12 })).toBe("mask")
   }
 })
 
@@ -513,10 +576,17 @@ test("covered copper pours keep pad and hole margin openings", async () => {
       is_covered_with_solder_mask: true,
       soldermask_margin: -0.25,
     }
-    const { canvas } = await renderPair([board, pour, item], "top")
-    expect(materialAt(canvas, 0.9)).toBe("mask")
-    expect(materialAt(canvas, 0.5)).toBe(kind === "hole" ? "drill" : "copper")
-    expect(materialAt(canvas, 0)).toBe(kind === "pad" ? "copper" : "drill")
+    const { canvas } = await renderPair({
+      circuit: [board, pour, item],
+      layer: "top",
+    })
+    expect(materialAt({ canvas, x: 0.9 })).toBe("mask")
+    expect(materialAt({ canvas, x: 0.5 })).toBe(
+      kind === "hole" ? "drill" : "copper",
+    )
+    expect(materialAt({ canvas, x: 0 })).toBe(
+      kind === "pad" ? "copper" : "drill",
+    )
   }
 })
 
@@ -525,34 +595,34 @@ test("soldermask flag and margin comparison against published circuit-to-svg", a
   const ctx = comparison.getContext("2d")
   ctx.fillStyle = "#171c22"
   ctx.fillRect(0, 0, comparison.width, comparison.height)
-  // Stroke the bundled alphabet so snapshots do not depend on OS fonts.
-  const label = (text: string, x: number, y: number, fontSize = 18) =>
-    drawText({
-      ctx,
-      text,
-      x,
-      y,
-      fontSize,
-      color: "white",
-      realToCanvasMat: identity(),
-      anchorAlignment: "bottom_left",
-    })
-  label("circuit-to-svg 0.0.450 (published)", 30, 38, 24)
-  label("circuit-to-canvas", 750, 38, 24)
+  label({
+    ctx,
+    text: "circuit-to-svg 0.0.450 (published)",
+    x: 30,
+    y: 38,
+    fontSize: 24,
+  })
+  label({ ctx, text: "circuit-to-canvas", x: 750, y: 38, fontSize: 24 })
   for (const [column, margin] of [-0.25, 0, 0.25].entries()) {
     for (const offset of [0, 720])
-      label(
-        `${margin > 0 ? "+" : ""}${margin} mm`,
-        offset + 230 + column * 160,
-        76,
-      )
+      label({
+        ctx,
+        text: `${margin > 0 ? "+" : ""}${margin} mm`,
+        x: offset + 230 + column * 160,
+        y: 76,
+      })
   }
   for (const [kindIndex, kind] of kinds.entries()) {
     for (const [flagIndex, covered] of [undefined, false, true].entries()) {
       const y = 95 + (kindIndex * 3 + flagIndex) * 110
       for (const offset of [0, 720]) {
-        label(kind, offset + 24, y + 40)
-        label(`flag: ${covered ?? "missing"}`, offset + 24, y + 66)
+        label({ ctx, text: kind, x: offset + 24, y: y + 40 })
+        label({
+          ctx,
+          text: `flag: ${covered ?? "missing"}`,
+          x: offset + 24,
+          y: y + 66,
+        })
       }
       for (const [column, margin] of [-0.25, 0, 0.25].entries()) {
         const item = {
@@ -562,19 +632,23 @@ test("soldermask flag and margin comparison against published circuit-to-svg", a
             ? {}
             : { is_covered_with_solder_mask: covered }),
         }
-        const { canvas, reference } = await renderPair([board, item], "top")
+        const { canvas, reference } = await renderPair({
+          circuit: [board, item],
+          layer: "top",
+        })
         const x = 210 + column * 160
         ctx.drawImage(reference, x, y, 100, 100)
         ctx.drawImage(canvas, x + 720, y, 100, 100)
       }
     }
   }
-  label(
-    "Same circuit JSON and soldermask behavior; each renderer keeps its own colors.",
-    24,
-    1105,
-    15,
-  )
+  label({
+    ctx,
+    text: "Same circuit JSON and soldermask behavior; each renderer keeps its own colors.",
+    x: 24,
+    y: 1105,
+    fontSize: 15,
+  })
   await expect(comparison.toBuffer("image/png")).toMatchPngSnapshot(
     import.meta.path,
   )
