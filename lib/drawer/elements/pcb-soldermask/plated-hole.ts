@@ -5,6 +5,7 @@ import type { CanvasContext } from "../../types"
 import { drawPillPath } from "../helper-functions/draw-pill"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
+import { isPlatedHolePadCollapsed } from "../helper-functions/is-plated-hole-pad-collapsed"
 import { offsetPolygonPoints } from "../soldermask-margin"
 import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
@@ -67,6 +68,10 @@ function drawPlatedHoleShapePath(params: {
   margin: number
 }): void {
   const { ctx, hole, realToCanvasMat, margin } = params
+  // A collapsed opening must leave an empty path, not reuse an earlier cutout.
+  ctx.beginPath()
+  if (isPlatedHolePadCollapsed(hole, margin)) return
+
   if (hole.shape === "circle") {
     const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
     const radius =
