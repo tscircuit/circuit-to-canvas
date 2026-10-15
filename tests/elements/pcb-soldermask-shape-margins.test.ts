@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { applyToPoint, rotateDEG } from "transformation-matrix"
 import {
   board,
   renderPair,
@@ -7,7 +8,8 @@ import {
 } from "../fixtures/soldermask-svg-behavior"
 
 test("pad and hole margin geometry matches SVG", async () => {
-  for (const { item, rotation = 0 } of shapeCases) {
+  for (const { item, ccwRotationDegrees = 0 } of shapeCases) {
+    const localToRealMat = rotateDEG(ccwRotationDegrees)
     for (const covered of [undefined, false, true]) {
       for (const margin of [-0.25, 0, 0.25]) {
         const circuit = [
@@ -25,9 +27,7 @@ test("pad and hole margin geometry matches SVG", async () => {
           layer: "top",
         })
         for (const distance of [0.5, 0.9, 1.1, 1.4]) {
-          const angle = (rotation * Math.PI) / 180
-          const x = -distance * Math.sin(angle)
-          const y = distance * Math.cos(angle)
+          const [x, y] = applyToPoint(localToRealMat, [0, distance])
           // SVG 0.0.450 omits rotation on positive rotated-hole cutouts.
           // Keep Canvas's correctly rotated opening instead of copying that bug.
           if (

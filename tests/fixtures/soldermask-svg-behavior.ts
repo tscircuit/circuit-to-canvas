@@ -5,7 +5,13 @@ import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 import type { CanvasContext } from "../../lib/drawer/types"
 import { drawText } from "../../lib/drawer/shapes/text"
-import { identity } from "transformation-matrix"
+import {
+  applyToPoint,
+  compose,
+  identity,
+  scale,
+  translate,
+} from "transformation-matrix"
 
 const viewport = { minX: -2, maxX: 2, minY: -2, maxY: 2 }
 
@@ -20,9 +26,15 @@ export const board: AnyCircuitElement = {
   material: "fr4",
 }
 
-export const kinds = ["pad", "hole", "plated hole"] as const
+export const kinds = ["pad", "hole", "plated_hole"] as const
 
 type Kind = (typeof kinds)[number]
+
+export const kindLabels: Record<Kind, string> = {
+  pad: "pad",
+  hole: "hole",
+  plated_hole: "plated hole",
+}
 
 export function element(
   kind: Kind,
@@ -122,14 +134,22 @@ export function materialAt({
   x: number
   y?: number
 }) {
+  const uniformScale = Math.min(
+    canvas.width / (viewport.maxX - viewport.minX),
+    canvas.height / (viewport.maxY - viewport.minY),
+  )
+  const realToCanvasMat = compose(
+    translate(canvas.width / 2, canvas.height / 2),
+    scale(uniformScale, -uniformScale),
+    translate(
+      -(viewport.minX + viewport.maxX) / 2,
+      -(viewport.minY + viewport.maxY) / 2,
+    ),
+  )
+  const [canvasX, canvasY] = applyToPoint(realToCanvasMat, [x, y])
   const [r = 0, g = 0, b = 0] = canvas
     .getContext("2d")
-    .getImageData(
-      Math.round(200 + x * 100),
-      Math.round(200 - y * 100),
-      1,
-      1,
-    ).data
+    .getImageData(Math.round(canvasX), Math.round(canvasY), 1, 1).data
   if (r > 240 && b > 200 && g < 80) return "drill"
   if (g > r && g > b) return "mask"
   if (r > 150 && g > 100 && b < 150) return "substrate"
@@ -164,165 +184,167 @@ export function label({
   })
 }
 
-export const shapeCases: Array<{ item: AnyCircuitElement; rotation?: number }> =
-  [
-    {
-      item: {
-        type: "pcb_smtpad",
-        pcb_smtpad_id: "rect",
-        shape: "rect",
-        layer: "top",
-        x: 0,
-        y: 0,
-        width: 2,
-        height: 2,
-        corner_radius: 0.3,
-      },
+export const shapeCases: Array<{
+  item: AnyCircuitElement
+  ccwRotationDegrees?: number
+}> = [
+  {
+    item: {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "rect",
+      shape: "rect",
+      layer: "top",
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 2,
+      corner_radius: 0.3,
     },
-    {
-      item: {
-        type: "pcb_smtpad",
-        pcb_smtpad_id: "rotated-rect",
-        shape: "rotated_rect",
-        layer: "top",
-        x: 0,
-        y: 0,
-        width: 2,
-        height: 2,
-        corner_radius: 0.3,
-        ccw_rotation: 30,
-      },
-      rotation: 30,
+  },
+  {
+    item: {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "rotated-rect",
+      shape: "rotated_rect",
+      layer: "top",
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 2,
+      corner_radius: 0.3,
+      ccw_rotation: 30,
     },
-    {
-      item: {
-        type: "pcb_smtpad",
-        pcb_smtpad_id: "pill",
-        shape: "pill",
-        layer: "top",
-        x: 0,
-        y: 0,
-        width: 3,
-        height: 2,
-        radius: 1,
-      },
+    ccwRotationDegrees: 30,
+  },
+  {
+    item: {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "pill",
+      shape: "pill",
+      layer: "top",
+      x: 0,
+      y: 0,
+      width: 3,
+      height: 2,
+      radius: 1,
     },
-    {
-      item: {
-        type: "pcb_smtpad",
-        pcb_smtpad_id: "rotated-pill",
-        shape: "rotated_pill",
-        layer: "top",
-        x: 0,
-        y: 0,
-        width: 3,
-        height: 2,
-        radius: 1,
-        ccw_rotation: 30,
-      },
-      rotation: 30,
+  },
+  {
+    item: {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "rotated-pill",
+      shape: "rotated_pill",
+      layer: "top",
+      x: 0,
+      y: 0,
+      width: 3,
+      height: 2,
+      radius: 1,
+      ccw_rotation: 30,
     },
-    {
-      item: {
-        type: "pcb_smtpad",
-        pcb_smtpad_id: "polygon",
-        shape: "polygon",
-        layer: "top",
-        points: [
-          { x: -1, y: -1 },
-          { x: 1, y: -1 },
-          { x: 1, y: 1 },
-          { x: -1, y: 1 },
-        ],
-      },
+    ccwRotationDegrees: 30,
+  },
+  {
+    item: {
+      type: "pcb_smtpad",
+      pcb_smtpad_id: "polygon",
+      shape: "polygon",
+      layer: "top",
+      points: [
+        { x: -1, y: -1 },
+        { x: 1, y: -1 },
+        { x: 1, y: 1 },
+        { x: -1, y: 1 },
+      ],
     },
-    {
-      item: {
-        type: "pcb_hole",
-        pcb_hole_id: "square",
-        hole_shape: "square",
-        x: 0,
-        y: 0,
-        hole_diameter: 2,
-      },
+  },
+  {
+    item: {
+      type: "pcb_hole",
+      pcb_hole_id: "square",
+      hole_shape: "square",
+      x: 0,
+      y: 0,
+      hole_diameter: 2,
     },
-    {
-      item: {
-        type: "pcb_hole",
-        pcb_hole_id: "oval",
-        hole_shape: "oval",
-        x: 0,
-        y: 0,
-        hole_width: 3,
-        hole_height: 2,
-      },
+  },
+  {
+    item: {
+      type: "pcb_hole",
+      pcb_hole_id: "oval",
+      hole_shape: "oval",
+      x: 0,
+      y: 0,
+      hole_width: 3,
+      hole_height: 2,
     },
-    {
-      item: {
-        type: "pcb_hole",
-        pcb_hole_id: "rect",
-        hole_shape: "rect",
-        x: 0,
-        y: 0,
-        hole_width: 3,
-        hole_height: 2,
-      },
+  },
+  {
+    item: {
+      type: "pcb_hole",
+      pcb_hole_id: "rect",
+      hole_shape: "rect",
+      x: 0,
+      y: 0,
+      hole_width: 3,
+      hole_height: 2,
     },
-    {
-      item: {
-        type: "pcb_hole",
-        pcb_hole_id: "pill",
-        hole_shape: "pill",
-        x: 0,
-        y: 0,
-        hole_width: 3,
-        hole_height: 2,
-      },
+  },
+  {
+    item: {
+      type: "pcb_hole",
+      pcb_hole_id: "pill",
+      hole_shape: "pill",
+      x: 0,
+      y: 0,
+      hole_width: 3,
+      hole_height: 2,
     },
-    {
-      item: {
-        type: "pcb_hole",
-        pcb_hole_id: "rotated-pill",
-        hole_shape: "rotated_pill",
-        x: 0,
-        y: 0,
-        hole_width: 3,
-        hole_height: 2,
-        ccw_rotation: 30,
-      },
-      rotation: 30,
+  },
+  {
+    item: {
+      type: "pcb_hole",
+      pcb_hole_id: "rotated-pill",
+      hole_shape: "rotated_pill",
+      x: 0,
+      y: 0,
+      hole_width: 3,
+      hole_height: 2,
+      ccw_rotation: 30,
     },
-    {
-      item: {
-        type: "pcb_plated_hole",
-        pcb_plated_hole_id: "pill",
-        ccw_rotation: 0,
-        shape: "pill",
-        x: 0,
-        y: 0,
-        outer_width: 3,
-        outer_height: 2,
-        hole_width: 1,
-        hole_height: 0.6,
-        layers: ["top", "bottom"],
-      },
+    ccwRotationDegrees: 30,
+  },
+  {
+    item: {
+      type: "pcb_plated_hole",
+      pcb_plated_hole_id: "pill",
+      ccw_rotation: 0,
+      shape: "pill",
+      x: 0,
+      y: 0,
+      outer_width: 3,
+      outer_height: 2,
+      hole_width: 1,
+      hole_height: 0.6,
+      layers: ["top", "bottom"],
     },
-    {
-      item: {
-        type: "pcb_plated_hole",
-        pcb_plated_hole_id: "rect",
-        shape: "circular_hole_with_rect_pad",
-        hole_shape: "circle",
-        pad_shape: "rect",
-        hole_offset_x: 0,
-        hole_offset_y: 0,
-        x: 0,
-        y: 0,
-        rect_pad_width: 3,
-        rect_pad_height: 2,
-        rect_border_radius: 0.3,
-        hole_diameter: 0.6,
-        layers: ["top", "bottom"],
-      },
+  },
+  {
+    item: {
+      type: "pcb_plated_hole",
+      pcb_plated_hole_id: "rect",
+      shape: "circular_hole_with_rect_pad",
+      hole_shape: "circle",
+      pad_shape: "rect",
+      hole_offset_x: 0,
+      hole_offset_y: 0,
+      x: 0,
+      y: 0,
+      rect_pad_width: 3,
+      rect_pad_height: 2,
+      rect_border_radius: 0.3,
+      hole_diameter: 0.6,
+      layers: ["top", "bottom"],
     },
-  ]
+  },
+]

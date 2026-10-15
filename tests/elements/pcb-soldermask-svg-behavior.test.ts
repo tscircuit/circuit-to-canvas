@@ -3,6 +3,7 @@ import { createCanvas } from "@napi-rs/canvas"
 import {
   board,
   kinds,
+  kindLabels,
   element,
   renderPair,
   label,
@@ -34,7 +35,7 @@ test("soldermask flag and margin comparison against published circuit-to-svg", a
     for (const [flagIndex, covered] of [undefined, false, true].entries()) {
       const y = 95 + (kindIndex * 3 + flagIndex) * 110
       for (const offset of [0, 720]) {
-        label({ ctx, text: kind, x: offset + 24, y: y + 40 })
+        label({ ctx, text: kindLabels[kind], x: offset + 24, y: y + 40 })
         label({
           ctx,
           text: `flag: ${covered ?? "missing"}`,
