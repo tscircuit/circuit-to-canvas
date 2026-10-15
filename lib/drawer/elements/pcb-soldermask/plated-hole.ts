@@ -18,6 +18,7 @@ export function processPlatedHoleSoldermask(params: {
   soldermaskOverCopperColor: string
   substrateColor: string
   layer: "top" | "bottom"
+  phase: "substrate" | "openings"
 }): void {
   const {
     ctx,
@@ -26,6 +27,7 @@ export function processPlatedHoleSoldermask(params: {
     soldermaskOverCopperColor,
     substrateColor,
     layer,
+    phase,
   } = params
   // Check if this hole is on the current layer
   if (hole.layers && !hole.layers.includes(layer)) return
@@ -34,6 +36,16 @@ export function processPlatedHoleSoldermask(params: {
   // Like circuit-to-svg, holes only use margins when coverage is explicit.
   // A zero margin leaves the hole exposed, even when the flag is true.
   const margin = isCoveredWithSoldermask ? (hole.soldermask_margin ?? 0) : 0
+
+  if (phase === "substrate") {
+    if (margin > 0) {
+      // Preserve substrate borders even when board material is hidden.
+      ctx.fillStyle = substrateColor
+      drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
+      ctx.fill()
+    }
+    return
+  }
 
   if (margin < 0) {
     // Negative margin: open the inner copper area, then draw mask-over-copper ring
@@ -47,15 +59,8 @@ export function processPlatedHoleSoldermask(params: {
       soldermaskOverCopperColor,
       margin,
     })
-  } else if (margin > 0) {
-    // Preserve the substrate border even when board material is hidden.
-    ctx.fillStyle = substrateColor
-    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin })
-    ctx.fill()
-    drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
-    cutPathFromSoldermask(ctx)
   } else {
-    // Zero margin: cut pad opening from the soldermask.
+    // Zero/positive margins expose copper after all substrate borders are drawn.
     drawPlatedHoleShapePath({ ctx, hole, realToCanvasMat, margin: 0 })
     cutPathFromSoldermask(ctx)
   }

@@ -18,6 +18,7 @@ export function processSmtPadSoldermask(params: {
   substrateColor: string
   copperColor: string
   layer: "top" | "bottom"
+  phase: "substrate" | "openings"
 }): void {
   const {
     ctx,
@@ -27,6 +28,7 @@ export function processSmtPadSoldermask(params: {
     copperColor,
     substrateColor,
     layer,
+    phase,
   } = params
   // Only process pads on the current layer
   if (pad.layer !== layer) return
@@ -50,6 +52,22 @@ export function processSmtPadSoldermask(params: {
     mb = pad.soldermask_margin_bottom ?? margin
   }
 
+  if (phase === "substrate") {
+    if (
+      ml >= 0 &&
+      mr >= 0 &&
+      mt >= 0 &&
+      mb >= 0 &&
+      (ml > 0 || mr > 0 || mt > 0 || mb > 0)
+    ) {
+      // Paint borders before any openings so they cannot cover neighboring copper.
+      ctx.fillStyle = substrateColor
+      drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
+      ctx.fill()
+    }
+    return
+  }
+
   if (isCoveredWithSoldermask && ml === 0 && mr === 0 && mt === 0 && mb === 0) {
     // SVG covers a pad completely only when all effective margins are zero.
     ctx.fillStyle = soldermaskOverCopperColor
@@ -64,15 +82,8 @@ export function processSmtPadSoldermask(params: {
     ctx.fillStyle = copperColor
     drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
     ctx.fill()
-  } else if (ml > 0 || mr > 0 || mt > 0 || mb > 0) {
-    // SVG shows substrate around positive openings even without board material.
-    ctx.fillStyle = substrateColor
-    drawPadShapePath({ ctx, pad, realToCanvasMat, ml, mr, mt, mb })
-    ctx.fill()
-    drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
-    cutPathFromSoldermask(ctx)
   } else {
-    // Zero margin: cut pad opening from the soldermask.
+    // Zero/positive margins expose the original copper after all borders are drawn.
     drawPadShapePath({ ctx, pad, realToCanvasMat, ml: 0, mr: 0, mt: 0, mb: 0 })
     cutPathFromSoldermask(ctx)
   }
