@@ -7,6 +7,7 @@ import { addPolygonToPath } from "./addPolygonToPath"
 import {
   getAlphabetAdvanceWidth,
   getAlphabetLayout,
+  GLYPH_SCALE,
   type AlphabetLayout,
 } from "./getAlphabetLayout"
 import { getTextGeometry } from "./getTextStartPosition"
@@ -34,8 +35,8 @@ export interface StrokeAlphabetLineParams {
 export function strokeAlphabetLine(params: StrokeAlphabetLineParams): void {
   const { ctx, line, fontSize, startX, startY, layout } = params
   const { strokeWidth } = layout
-  const height = fontSize
-  const glyphScaleX = fontSize
+  const height = fontSize * GLYPH_SCALE
+  const glyphScaleX = fontSize * GLYPH_SCALE
   const topY = startY
   const characters = Array.from(line)
   let cursor = startX + strokeWidth / 2
