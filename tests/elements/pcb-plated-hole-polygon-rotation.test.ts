@@ -4,7 +4,7 @@ import type { AnyCircuitElement, PcbHoleWithPolygonPad } from "circuit-json"
 import { applyToPoint } from "transformation-matrix"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test.failing("polygon pads and offset drills at 0 and 90 degrees", async () => {
+test("polygon pads and offset drills at 0 and 90 degrees", async () => {
   const canvas = createCanvas(800, 480)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)

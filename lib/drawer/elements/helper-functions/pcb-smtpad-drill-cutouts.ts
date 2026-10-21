@@ -8,6 +8,8 @@ import type {
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
+import { getPolygonPadTransform } from "./get-polygon-pad-transform"
+import { drawPillPath } from "./draw-pill"
 
 interface DrillCutoutCircle {
   shape: "circle"
@@ -278,16 +280,13 @@ function appendOvalPath(
   const [cx, cy] = applyToPoint(realToCanvasMat, [x, y])
   const scaledRadiusX = radiusX * Math.abs(realToCanvasMat.a)
   const scaledRadiusY = radiusY * Math.abs(realToCanvasMat.a)
-
-  ctx.save()
-  ctx.translate(cx, cy)
-  if (rotation !== 0) {
-    ctx.rotate(-rotation * (Math.PI / 180))
-  }
-  ctx.moveTo(scaledRadiusX, 0)
-  ctx.ellipse(0, 0, scaledRadiusX, scaledRadiusY, 0, 0, Math.PI * 2)
+  const radians = (-rotation * Math.PI) / 180
+  ctx.moveTo(
+    cx + scaledRadiusX * Math.cos(radians),
+    cy + scaledRadiusX * Math.sin(radians),
+  )
+  ctx.ellipse(cx, cy, scaledRadiusX, scaledRadiusY, radians, 0, Math.PI * 2)
   ctx.closePath()
-  ctx.restore()
 }
 
 function appendRectPath(
@@ -366,37 +365,14 @@ function appendPillPath(
   const scaledWidth = width * Math.abs(realToCanvasMat.a)
   const scaledHeight = height * Math.abs(realToCanvasMat.a)
 
-  ctx.save()
-  ctx.translate(cx, cy)
-  if (rotation !== 0) {
-    ctx.rotate(-rotation * (Math.PI / 180))
-  }
-
-  if (scaledWidth > scaledHeight) {
-    const radius = scaledHeight / 2
-    const straightLength = scaledWidth - scaledHeight
-
-    ctx.moveTo(-straightLength / 2, -radius)
-    ctx.lineTo(straightLength / 2, -radius)
-    ctx.arc(straightLength / 2, 0, radius, -Math.PI / 2, Math.PI / 2)
-    ctx.lineTo(-straightLength / 2, radius)
-    ctx.arc(-straightLength / 2, 0, radius, Math.PI / 2, -Math.PI / 2)
-  } else if (scaledHeight > scaledWidth) {
-    const radius = scaledWidth / 2
-    const straightLength = scaledHeight - scaledWidth
-
-    ctx.moveTo(radius, -straightLength / 2)
-    ctx.lineTo(radius, straightLength / 2)
-    ctx.arc(0, straightLength / 2, radius, 0, Math.PI)
-    ctx.lineTo(-radius, -straightLength / 2)
-    ctx.arc(0, -straightLength / 2, radius, Math.PI, 0)
-  } else {
-    ctx.moveTo(scaledWidth / 2, 0)
-    ctx.arc(0, 0, scaledWidth / 2, 0, Math.PI * 2)
-  }
-
-  ctx.closePath()
-  ctx.restore()
+  drawPillPath({
+    ctx,
+    cx,
+    cy,
+    width: scaledWidth,
+    height: scaledHeight,
+    ccwRotationDegrees: rotation,
+  })
 }
 
 function appendPolygonPath(
@@ -681,8 +657,10 @@ function getPlatedHoleDrillCutout(
 
   if (hole.shape !== "hole_with_polygon_pad") return
 
-  const holeX = hole.x + (hole.hole_offset_x ?? 0)
-  const holeY = hole.y + (hole.hole_offset_y ?? 0)
+  const { x: holeX, y: holeY } = applyToPoint(getPolygonPadTransform(hole), {
+    x: hole.hole_offset_x ?? 0,
+    y: hole.hole_offset_y ?? 0,
+  })
   const holeShape = hole.hole_shape
 
   if (holeShape === "circle") {
@@ -706,6 +684,7 @@ function getPlatedHoleDrillCutout(
       y: holeY,
       radiusX,
       radiusY,
+      rotation: hole.ccw_rotation,
     }
   }
 
@@ -719,7 +698,7 @@ function getPlatedHoleDrillCutout(
       y: holeY,
       width,
       height,
-      rotation: holeShape === "rotated_pill" ? hole.ccw_rotation : 0,
+      rotation: hole.ccw_rotation,
     }
   }
 }

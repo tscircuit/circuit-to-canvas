@@ -6,6 +6,7 @@ import { drawPillPath } from "../helper-functions/draw-pill"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { isPlatedHolePadCollapsed } from "../helper-functions/is-plated-hole-pad-collapsed"
+import { getPolygonPadTransform } from "../helper-functions/get-polygon-pad-transform"
 import { offsetPolygonPoints } from "../soldermask-margin"
 import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
@@ -183,11 +184,9 @@ function drawPlatedHoleShapePath(params: {
     hole.pad_outline &&
     hole.pad_outline.length >= 3
   ) {
-    const padPoints = hole.pad_outline.map(
-      (point: { x: number; y: number }) => ({
-        x: hole.x + point.x,
-        y: hole.y + point.y,
-      }),
+    const padTransform = getPolygonPadTransform(hole)
+    const padPoints = hole.pad_outline.map((point) =>
+      applyToPoint(padTransform, point),
     )
     const marginPoints =
       margin !== 0 ? offsetPolygonPoints(padPoints, margin) : padPoints
@@ -413,11 +412,9 @@ function drawNegativeMarginRingForPlatedHole(params: {
     hole.pad_outline &&
     hole.pad_outline.length >= 3
   ) {
-    const padPoints = hole.pad_outline.map(
-      (point: { x: number; y: number }) => ({
-        x: hole.x + point.x,
-        y: hole.y + point.y,
-      }),
+    const padTransform = getPolygonPadTransform(hole)
+    const padPoints = hole.pad_outline.map((point) =>
+      applyToPoint(padTransform, point),
     )
 
     ctx.beginPath()
