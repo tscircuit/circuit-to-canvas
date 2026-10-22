@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { createCanvas } from "@napi-rs/canvas"
 import type { PcbCopperPour } from "circuit-json"
-import { CircuitToCanvasDrawer } from "../../lib/drawer"
+import { CircuitToCanvasDrawer, drawText } from "../../lib/drawer"
 
 test("draw copper pours with configurable opacity", async () => {
   const pours: PcbCopperPour[] = [
@@ -68,10 +68,10 @@ test("draw copper pours with configurable opacity", async () => {
   }
 
   const cases = [
-    { label: "Default (50%)", opacity: undefined, expectedAlpha: [127, 128] },
-    { label: "0%", opacity: 0, expectedAlpha: [0] },
-    { label: "25%", opacity: 0.25, expectedAlpha: [63, 64] },
-    { label: "100%", opacity: 1, expectedAlpha: [255] },
+    { label: "Default (0.5)", opacity: undefined, expectedAlpha: [127, 128] },
+    { label: "Opacity 0", opacity: 0, expectedAlpha: [0] },
+    { label: "Opacity 0.25", opacity: 0.25, expectedAlpha: [63, 64] },
+    { label: "Opacity 1", opacity: 1, expectedAlpha: [255] },
   ]
   for (const [index, { label, opacity, expectedAlpha }] of cases.entries()) {
     const canvas = createCanvas(120, 100)
@@ -87,17 +87,26 @@ test("draw copper pours with configurable opacity", async () => {
 
     const offsetX = index * 240
     comparisonCtx.drawImage(canvas, offsetX, 40, 240, 200)
-    comparisonCtx.fillStyle = "#ffffff"
-    comparisonCtx.textAlign = "center"
-    comparisonCtx.font = "18px sans-serif"
-    comparisonCtx.fillText(label, offsetX + 120, 27)
-    comparisonCtx.font = "12px sans-serif"
-    comparisonCtx.fillText("Rect", offsetX + 40, 255)
-    comparisonCtx.fillText("Polygon", offsetX + 120, 255)
-    comparisonCtx.fillText("BRep", offsetX + 200, 255)
-    comparisonCtx.fillText("top", offsetX + 40, 273)
-    comparisonCtx.fillText("bottom", offsetX + 120, 273)
-    comparisonCtx.fillText("inner1", offsetX + 200, 273)
+    for (const [text, x, y, fontSize] of [
+      [label, offsetX + 120, 20, 18],
+      ["Rect", offsetX + 40, 250, 12],
+      ["Polygon", offsetX + 120, 250, 12],
+      ["BRep", offsetX + 200, 250, 12],
+      ["top", offsetX + 40, 270, 12],
+      ["bottom", offsetX + 120, 270, 12],
+      ["inner1", offsetX + 200, 270, 12],
+    ] as const) {
+      drawText({
+        ctx: comparisonCtx,
+        text,
+        x,
+        y,
+        fontSize,
+        color: "#ffffff",
+        realToCanvasMat: drawer.realToCanvasMat,
+        anchorAlignment: "center",
+      })
+    }
   }
 
   await expect(comparison.toBuffer("image/png")).toMatchPngSnapshot(
