@@ -1,6 +1,7 @@
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { CanvasContext } from "../types"
+import { drawPolygonPath } from "../elements/helper-functions/draw-polygon"
 
 export interface DrawPolygonParams {
   ctx: CanvasContext
@@ -23,13 +24,12 @@ export function drawPolygon(params: DrawPolygonParams): void {
 
   if (points.length < 3) return
 
-  const canvasPoints = points.map((p) =>
-    applyToPoint(realToCanvasMat, [p.x, p.y]),
-  )
-
-  const firstPoint = canvasPoints[0]
-  if (!firstPoint) return
   const [cx, cy] = applyToPoint(realToCanvasMat, [center.x, center.y])
+  const canvasPoints = points.map((point) => {
+    const [x, y] = applyToPoint(realToCanvasMat, [point.x, point.y])
+    return { x: x - cx, y: y - cy }
+  })
+  if (!canvasPoints[0]) return
 
   ctx.save()
   ctx.translate(cx, cy)
@@ -38,17 +38,7 @@ export function drawPolygon(params: DrawPolygonParams): void {
   }
 
   ctx.beginPath()
-  const [firstX, firstY] = firstPoint
-  ctx.moveTo(firstX - cx, firstY - cy)
-
-  for (let i = 1; i < canvasPoints.length; i++) {
-    const point = canvasPoints[i]
-    if (!point) continue
-    const [x, y] = point
-    ctx.lineTo(x - cx, y - cy)
-  }
-
-  ctx.closePath()
+  drawPolygonPath({ ctx, points: canvasPoints })
   ctx.fillStyle = fill
   ctx.fill()
   ctx.restore()

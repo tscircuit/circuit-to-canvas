@@ -580,9 +580,9 @@ function getHoleDrillCutout(hole: PcbHole): DrillCutout | undefined {
   }
 }
 
-function getPlatedHoleDrillCutout(
+export function getPlatedHoleDrillCutout(
   hole: PcbPlatedHole,
-): DrillCutout | undefined {
+): DrillCutoutCircle | DrillCutoutOval | DrillCutoutPill | undefined {
   if (hole.shape === "circle") {
     const radius = hole.hole_diameter / 2
     if (radius <= 0) return

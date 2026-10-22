@@ -1,12 +1,12 @@
 import { getWireTaperSegments } from "./get-wire-taper-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import { applyToPoint, rotate } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
 import { drawOval } from "../../shapes/oval"
 import { drawPill } from "../../shapes/pill"
 import type { CanvasContext } from "../../types"
 import { collectTraceSegments } from "./collect-trace-segments"
+import { getPlatedHoleDrillCutout } from "../helper-functions/pcb-smtpad-drill-cutouts"
 
 const COORD_EPSILON = 1e-6
 
@@ -156,130 +156,6 @@ export function cutTraceDestinationsAtDrills(params: {
   }
 
   ctx.restore()
-}
-
-function getPlatedHoleDrillCutout(
-  hole: PcbPlatedHole,
-): TraceDrillCutout | undefined {
-  if (hole.shape === "circle") {
-    const radius = hole.hole_diameter / 2
-    if (radius <= 0) return
-    return {
-      shape: "circle",
-      x: hole.x,
-      y: hole.y,
-      radius,
-    }
-  }
-
-  if (hole.shape === "oval") {
-    const radiusX = hole.hole_width / 2
-    const radiusY = hole.hole_height / 2
-    if (radiusX <= 0 || radiusY <= 0) return
-    return {
-      shape: "oval",
-      x: hole.x,
-      y: hole.y,
-      radiusX,
-      radiusY,
-      rotation: hole.ccw_rotation,
-    }
-  }
-
-  if (hole.shape === "pill") {
-    if (hole.hole_width <= 0 || hole.hole_height <= 0) return
-    return {
-      shape: "pill",
-      x: hole.x,
-      y: hole.y,
-      width: hole.hole_width,
-      height: hole.hole_height,
-      rotation: hole.ccw_rotation,
-    }
-  }
-
-  if (hole.shape === "circular_hole_with_rect_pad") {
-    const radius = hole.hole_diameter / 2
-    if (radius <= 0) return
-    return {
-      shape: "circle",
-      x: hole.x + (hole.hole_offset_x ?? 0),
-      y: hole.y + (hole.hole_offset_y ?? 0),
-      radius,
-    }
-  }
-
-  if (hole.shape === "pill_hole_with_rect_pad") {
-    if (hole.hole_width <= 0 || hole.hole_height <= 0) return
-    return {
-      shape: "pill",
-      x: hole.x + (hole.hole_offset_x ?? 0),
-      y: hole.y + (hole.hole_offset_y ?? 0),
-      width: hole.hole_width,
-      height: hole.hole_height,
-    }
-  }
-
-  if (hole.shape === "rotated_pill_hole_with_rect_pad") {
-    if (hole.hole_width <= 0 || hole.hole_height <= 0) return
-    return {
-      shape: "pill",
-      x: hole.x + (hole.hole_offset_x ?? 0),
-      y: hole.y + (hole.hole_offset_y ?? 0),
-      width: hole.hole_width,
-      height: hole.hole_height,
-      rotation: hole.hole_ccw_rotation,
-    }
-  }
-
-  if (hole.shape !== "hole_with_polygon_pad") return
-
-  const holeOffset = applyToPoint(
-    rotate(((hole.ccw_rotation ?? 0) * Math.PI) / 180),
-    { x: hole.hole_offset_x ?? 0, y: hole.hole_offset_y ?? 0 },
-  )
-  const holeX = hole.x + holeOffset.x
-  const holeY = hole.y + holeOffset.y
-  const holeShape = hole.hole_shape
-
-  if (holeShape === "circle") {
-    const radius = (hole.hole_diameter ?? 0) / 2
-    if (radius <= 0) return
-    return {
-      shape: "circle",
-      x: holeX,
-      y: holeY,
-      radius,
-    }
-  }
-
-  if (holeShape === "oval") {
-    const radiusX = (hole.hole_width ?? 0) / 2
-    const radiusY = (hole.hole_height ?? 0) / 2
-    if (radiusX <= 0 || radiusY <= 0) return
-    return {
-      shape: "oval",
-      x: holeX,
-      y: holeY,
-      radiusX,
-      radiusY,
-      rotation: hole.ccw_rotation,
-    }
-  }
-
-  if (holeShape === "pill" || holeShape === "rotated_pill") {
-    const width = hole.hole_width ?? 0
-    const height = hole.hole_height ?? 0
-    if (width <= 0 || height <= 0) return
-    return {
-      shape: "pill",
-      x: holeX,
-      y: holeY,
-      width,
-      height,
-      rotation: hole.ccw_rotation,
-    }
-  }
 }
 
 function isSamePoint(x1: number, y1: number, x2: number, y2: number): boolean {

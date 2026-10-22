@@ -13,24 +13,21 @@ export function drawPolygonPath(params: {
   ccwRotationDegrees?: number
 }): void {
   const { ctx, points, cx = 0, cy = 0, ccwRotationDegrees = 0 } = params
-  if (points.length < 3) return
+  const firstPoint = points[0]
+  if (points.length < 3 || !firstPoint) return
 
   const transform = compose(
     translate(cx, cy),
     rotate((-ccwRotationDegrees * Math.PI) / 180),
     translate(-cx, -cy),
   )
-  const firstPoint = points[0]
-  if (firstPoint) {
-    const first = applyToPoint(transform, firstPoint)
-    ctx.moveTo(first.x, first.y)
-    for (let i = 1; i < points.length; i++) {
-      const point = points[i]
-      if (point) {
-        const rotatedPoint = applyToPoint(transform, point)
-        ctx.lineTo(rotatedPoint.x, rotatedPoint.y)
-      }
-    }
-    ctx.closePath()
+  const first = applyToPoint(transform, firstPoint)
+  ctx.moveTo(first.x, first.y)
+  for (let i = 1; i < points.length; i++) {
+    const point = points[i]
+    if (!point) continue
+    const rotatedPoint = applyToPoint(transform, point)
+    ctx.lineTo(rotatedPoint.x, rotatedPoint.y)
   }
+  ctx.closePath()
 }
