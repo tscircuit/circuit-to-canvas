@@ -1,6 +1,6 @@
 import type { LayerRef, PcbPlatedHole } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import { applyToPoint } from "transformation-matrix"
+import { applyToPoint, rotate } from "transformation-matrix"
 import { drawCircle } from "../shapes/circle"
 import { drawOval } from "../shapes/oval"
 import { drawPill } from "../shapes/pill"
@@ -9,7 +9,6 @@ import { drawRect } from "../shapes/rect"
 import type { CanvasContext, PcbColorMap } from "../types"
 import { offsetPolygonPoints } from "./soldermask-margin"
 import { isPlatedHolePadCollapsed } from "./helper-functions/is-plated-hole-pad-collapsed"
-import { getPolygonPadTransform } from "./helper-functions/get-polygon-pad-transform"
 
 export interface DrawPcbPlatedHoleParams {
   ctx: CanvasContext
@@ -280,12 +279,12 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
   }
 
   if (hole.shape === "hole_with_polygon_pad") {
-    const padTransform = getPolygonPadTransform(hole)
     const padOutline = hole.pad_outline
     if (padOutline && padOutline.length >= 3) {
-      const padPoints = padOutline.map((point) =>
-        applyToPoint(padTransform, point),
-      )
+      const padPoints = padOutline.map((point) => ({
+        x: hole.x + point.x,
+        y: hole.y + point.y,
+      }))
 
       // Draw polygon pad (smaller if negative margin)
       const copperPoints =
@@ -298,15 +297,18 @@ export function drawPcbPlatedHole(params: DrawPcbPlatedHoleParams): void {
           points: copperPoints,
           fill: copperColor,
           realToCanvasMat,
+          center: { x: hole.x, y: hole.y },
+          rotation: hole.ccw_rotation,
         })
       }
     }
 
     // Draw drill hole (with offset)
-    const holeCenter = applyToPoint(padTransform, {
-      x: hole.hole_offset_x ?? 0,
-      y: hole.hole_offset_y ?? 0,
-    })
+    const holeOffset = applyToPoint(
+      rotate(((hole.ccw_rotation ?? 0) * Math.PI) / 180),
+      { x: hole.hole_offset_x ?? 0, y: hole.hole_offset_y ?? 0 },
+    )
+    const holeCenter = { x: hole.x + holeOffset.x, y: hole.y + holeOffset.y }
     const holeShape = hole.hole_shape
 
     if (holeShape === "circle") {

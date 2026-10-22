@@ -5,8 +5,6 @@ import type {
   PcbSmtPad,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import { applyToPoint } from "transformation-matrix"
-import { getPolygonPadTransform } from "../../helper-functions/get-polygon-pad-transform"
 import type { CanvasContext } from "../../../types"
 import { drawCircle } from "../../../shapes/circle"
 import { drawOval } from "../../../shapes/oval"
@@ -223,14 +221,16 @@ function cutPlatedHole(params: {
     hole.pad_outline &&
     hole.pad_outline.length >= 3
   ) {
-    const padTransform = getPolygonPadTransform(hole)
     drawPolygon({
       ctx,
-      points: hole.pad_outline.map((point) =>
-        applyToPoint(padTransform, point),
-      ),
+      points: hole.pad_outline.map((point) => ({
+        x: hole.x + point.x,
+        y: hole.y + point.y,
+      })),
       fill: CUTOUT_MASK_COLOR,
       realToCanvasMat,
+      center: { x: hole.x, y: hole.y },
+      rotation: hole.ccw_rotation,
     })
   }
 }

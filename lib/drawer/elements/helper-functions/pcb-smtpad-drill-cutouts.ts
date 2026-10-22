@@ -6,9 +6,8 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import { applyToPoint } from "transformation-matrix"
+import { applyToPoint, rotate } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
-import { getPolygonPadTransform } from "./get-polygon-pad-transform"
 import { drawPillPath } from "./draw-pill"
 
 interface DrillCutoutCircle {
@@ -657,10 +656,12 @@ function getPlatedHoleDrillCutout(
 
   if (hole.shape !== "hole_with_polygon_pad") return
 
-  const { x: holeX, y: holeY } = applyToPoint(getPolygonPadTransform(hole), {
-    x: hole.hole_offset_x ?? 0,
-    y: hole.hole_offset_y ?? 0,
-  })
+  const holeOffset = applyToPoint(
+    rotate(((hole.ccw_rotation ?? 0) * Math.PI) / 180),
+    { x: hole.hole_offset_x ?? 0, y: hole.hole_offset_y ?? 0 },
+  )
+  const holeX = hole.x + holeOffset.x
+  const holeY = hole.y + holeOffset.y
   const holeShape = hole.hole_shape
 
   if (holeShape === "circle") {

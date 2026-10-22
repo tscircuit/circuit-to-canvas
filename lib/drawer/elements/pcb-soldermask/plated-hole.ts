@@ -6,7 +6,6 @@ import { drawPillPath } from "../helper-functions/draw-pill"
 import { drawPolygonPath } from "../helper-functions/draw-polygon"
 import { drawRoundedRectPath } from "../helper-functions/draw-rounded-rect"
 import { isPlatedHolePadCollapsed } from "../helper-functions/is-plated-hole-pad-collapsed"
-import { getPolygonPadTransform } from "../helper-functions/get-polygon-pad-transform"
 import { offsetPolygonPoints } from "../soldermask-margin"
 import { cutPathFromSoldermask } from "./cut-path-from-soldermask"
 /**
@@ -184,10 +183,11 @@ function drawPlatedHoleShapePath(params: {
     hole.pad_outline &&
     hole.pad_outline.length >= 3
   ) {
-    const padTransform = getPolygonPadTransform(hole)
-    const padPoints = hole.pad_outline.map((point) =>
-      applyToPoint(padTransform, point),
-    )
+    const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
+    const padPoints = hole.pad_outline.map((point) => ({
+      x: hole.x + point.x,
+      y: hole.y + point.y,
+    }))
     const marginPoints =
       margin !== 0 ? offsetPolygonPoints(padPoints, margin) : padPoints
     const canvasPoints = marginPoints.map((p) => {
@@ -196,7 +196,13 @@ function drawPlatedHoleShapePath(params: {
     })
 
     ctx.beginPath()
-    drawPolygonPath({ ctx, points: canvasPoints })
+    drawPolygonPath({
+      ctx,
+      points: canvasPoints,
+      cx: centerX,
+      cy: centerY,
+      ccwRotationDegrees: hole.ccw_rotation,
+    })
   }
 }
 
@@ -412,10 +418,11 @@ function drawNegativeMarginRingForPlatedHole(params: {
     hole.pad_outline &&
     hole.pad_outline.length >= 3
   ) {
-    const padTransform = getPolygonPadTransform(hole)
-    const padPoints = hole.pad_outline.map((point) =>
-      applyToPoint(padTransform, point),
-    )
+    const [centerX, centerY] = applyToPoint(realToCanvasMat, [hole.x, hole.y])
+    const padPoints = hole.pad_outline.map((point) => ({
+      x: hole.x + point.x,
+      y: hole.y + point.y,
+    }))
 
     ctx.beginPath()
 
@@ -424,7 +431,13 @@ function drawNegativeMarginRingForPlatedHole(params: {
       const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
       return { x, y }
     })
-    drawPolygonPath({ ctx, points: outerPoints })
+    drawPolygonPath({
+      ctx,
+      points: outerPoints,
+      cx: centerX,
+      cy: centerY,
+      ccwRotationDegrees: hole.ccw_rotation,
+    })
 
     // Draw inner polygon cutout
     const innerMarginPoints = offsetPolygonPoints(padPoints, -marginThickness)
@@ -433,7 +446,13 @@ function drawNegativeMarginRingForPlatedHole(params: {
         const [x, y] = applyToPoint(realToCanvasMat, [p.x, p.y])
         return { x, y }
       })
-      drawPolygonPath({ ctx, points: innerPoints })
+      drawPolygonPath({
+        ctx,
+        points: innerPoints,
+        cx: centerX,
+        cy: centerY,
+        ccwRotationDegrees: hole.ccw_rotation,
+      })
     }
 
     ctx.fill("evenodd")

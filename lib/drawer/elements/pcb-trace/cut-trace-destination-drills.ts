@@ -1,13 +1,12 @@
 import { getWireTaperSegments } from "./get-wire-taper-polygon"
 import type { LayerRef, PcbPlatedHole, PcbTrace, PcbVia } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import { applyToPoint } from "transformation-matrix"
+import { applyToPoint, rotate } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
 import { drawOval } from "../../shapes/oval"
 import { drawPill } from "../../shapes/pill"
 import type { CanvasContext } from "../../types"
 import { collectTraceSegments } from "./collect-trace-segments"
-import { getPolygonPadTransform } from "../helper-functions/get-polygon-pad-transform"
 
 const COORD_EPSILON = 1e-6
 
@@ -235,10 +234,12 @@ function getPlatedHoleDrillCutout(
 
   if (hole.shape !== "hole_with_polygon_pad") return
 
-  const { x: holeX, y: holeY } = applyToPoint(getPolygonPadTransform(hole), {
-    x: hole.hole_offset_x ?? 0,
-    y: hole.hole_offset_y ?? 0,
-  })
+  const holeOffset = applyToPoint(
+    rotate(((hole.ccw_rotation ?? 0) * Math.PI) / 180),
+    { x: hole.hole_offset_x ?? 0, y: hole.hole_offset_y ?? 0 },
+  )
+  const holeX = hole.x + holeOffset.x
+  const holeY = hole.y + holeOffset.y
   const holeShape = hole.hole_shape
 
   if (holeShape === "circle") {

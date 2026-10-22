@@ -1,4 +1,5 @@
 import type { CanvasContext } from "../../types"
+import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 
 /**
  * Draws a polygon path from an array of points.
@@ -7,17 +8,27 @@ import type { CanvasContext } from "../../types"
 export function drawPolygonPath(params: {
   ctx: CanvasContext
   points: Array<{ x: number; y: number }>
+  cx?: number
+  cy?: number
+  ccwRotationDegrees?: number
 }): void {
-  const { ctx, points } = params
+  const { ctx, points, cx = 0, cy = 0, ccwRotationDegrees = 0 } = params
   if (points.length < 3) return
 
+  const transform = compose(
+    translate(cx, cy),
+    rotate((-ccwRotationDegrees * Math.PI) / 180),
+    translate(-cx, -cy),
+  )
   const firstPoint = points[0]
   if (firstPoint) {
-    ctx.moveTo(firstPoint.x, firstPoint.y)
+    const first = applyToPoint(transform, firstPoint)
+    ctx.moveTo(first.x, first.y)
     for (let i = 1; i < points.length; i++) {
       const point = points[i]
       if (point) {
-        ctx.lineTo(point.x, point.y)
+        const rotatedPoint = applyToPoint(transform, point)
+        ctx.lineTo(rotatedPoint.x, rotatedPoint.y)
       }
     }
     ctx.closePath()
