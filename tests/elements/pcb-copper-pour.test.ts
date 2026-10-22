@@ -3,6 +3,77 @@ import { createCanvas } from "@napi-rs/canvas"
 import type { PcbCopperPour } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
+test.each<{ opacity: number | undefined; expectedAlpha: number[] }>([
+  { opacity: undefined, expectedAlpha: [127, 128] },
+  { opacity: 0, expectedAlpha: [0] },
+  { opacity: 0.25, expectedAlpha: [63, 64] },
+  { opacity: 1, expectedAlpha: [255] },
+])("draw copper pours with opacity $opacity", ({ opacity, expectedAlpha }) => {
+  const canvas = createCanvas(120, 100)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  const pours: PcbCopperPour[] = [
+    {
+      type: "pcb_copper_pour",
+      pcb_copper_pour_id: "rect",
+      shape: "rect",
+      layer: "top",
+      center: { x: 20, y: 50 },
+      width: 20,
+      height: 40,
+      covered_with_solder_mask: false,
+    },
+    {
+      type: "pcb_copper_pour",
+      pcb_copper_pour_id: "polygon",
+      shape: "polygon",
+      layer: "bottom",
+      points: [
+        { x: 50, y: 30 },
+        { x: 70, y: 30 },
+        { x: 70, y: 70 },
+        { x: 50, y: 70 },
+      ],
+      covered_with_solder_mask: false,
+    },
+    {
+      type: "pcb_copper_pour",
+      pcb_copper_pour_id: "brep",
+      shape: "brep",
+      layer: "inner1",
+      brep_shape: {
+        outer_ring: {
+          vertices: [
+            { x: 90, y: 30 },
+            { x: 110, y: 30 },
+            { x: 110, y: 70 },
+            { x: 90, y: 70 },
+          ],
+        },
+        inner_rings: [
+          {
+            vertices: [
+              { x: 96, y: 44 },
+              { x: 104, y: 44 },
+              { x: 104, y: 56 },
+              { x: 96, y: 56 },
+            ],
+          },
+        ],
+      },
+      covered_with_solder_mask: false,
+    },
+  ]
+
+  drawer.drawElements(pours, { copperPourOpacity: opacity })
+
+  for (const x of [20, 60, 92]) {
+    expect(expectedAlpha).toContain(ctx.getImageData(x, 50, 1, 1).data[3]!)
+  }
+  expect(ctx.getImageData(100, 50, 1, 1).data[3]).toBe(0)
+  expect(ctx.globalAlpha).toBe(1)
+})
+
 test("draw rectangular copper pour", async () => {
   const canvas = createCanvas(100, 100)
   const ctx = canvas.getContext("2d")

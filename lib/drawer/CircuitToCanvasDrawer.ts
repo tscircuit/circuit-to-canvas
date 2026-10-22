@@ -84,6 +84,8 @@ import {
 
 export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
+  /** Copper pour opacity from 0 to 1. Defaults to 0.5. */
+  copperPourOpacity?: number
   /**
    * Elements used to find copper pours when clipping traces. This is
    * useful when `elements` is a filtered subset, such as a trace-only render
@@ -349,6 +351,7 @@ export class CircuitToCanvasDrawer {
           pour: element as PcbCopperPour,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
+          opacity: options.copperPourOpacity,
         })
       }
     }

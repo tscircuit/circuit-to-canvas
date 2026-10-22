@@ -9,6 +9,8 @@ export interface DrawPcbCopperPourParams {
   pour: PcbCopperPour
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
+  /** Copper pour opacity from 0 to 1. Defaults to 0.5. */
+  opacity?: number
 }
 
 function layerToColor(layer: string, colorMap: PcbColorMap): string {
@@ -84,10 +86,9 @@ export function appendPcbCopperPourPath(params: {
 }
 
 export function drawPcbCopperPour(params: DrawPcbCopperPourParams): void {
-  const { ctx, pour, realToCanvasMat, colorMap } = params
+  const { ctx, pour, realToCanvasMat, colorMap, opacity = 0.5 } = params
 
   const color = layerToColor(pour.layer, colorMap)
-  const opacity = 0.5
 
   // Save context to apply opacity
   ctx.save()
