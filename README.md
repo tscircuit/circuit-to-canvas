@@ -12,20 +12,19 @@ drawer.setCameraBounds({ minX: 0, maxX: 100, minY: 0, maxY: 100 })
 
 drawer.configure({
   colorOverrides: {
-    topCopper: "#ff0000"
-  }
+    topCopper: "#ff0000",
+  },
 })
 
 // Accepts a circuit json array, by default draws on all layers
 drawer.drawElements([pcbPlatedHole], {
-  layers: ["top_copper"]
+  layers: ["top_copper"],
 })
 ```
 
 ## Implementation Notes
 
 There are two "types" of layers:
-
 - Specific drawing layers e.g. "top_copper"
 - Layer groups "top" (includes "top_copper", "top_soldermask")
 
