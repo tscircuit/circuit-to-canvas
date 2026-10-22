@@ -3,15 +3,7 @@ import { createCanvas } from "@napi-rs/canvas"
 import type { PcbCopperPour } from "circuit-json"
 import { CircuitToCanvasDrawer } from "../../lib/drawer"
 
-test.each<{ opacity: number | undefined; expectedAlpha: number[] }>([
-  { opacity: undefined, expectedAlpha: [127, 128] },
-  { opacity: 0, expectedAlpha: [0] },
-  { opacity: 0.25, expectedAlpha: [63, 64] },
-  { opacity: 1, expectedAlpha: [255] },
-])("draw copper pours with opacity $opacity", ({ opacity, expectedAlpha }) => {
-  const canvas = createCanvas(120, 100)
-  const ctx = canvas.getContext("2d")
-  const drawer = new CircuitToCanvasDrawer(ctx)
+test("draw copper pours with configurable opacity", async () => {
   const pours: PcbCopperPour[] = [
     {
       type: "pcb_copper_pour",
@@ -31,8 +23,7 @@ test.each<{ opacity: number | undefined; expectedAlpha: number[] }>([
       points: [
         { x: 50, y: 30 },
         { x: 70, y: 30 },
-        { x: 70, y: 70 },
-        { x: 50, y: 70 },
+        { x: 60, y: 70 },
       ],
       covered_with_solder_mask: false,
     },
@@ -65,13 +56,54 @@ test.each<{ opacity: number | undefined; expectedAlpha: number[] }>([
     },
   ]
 
-  drawer.drawElements(pours, { copperPourOpacity: opacity })
-
-  for (const x of [20, 60, 92]) {
-    expect(expectedAlpha).toContain(ctx.getImageData(x, 50, 1, 1).data[3]!)
+  const comparison = createCanvas(960, 280)
+  const comparisonCtx = comparison.getContext("2d")
+  comparisonCtx.fillStyle = "#1a1a1a"
+  comparisonCtx.fillRect(0, 0, 960, 280)
+  for (let y = 40; y < 240; y += 20) {
+    for (let x = 0; x < 960; x += 20) {
+      comparisonCtx.fillStyle = (x / 20 + y / 20) % 2 ? "#303030" : "#242424"
+      comparisonCtx.fillRect(x, y, 20, 20)
+    }
   }
-  expect(ctx.getImageData(100, 50, 1, 1).data[3]).toBe(0)
-  expect(ctx.globalAlpha).toBe(1)
+
+  const cases = [
+    { label: "Default (50%)", opacity: undefined, expectedAlpha: [127, 128] },
+    { label: "0%", opacity: 0, expectedAlpha: [0] },
+    { label: "25%", opacity: 0.25, expectedAlpha: [63, 64] },
+    { label: "100%", opacity: 1, expectedAlpha: [255] },
+  ]
+  for (const [index, { label, opacity, expectedAlpha }] of cases.entries()) {
+    const canvas = createCanvas(120, 100)
+    const ctx = canvas.getContext("2d")
+    const drawer = new CircuitToCanvasDrawer(ctx)
+    drawer.drawElements(pours, { copperPourOpacity: opacity })
+
+    for (const x of [20, 60, 92]) {
+      expect(expectedAlpha).toContain(ctx.getImageData(x, 50, 1, 1).data[3]!)
+    }
+    expect(ctx.getImageData(100, 50, 1, 1).data[3]).toBe(0)
+    expect(ctx.globalAlpha).toBe(1)
+
+    const offsetX = index * 240
+    comparisonCtx.drawImage(canvas, offsetX, 40, 240, 200)
+    comparisonCtx.fillStyle = "#ffffff"
+    comparisonCtx.textAlign = "center"
+    comparisonCtx.font = "18px sans-serif"
+    comparisonCtx.fillText(label, offsetX + 120, 27)
+    comparisonCtx.font = "12px sans-serif"
+    comparisonCtx.fillText("Rect", offsetX + 40, 255)
+    comparisonCtx.fillText("Polygon", offsetX + 120, 255)
+    comparisonCtx.fillText("BRep", offsetX + 200, 255)
+    comparisonCtx.fillText("top", offsetX + 40, 273)
+    comparisonCtx.fillText("bottom", offsetX + 120, 273)
+    comparisonCtx.fillText("inner1", offsetX + 200, 273)
+  }
+
+  await expect(comparison.toBuffer("image/png")).toMatchPngSnapshot(
+    import.meta.path,
+    "copper-pour-opacity",
+  )
 })
 
 test("draw rectangular copper pour", async () => {
