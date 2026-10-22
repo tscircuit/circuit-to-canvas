@@ -18,6 +18,7 @@ import { processPlatedHoleSoldermask } from "./plated-hole"
 import { processSmtPadSoldermask } from "./smt-pad"
 import { processTraceSoldermask } from "./trace"
 import { isViaTented, processViaSoldermask } from "./via"
+import { drawSoldermaskOpening } from "../draw-soldermask-opening"
 
 export interface DrawPcbSoldermaskParams {
   ctx: CanvasContext
@@ -187,6 +188,19 @@ export function drawPcbSoldermask(params: DrawPcbSoldermaskParams): void {
     })
   }
 
+  soldermaskCtx.save()
+  soldermaskCtx.globalCompositeOperation = "destination-out"
+  for (const element of elements) {
+    if (element.type !== "pcb_soldermask_opening" || element.layer !== layer)
+      continue
+    drawSoldermaskOpening({
+      ctx: soldermaskCtx,
+      opening: element,
+      realToCanvasMat,
+      fill: "#000",
+    })
+  }
+  soldermaskCtx.restore()
   mergeDrawingLayer(ctx, soldermaskCtx)
 }
 
