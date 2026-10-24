@@ -7,7 +7,7 @@ import type { Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import { drawLine } from "../../shapes/line"
 import { drawPolygon } from "../../shapes/polygon"
-import { buildTracePolygon } from "../pcb-trace/build-trace-polygon"
+import { buildTracePolygon } from "@tscircuit/circuit-json-util"
 import { collectTraceSegments } from "../pcb-trace/collect-trace-segments"
 import { cutTraceDestinationsAtDrills } from "../pcb-trace/cut-trace-destination-drills"
 
