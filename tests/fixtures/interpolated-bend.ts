@@ -24,7 +24,7 @@ export const interpolatedBendRepro: AnyCircuitElement[] = [
   interpolatedBend,
   ...[
     { x: -6, y: 6, text: "CONTROL: CONSTANT 2mm" },
-    { x: 6, y: 6, text: "BUG: INTERPOLATED 2mm" },
+    { x: 6, y: 6, text: "FIX: INTERPOLATED 2mm" },
     { x: 0, y: -5, text: "ALL VERTEX WIDTHS ARE 2mm: BENDS MUST NOT NARROW" },
   ].map(({ x, y, text }, index) => ({
     type: "pcb_note_text" as const,
