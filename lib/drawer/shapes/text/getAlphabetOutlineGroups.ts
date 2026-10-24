@@ -2,6 +2,7 @@ import glyphOutlineAlphabet from "@tscircuit/alphabet/outline-polygons"
 import type { Point } from "circuit-json"
 import {
   getAlphabetAdvanceWidth,
+  GLYPH_SCALE,
   type AlphabetLayout,
 } from "./getAlphabetLayout"
 
@@ -17,8 +18,8 @@ export function getAlphabetOutlineGroups(
   params: GlyphOutlineLineParams,
 ): Point[][][] {
   const { line, fontSize, startX, startY } = params
-  const height = fontSize
-  const glyphScaleX = fontSize
+  const height = fontSize * GLYPH_SCALE
+  const glyphScaleX = fontSize * GLYPH_SCALE
   const characters = Array.from(line)
   const groups: Point[][][] = []
   let cursor = startX + params.layout.strokeWidth / 2

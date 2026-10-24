@@ -157,22 +157,27 @@ function getStartOffset(
     return getApproximateTextStartPosition(alignment, layout)
   }
 
+  // Anchor the advance box (width = sum of advances, height = glyph scale x
+  // font size) on the anchor, like circuit-json-to-gerber does, instead of
+  // centring the glyph ink bounds. The box sits at [0, layout.width] x
+  // [0, layout.height] in base coordinates: lines start at x = 0 and the
+  // first line's glyph box starts at y = 0.
   return {
-    x: -getHorizontalAnchorPosition(alignment, bounds),
-    y: -getVerticalAnchorPosition(alignment, bounds),
+    x: -getHorizontalAdvanceBoxAnchorPosition(alignment, layout),
+    y: -getVerticalAdvanceBoxAnchorPosition(alignment, layout),
   }
 }
 
-function getHorizontalAnchorPosition(
+function getHorizontalAdvanceBoxAnchorPosition(
   alignment: NinePointAnchor,
-  bounds: Pick<TextBounds, "minX" | "maxX">,
+  layout: AlphabetLayout,
 ): number {
   if (
     alignment === "top_left" ||
     alignment === "bottom_left" ||
     alignment === "center_left"
   ) {
-    return bounds.minX
+    return 0
   }
 
   if (
@@ -180,22 +185,22 @@ function getHorizontalAnchorPosition(
     alignment === "bottom_right" ||
     alignment === "center_right"
   ) {
-    return bounds.maxX
+    return layout.width
   }
 
-  return (bounds.minX + bounds.maxX) / 2
+  return layout.width / 2
 }
 
-function getVerticalAnchorPosition(
+function getVerticalAdvanceBoxAnchorPosition(
   alignment: NinePointAnchor,
-  bounds: Pick<TextBounds, "minY" | "maxY">,
+  layout: AlphabetLayout,
 ): number {
   if (
     alignment === "top_left" ||
     alignment === "top_right" ||
     alignment === "top_center"
   ) {
-    return bounds.minY
+    return 0
   }
 
   if (
@@ -203,10 +208,10 @@ function getVerticalAnchorPosition(
     alignment === "bottom_right" ||
     alignment === "bottom_center"
   ) {
-    return bounds.maxY
+    return layout.height
   }
 
-  return (bounds.minY + bounds.maxY) / 2
+  return layout.height / 2
 }
 
 function translateGlyphGroups(

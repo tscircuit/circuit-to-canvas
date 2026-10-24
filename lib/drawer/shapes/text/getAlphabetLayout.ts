@@ -16,6 +16,11 @@ export type AlphabetLayout = {
   lineWidths: number[]
 }
 
+// Glyphs are drawn at 70% of the font size (cap-height scale), matching
+// circuit-json-to-gerber's CAP_HEIGHT_SCALE. Advances (widths) stay at full
+// font size; only the glyph scale changes.
+export const GLYPH_SCALE = 0.7
+
 const getAdvanceRatio = (char: string): number =>
   glyphAdvanceRatio[char] ??
   (char === " " ? textMetrics.spaceWidthRatio : textMetrics.glyphWidthRatio)
@@ -60,7 +65,9 @@ export function getAlphabetLayout(
   )
 
   const height =
-    lines.length > 1 ? fontSize + (lines.length - 1) * lineHeight : fontSize
+    lines.length > 1
+      ? fontSize * GLYPH_SCALE + (lines.length - 1) * lineHeight
+      : fontSize * GLYPH_SCALE
 
   return {
     width,
