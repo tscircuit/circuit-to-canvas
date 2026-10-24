@@ -3,7 +3,7 @@ import { pcb_trace } from "circuit-json"
 import { buildTracePolygon } from "../../lib/drawer/elements/pcb-trace/build-trace-polygon"
 import { interpolatedBend } from "../fixtures/interpolated-bend"
 
-test.failing("interpolated bend edges intersect one half-width from each centerline", () => {
+test("interpolated bend edges intersect one half-width from each centerline", () => {
   expect(pcb_trace.safeParse(interpolatedBend).success).toBe(true)
   const polygon = buildTracePolygon(interpolatedBend.route)
   // Incoming upper edge is y=-1; outgoing left edge is x=7.
