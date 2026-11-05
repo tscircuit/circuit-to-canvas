@@ -9,6 +9,7 @@ export interface DrawPcbViaParams {
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
   layer?: LayerRef
+  clearDrillHole?: boolean
 }
 
 export function drawPcbVia(params: DrawPcbViaParams): void {
@@ -36,6 +37,8 @@ export function drawPcbVia(params: DrawPcbViaParams): void {
     realToCanvasMat,
   })
   ctx.restore()
+
+  if (params.clearDrillHole) return
 
   drawCircle({
     ctx,
