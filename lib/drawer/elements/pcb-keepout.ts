@@ -2,11 +2,31 @@ import type { PCBKeepout } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
 import type { PcbColorMap, CanvasContext } from "../types"
-import { drawCirclePath, drawRectPath } from "./helper-functions"
+import { drawLine } from "../shapes/line"
+import {
+  drawCirclePath,
+  drawPolygonPath,
+  drawRectPath,
+} from "./helper-functions"
+
+/** Circuit JSON `pcb_keepout` with `shape: "outline"`. */
+export interface PcbKeepoutOutline {
+  type: "pcb_keepout"
+  shape: "outline"
+  pcb_keepout_id: string
+  outline: Array<{ x: number; y: number }>
+  stroke_width: number
+  layers: string[]
+  description?: string
+  pcb_group_id?: string
+  subcircuit_id?: string
+}
+
+export type DrawablePcbKeepout = PCBKeepout | PcbKeepoutOutline
 
 export interface DrawPcbKeepoutParams {
   ctx: CanvasContext
-  keepout: PCBKeepout
+  keepout: DrawablePcbKeepout
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
 }
@@ -18,7 +38,10 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-function getKeepoutColor(keepout: PCBKeepout, colorMap: PcbColorMap): string {
+function getKeepoutColor(
+  keepout: DrawablePcbKeepout,
+  colorMap: PcbColorMap,
+): string {
   return keepout.layers.includes("bottom") && !keepout.layers.includes("top")
     ? colorMap.keepout.bottom
     : colorMap.keepout.top
@@ -177,5 +200,66 @@ export function drawPcbKeepout(params: DrawPcbKeepoutParams): void {
     })
 
     ctx.restore()
+    return
   }
+
+  if (keepout.shape !== "outline") return
+
+  const outline = keepout.outline ?? []
+  if (outline.length < 2) return
+
+  if (outline.length === 2) {
+    const start = outline[0]
+    const end = outline[1]
+    if (!start || !end) return
+    drawLine({
+      ctx,
+      start,
+      end,
+      strokeWidth: keepout.stroke_width,
+      stroke: strokeColor,
+      realToCanvasMat,
+    })
+    return
+  }
+
+  const mapped = outline.map((pt) => {
+    const [x, y] = applyToPoint(realToCanvasMat, [pt.x, pt.y])
+    return { x, y }
+  })
+  const xs = mapped.map((pt) => pt.x)
+  const ys = mapped.map((pt) => pt.y)
+  const minX = Math.min(...xs)
+  const minY = Math.min(...ys)
+  const maxX = Math.max(...xs)
+  const maxY = Math.max(...ys)
+  const width = maxX - minX
+  const height = maxY - minY
+  const diagonal = Math.sqrt(width * width + height * height)
+
+  ctx.save()
+  drawKeepoutSurface({
+    ctx,
+    strokeColor,
+    fillColor,
+    drawPath: () => {
+      ctx.beginPath()
+      drawPolygonPath({ ctx, points: mapped })
+    },
+    drawHatch: () =>
+      drawHatchLines({
+        ctx,
+        strokeColor,
+        hatchWidth,
+        hatchSpacing,
+        diagonal,
+        getLineEndpoints: (offset) => ({
+          startX: minX + offset,
+          startY: minY,
+          endX: minX + offset + diagonal,
+          endY: minY + diagonal,
+        }),
+      }),
+  })
+  ctx.restore()
 }
