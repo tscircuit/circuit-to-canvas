@@ -53,7 +53,10 @@ export async function getStackedPngSvgComparison(
     minY: bounds.minY,
     maxY: bounds.maxY,
   })
-  drawer.drawElements(circuitJson, { drawSoldermask })
+  drawer.drawElements(circuitJson, {
+    drawSoldermask,
+    showDifferentialPairPhaseSkew,
+  })
 
   const canvasPng = canvas.toBuffer("image/png")
 

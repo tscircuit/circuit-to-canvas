@@ -6,9 +6,11 @@ import type {
   PcbTrace,
   PcbVia,
 } from "circuit-json"
+import type { PhaseSkewStroke } from "circuit-json-to-differential-pair-phase-skew"
 import type { Matrix } from "transformation-matrix"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
+import { drawLine } from "../../shapes/line"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import { appendPcbCopperPourPath } from "../pcb-copper-pour"
 import { drawPcbTrace } from "./pcb-trace"
@@ -22,6 +24,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
   vias: PcbVia[]
   platedHoles: PcbPlatedHole[]
   renderLayers?: PcbRenderLayer[]
+  phaseSkewStrokes?: PhaseSkewStroke[]
 }): void {
   const {
     ctx,
@@ -32,57 +35,11 @@ export function drawPcbTracesClippedToCopperPours(params: {
     vias,
     platedHoles,
     renderLayers,
+    phaseSkewStrokes = [],
   } = params
 
-  for (const layer of getTraceLayers(traces, renderLayers)) {
-    const layerCopperPours = copperPours.filter((pour) => pour.layer === layer)
-
-    if (layerCopperPours.length === 0) {
-      drawTracesOnLayer({
-        ctx,
-        traces,
-        layer,
-        realToCanvasMat,
-        colorMap,
-        vias,
-        platedHoles,
-      })
-      continue
-    }
-
-    const traceLayerCtx = createDrawingLayerContext(
-      ctx,
-      ctx.canvas.width,
-      ctx.canvas.height,
-    )
-
-    if (traceLayerCtx) {
-      drawTracesOnLayer({
-        ctx: traceLayerCtx,
-        traces,
-        layer,
-        realToCanvasMat,
-        colorMap,
-        vias,
-        platedHoles,
-      })
-      eraseCopperPoursFromTraceLayer({
-        ctx: traceLayerCtx,
-        copperPours: layerCopperPours,
-        realToCanvasMat,
-      })
-      if (mergeDrawingLayer(ctx, traceLayerCtx)) continue
-    }
-
-    // A custom canvas implementation may not support drawing layers. Keep a
-    // clip-based fallback so trace rendering remains available in that case.
-    ctx.save()
-    clipToOutsideCopperPours({
-      ctx,
-      copperPours: layerCopperPours,
-      realToCanvasMat,
-    })
-    drawTracesOnLayer({
+  for (const layer of getTraceLayers(traces, phaseSkewStrokes, renderLayers)) {
+    const layerParams = {
       ctx,
       traces,
       layer,
@@ -90,12 +47,29 @@ export function drawPcbTracesClippedToCopperPours(params: {
       colorMap,
       vias,
       platedHoles,
-    })
-    ctx.restore()
+    }
+    const layerCopperPours = copperPours.filter((pour) => pour.layer === layer)
+    if (layerCopperPours.length > 0) {
+      drawClippedTracesOnLayer(layerParams, layerCopperPours)
+    } else {
+      drawTracesOnLayer(layerParams)
+    }
+
+    for (const stroke of phaseSkewStrokes) {
+      if (stroke.layer !== layer) continue
+      drawLine({
+        ctx,
+        start: stroke.start,
+        end: stroke.end,
+        strokeWidth: stroke.width,
+        stroke: stroke.color,
+        realToCanvasMat,
+      })
+    }
   }
 }
 
-function drawTracesOnLayer(params: {
+interface DrawTracesOnLayerParams {
   ctx: CanvasContext
   traces: PcbTrace[]
   layer: LayerRef
@@ -103,20 +77,39 @@ function drawTracesOnLayer(params: {
   colorMap: PcbColorMap
   vias: PcbVia[]
   platedHoles: PcbPlatedHole[]
-}): void {
-  const { ctx, traces, layer, realToCanvasMat, colorMap, vias, platedHoles } =
-    params
+}
 
-  for (const trace of traces) {
-    drawPcbTrace({
-      ctx,
-      trace,
+function drawClippedTracesOnLayer(
+  params: DrawTracesOnLayerParams,
+  copperPours: PcbCopperPour[],
+): void {
+  const { ctx, realToCanvasMat } = params
+  const traceLayerCtx = createDrawingLayerContext(
+    ctx,
+    ctx.canvas.width,
+    ctx.canvas.height,
+  )
+  if (traceLayerCtx) {
+    drawTracesOnLayer({ ...params, ctx: traceLayerCtx })
+    eraseCopperPoursFromTraceLayer({
+      ctx: traceLayerCtx,
+      copperPours,
       realToCanvasMat,
-      colorMap,
-      vias,
-      platedHoles,
-      layer,
     })
+    if (mergeDrawingLayer(ctx, traceLayerCtx)) return
+  }
+
+  // A custom canvas implementation may not support drawing layers.
+  ctx.save()
+  clipToOutsideCopperPours({ ctx, copperPours, realToCanvasMat })
+  drawTracesOnLayer(params)
+  ctx.restore()
+}
+
+function drawTracesOnLayer(params: DrawTracesOnLayerParams): void {
+  const { traces, ...drawingParams } = params
+  for (const trace of traces) {
+    drawPcbTrace({ ...drawingParams, trace })
   }
 }
 
@@ -143,22 +136,23 @@ function eraseCopperPoursFromTraceLayer(params: {
 
 function getTraceLayers(
   traces: PcbTrace[],
+  phaseSkewStrokes: PhaseSkewStroke[],
   renderLayers?: PcbRenderLayer[],
 ): LayerRef[] {
   const layers = new Set<LayerRef>()
   for (const trace of traces) {
     for (const point of trace.route ?? []) {
-      if (point.route_type !== "wire" || !point.layer) continue
-      if (
-        renderLayers?.length &&
-        !renderLayers.includes(`${point.layer}_copper` as PcbRenderLayer)
-      ) {
-        continue
-      }
-      layers.add(point.layer)
+      if (point.route_type === "wire" && point.layer) layers.add(point.layer)
     }
   }
-  return [...layers]
+  // A routed span between consecutive vias can contain no wire points.
+  for (const { layer } of phaseSkewStrokes) layers.add(layer)
+
+  return [...layers].filter(
+    (layer) =>
+      !renderLayers?.length ||
+      renderLayers.includes(`${layer}_copper` as PcbRenderLayer),
+  )
 }
 
 /** Clips to the complement of the finalized copper regions on this layer. */

@@ -36,6 +36,10 @@ import type {
   PcbTrace,
   PcbVia,
 } from "circuit-json"
+import {
+  getDifferentialPairPhaseSkewStrokes,
+  type PhaseSkewColors,
+} from "circuit-json-to-differential-pair-phase-skew"
 import type { Matrix } from "transformation-matrix"
 import { compose, identity, scale, translate } from "transformation-matrix"
 import { drawPcbBoard } from "./elements/pcb-board"
@@ -113,6 +117,10 @@ export interface DrawElementsOptions {
   showPcbNotes?: boolean
   /** Whether to render pcb_debug_object overlays. Defaults to false. */
   showDebugObjects?: boolean
+  /** Color routed differential pairs by local phase skew. Defaults to false. */
+  showDifferentialPairPhaseSkew?: boolean
+  /** Override the default phase skew palette. */
+  phaseSkewColors?: Partial<PhaseSkewColors>
   /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
   clearDrillHoles?: boolean
 }
@@ -222,6 +230,11 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
+    const phaseSkewStrokes = options.showDifferentialPairPhaseSkew
+      ? getDifferentialPairPhaseSkewStrokes(elements, {
+          colors: options.phaseSkewColors,
+        })
+      : undefined
     this.ctx.boardOwnerMap = createBoardOwnerMap([
       ...(options.clipContextElements ?? []),
       ...elements,
@@ -329,6 +342,19 @@ export class CircuitToCanvasDrawer {
         shouldDrawElement(el, options) && el.type === "pcb_trace",
     )
 
+    const drawTraces = () =>
+      drawPcbTracesClippedToCopperPours({
+        ctx: this.ctx,
+        traces: drawableTraces,
+        copperPours: drawableCopperPours,
+        realToCanvasMat: this.realToCanvasMat,
+        colorMap: this.colorMap,
+        vias: drawableVias,
+        platedHoles: drawablePlatedHoles,
+        renderLayers: options.layers,
+        phaseSkewStrokes,
+      })
+
     // Step 2: Draw board outline/material (inner board)
     if (board) {
       drawPcbBoard({
@@ -385,16 +411,7 @@ export class CircuitToCanvasDrawer {
 
     // Draw traces and drills before soldermask/paste so overlays stay on top.
     if (renderTopLayerOverlay) {
-      drawPcbTracesClippedToCopperPours({
-        ctx: this.ctx,
-        traces: drawableTraces,
-        copperPours: drawableCopperPours,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-        vias: drawableVias,
-        platedHoles: drawablePlatedHoles,
-        renderLayers: options.layers,
-      })
+      drawTraces()
 
       for (const element of elements) {
         if (!shouldDrawElement(element, options)) continue
@@ -547,16 +564,7 @@ export class CircuitToCanvasDrawer {
 
     // Step 7: Draw traces clipped to the copper-pour geometry on each layer.
     if (!renderTopLayerOverlay) {
-      drawPcbTracesClippedToCopperPours({
-        ctx: this.ctx,
-        traces: drawableTraces,
-        copperPours: drawableCopperPours,
-        realToCanvasMat: this.realToCanvasMat,
-        colorMap: this.colorMap,
-        vias: drawableVias,
-        platedHoles: drawablePlatedHoles,
-        renderLayers: options.layers,
-      })
+      drawTraces()
     }
 
     // Step 8: Draw holes (drill) on top of copper and soldermask

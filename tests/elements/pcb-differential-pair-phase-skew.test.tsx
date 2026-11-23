@@ -1,5 +1,9 @@
 import { test, expect } from "bun:test"
+import { createCanvas } from "@napi-rs/canvas"
+import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import { applyToPoint } from "transformation-matrix"
+import { CircuitToCanvasDrawer, type DrawElementsOptions } from "../../lib"
 import { getStackedPngSvgComparison } from "../fixtures/getStackedPngSvgComparison"
 import {
   LayerChangeBoard,
@@ -93,3 +97,70 @@ for (const { name, label, observation, render, width, height } of boards) {
     }
   })
 }
+
+function renderCanvas(circuitJson: CircuitJson, options?: DrawElementsOptions) {
+  const canvas = createCanvas(600, 240)
+  const ctx = canvas.getContext("2d")
+  const drawer = new CircuitToCanvasDrawer(ctx)
+  drawer.setCameraBounds({ minX: -15, maxX: 15, minY: -6, maxY: 6 })
+  drawer.drawElements(circuitJson, options)
+  return {
+    png: () => canvas.toBuffer("image/png"),
+    pixel(x: number, y: number) {
+      const point = applyToPoint(drawer.realToCanvasMat, { x, y })
+      return Array.from(
+        ctx.getImageData(Math.floor(point.x), Math.floor(point.y), 1, 1).data,
+      )
+    },
+  }
+}
+
+test("Canvas phase skew is opt-in and a matched pair uses the zero colour", () => {
+  const circuitJson = renderBoard(<MatchedPairBoard />)
+  const off = renderCanvas(circuitJson, {
+    showDifferentialPairPhaseSkew: false,
+    phaseSkewColors: { zero: "#17a34a" },
+  })
+  expect(off.png()).toEqual(renderCanvas(circuitJson).png())
+  expect(off.pixel(0, 0.6)).toEqual([200, 52, 52, 255])
+
+  const on = renderCanvas(circuitJson, { showDifferentialPairPhaseSkew: true })
+  expect(on.pixel(0, 0.6)).toEqual([255, 255, 255, 255])
+  expect(on.pixel(0, -0.6)).toEqual([255, 255, 255, 255])
+
+  const custom = renderCanvas(circuitJson, {
+    showDifferentialPairPhaseSkew: true,
+    phaseSkewColors: { zero: "#17a34a" },
+  })
+  expect(custom.pixel(0, 0.6)).toEqual([23, 163, 74, 255])
+})
+
+test("Canvas shows opposite phase skew signs after a detour", () => {
+  const canvas = renderCanvas(renderBoard(<LoadEndMeanderBoard />), {
+    showDifferentialPairPhaseSkew: true,
+  })
+  expect(canvas.pixel(0, 0.6)).toEqual([0, 0, 255, 255])
+  expect(canvas.pixel(0, -0.6)).toEqual([255, 0, 0, 255])
+  expect(canvas.pixel(11.5, 0.6)).toEqual([255, 255, 255, 255])
+  expect(canvas.pixel(11.5, -0.6)).toEqual([255, 255, 255, 255])
+})
+
+test("Canvas confines skew to visible copper and keeps via drills above it", () => {
+  const circuitJson = renderBoard(<LayerChangeBoard />)
+  const top = renderCanvas(circuitJson, {
+    showDifferentialPairPhaseSkew: true,
+    layers: ["top_copper"],
+  })
+  const bottom = renderCanvas(circuitJson, {
+    showDifferentialPairPhaseSkew: true,
+    layers: ["bottom_copper"],
+  })
+  expect(top.pixel(-2, 0.6)).toEqual([0, 0, 255, 255])
+  expect(top.pixel(2, 0.6)[3]).toBe(0)
+  expect(bottom.pixel(-2, 0.6)[3]).toBe(0)
+  expect(bottom.pixel(2, 0.6)).toEqual([0, 0, 255, 255])
+  for (const view of [top, bottom]) {
+    expect(view.pixel(0, 0.6)).toEqual([255, 38, 226, 255])
+    expect(view.pixel(0, -0.6)).toEqual([255, 38, 226, 255])
+  }
+})

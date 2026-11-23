@@ -39,10 +39,11 @@
   "peerDependencies": {
     "@tscircuit/alphabet": "*",
     "@tscircuit/circuit-json-util": "*",
-    "circuit-json": "*",
+    "circuit-json": ">=0.0.561",
     "typescript": "^5"
   },
   "dependencies": {
+    "circuit-json-to-differential-pair-phase-skew": "https://pkg.pr.new/tscircuit/circuit-json-to-differential-pair-phase-skew@ac6e557",
     "transformation-matrix": "^3.1.0"
   }
 }
