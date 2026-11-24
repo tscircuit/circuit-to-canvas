@@ -24,7 +24,7 @@
     "circuit-json": "^0.0.561",
     "circuit-json-to-connectivity-map": "^0.0.23",
     "circuit-to-svg": "0.0.465",
-    "format-si-unit": "^0.0.7",
+    "format-si-unit": "^0.0.12",
     "looks-same": "^10.0.1",
     "schematic-symbols": "^0.0.202",
     "tsup": "^8.5.1"
