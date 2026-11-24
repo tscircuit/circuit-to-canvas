@@ -27,7 +27,6 @@ const getPreGeneratedLabelPng = (label: string): Buffer => {
 
 export const stackPngsVertically = async (
   pngs: Array<{ png: Buffer; label: string }>,
-  title?: string,
 ): Promise<Buffer> => {
   if (pngs.length === 0) {
     throw new Error("No PNGs provided to stack")
@@ -44,9 +43,7 @@ export const stackPngsVertically = async (
 
   // Calculate the maximum width and total height
   const maxWidth = Math.max(...images.map((img) => img.width))
-  const titleHeight = title ? 32 : 0
-  const totalHeight =
-    titleHeight + images.reduce((sum, img) => sum + img.height, 0)
+  const totalHeight = images.reduce((sum, img) => sum + img.height, 0)
 
   // Create the final canvas
   const canvas = createCanvas(maxWidth, totalHeight)
@@ -57,14 +54,7 @@ export const stackPngsVertically = async (
   ctx.fillRect(0, 0, maxWidth, totalHeight)
 
   // Draw each image and its label
-  if (title) {
-    const escapedTitle = title.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
-    const titlePng = svgToPng(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${maxWidth}" height="${titleHeight}"><text x="10" y="22" font-size="16" fill="#fff">${escapedTitle}</text></svg>`,
-    )
-    ctx.drawImage(await loadImage(titlePng), 0, 0)
-  }
-  let currentY = titleHeight
+  let currentY = 0
   for (let i = 0; i < pngs.length; i++) {
     const { label } = pngs[i]!
     const img = images[i]!
