@@ -25,6 +25,7 @@ drawer.drawElements([pcbPlatedHole], {
 ## Implementation Notes
 
 There are two "types" of layers:
+
 - Specific drawing layers e.g. "top_copper"
 - Layer groups "top" (includes "top_copper", "top_soldermask")
 
