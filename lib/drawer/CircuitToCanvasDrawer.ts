@@ -92,7 +92,9 @@ export interface DrawElementsOptions {
    * Elements used to find copper pours when clipping traces. This is
    * useful when `elements` is a filtered subset, such as a trace-only render
    * pass in an interactive viewer. Defaults to `elements`.
-   * Also supplies board ownership and existing vias for subset rendering.
+   * Also supplies board ownership, existing vias, and differential-pair
+   * metadata and partner traces for subset rendering. Drawn elements take
+   * precedence over matching context elements during phase-skew analysis.
    */
   clipContextElements?: AnyCircuitElement[]
   /** Whether to render the soldermask layer. Defaults to false. */

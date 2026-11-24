@@ -1,3 +1,7 @@
+import {
+  type AnyCircuitJsonId,
+  getElementId,
+} from "@tscircuit/circuit-json-util"
 import type { AnyCircuitElement, PcbRenderLayer, PcbTrace } from "circuit-json"
 import {
   getDifferentialPairPhaseSkewStrokes,
@@ -17,13 +21,23 @@ export function getDrawablePhaseSkewStrokes(
     showDifferentialPairPhaseSkew,
     phaseSkewColors,
     layers,
+    clipContextElements,
   }: DrawElementsOptions,
 ): PhaseSkewStroke[] | undefined {
   if (!showDifferentialPairPhaseSkew) return undefined
 
-  const phaseSkewStrokes = getDifferentialPairPhaseSkewStrokes(elements, {
-    colors: phaseSkewColors,
-  })
+  // Context supplies pair metadata and partner traces omitted by subset passes.
+  // Drawn elements override cached context without duplicating traces or buses.
+  const elementsById = new Map<AnyCircuitJsonId, AnyCircuitElement>()
+  for (const element of [...(clipContextElements ?? []), ...elements]) {
+    elementsById.set(getElementId(element), element)
+  }
+  const phaseSkewStrokes = getDifferentialPairPhaseSkewStrokes(
+    [...elementsById.values()],
+    {
+      colors: phaseSkewColors,
+    },
+  )
   if (!phaseSkewStrokes.length) return phaseSkewStrokes
 
   const drawableTraceIds = new Set(
