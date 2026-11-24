@@ -33,5 +33,6 @@ export function drawPcbSilkscreenPill(
     stroke: color,
     strokeWidth,
     realToCanvasMat,
+    rotation: pill.ccw_rotation ?? 0,
   })
 }
