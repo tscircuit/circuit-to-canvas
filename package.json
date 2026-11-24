@@ -27,7 +27,7 @@
     "circuit-json": "0.0.561",
     "circuit-json-to-connectivity-map": "^0.0.23",
     "circuit-json-to-gltf": "0.0.164",
-    "circuit-to-svg": "github:tscircuit/circuit-to-svg#5fc74980d8941a026935ed86c7d5608dc5bf8572",
+    "circuit-to-svg": "github:tscircuit/circuit-to-svg#ddc1f129ca28e7d3403a5eeec3aedc94818ba08d",
     "format-si-unit": "^0.0.12",
     "looks-same": "^10.0.1",
     "react": "^19.1.0",
