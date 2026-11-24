@@ -89,6 +89,7 @@ for (const { name, label, observation, render, width, height } of boards) {
           maxY: height / 2 + 2,
         },
         showDifferentialPairPhaseSkew,
+        svgFirst: true,
         title: `${label} - ${showDifferentialPairPhaseSkew ? observation : "overlay off"}`,
       })
       await expect(stacked).toMatchPngSnapshot(
