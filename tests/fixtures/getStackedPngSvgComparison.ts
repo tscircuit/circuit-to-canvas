@@ -12,9 +12,6 @@ export interface StackedPngSvgComparisonOptions {
   padding?: number
   drawSoldermask?: boolean
   viewport?: Bounds
-  showDifferentialPairPhaseSkew?: boolean
-  svgFirst?: boolean
-  title?: string
 }
 
 /**
@@ -34,9 +31,6 @@ export async function getStackedPngSvgComparison(
     padding = 4,
     drawSoldermask = false,
     viewport,
-    showDifferentialPairPhaseSkew,
-    svgFirst = false,
-    title,
   } = options
 
   const bounds = viewport ?? getBoundsOfPcbElements(circuitJson)
@@ -55,10 +49,7 @@ export async function getStackedPngSvgComparison(
     minY: bounds.minY,
     maxY: bounds.maxY,
   })
-  drawer.drawElements(circuitJson, {
-    drawSoldermask,
-    showDifferentialPairPhaseSkew,
-  })
+  drawer.drawElements(circuitJson, { drawSoldermask })
 
   const canvasPng = canvas.toBuffer("image/png")
 
@@ -68,14 +59,14 @@ export async function getStackedPngSvgComparison(
     height,
     viewport,
     showSolderMask: drawSoldermask,
-    showDifferentialPairPhaseSkew,
   })
   const svgPng = svgToPng(svg)
 
-  const canvasRender = { png: canvasPng, label: "circuit-to-canvas" }
-  const svgRender = { png: svgPng, label: "circuit-to-svg" }
-  return stackPngsVertically(
-    svgFirst ? [svgRender, canvasRender] : [canvasRender, svgRender],
-    title,
-  )
+  // Stack both PNGs vertically with labels
+  const stackedPng = await stackPngsVertically([
+    { png: canvasPng, label: "circuit-to-canvas" },
+    { png: svgPng, label: "circuit-to-svg" },
+  ])
+
+  return stackedPng
 }
