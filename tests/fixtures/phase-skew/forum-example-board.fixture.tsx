@@ -1,5 +1,6 @@
 import type { CircuitJson, Point } from "circuit-json"
 import type { ReactElement } from "react"
+import { applyToPoint, compose, scale, translate } from "transformation-matrix"
 import { Circuit } from "tscircuit"
 
 export const FORUM_BOARD_WIDTH_MM = 22
@@ -20,14 +21,15 @@ const LOWER_STRAIGHT_PAD_Y = NEGATIVE_PAD_Y + 5 * PIXELS_PER_MM
 
 const DIAGONAL = Math.SQRT1_2
 const TRACE_WIDTH_MM = 0.2
+const imageToPcbMat = compose(
+  scale(1 / PIXELS_PER_MM, -1 / PIXELS_PER_MM),
+  translate(-IMAGE_CENTER_X, -IMAGE_CENTER_Y),
+)
 
 // Vertices were estimated against the forum poster at 1280 px wide. Convert
 // them to millimetres and flip Y to match PCB coordinates.
 function pcbPoint(x: number, y: number): Point {
-  return {
-    x: (x - IMAGE_CENTER_X) / PIXELS_PER_MM,
-    y: (IMAGE_CENTER_Y - y) / PIXELS_PER_MM,
-  }
+  return applyToPoint(imageToPcbMat, { x, y })
 }
 
 function tuningBump({
@@ -59,14 +61,12 @@ function tuningBump({
 // round corner into straight pieces, preserving the long straight stretches.
 function relativePath(sourceCenterY: number, vertices: ImageVertex[]): Point[] {
   const [startX] = vertices[0]!
+  const imageToRelativePcbMat = compose(
+    scale(1 / PIXELS_PER_MM, -1 / PIXELS_PER_MM),
+    translate(-startX, -sourceCenterY),
+  )
   return vertices.slice(1, -1).flatMap(([x, y, radius], index) => {
-    if (!radius)
-      return [
-        {
-          x: (x - startX) / PIXELS_PER_MM,
-          y: (sourceCenterY - y) / PIXELS_PER_MM,
-        },
-      ]
+    if (!radius) return [applyToPoint(imageToRelativePcbMat, { x, y })]
 
     const [prevX, prevY] = vertices[index]!
     const [nextX, nextY] = vertices[index + 2]!
@@ -87,10 +87,7 @@ function relativePath(sourceCenterY: number, vertices: ImageVertex[]): Point[] {
       const angle = startAngle + (turn * step) / chords
       const arcX = centerX + radius * Math.cos(angle)
       const arcY = centerY + radius * Math.sin(angle)
-      return {
-        x: (arcX - startX) / PIXELS_PER_MM,
-        y: (sourceCenterY - arcY) / PIXELS_PER_MM,
-      }
+      return applyToPoint(imageToRelativePcbMat, { x: arcX, y: arcY })
     })
   })
 }
