@@ -30,13 +30,19 @@ function pcbPoint(x: number, y: number): Point {
   }
 }
 
-function tuningBump(
-  x: number,
-  y: number,
-  dx: number,
-  dy: number,
-  depth: number,
-): ImageVertex[] {
+function tuningBump({
+  x,
+  y,
+  dx,
+  dy,
+  depth,
+}: {
+  x: number
+  y: number
+  dx: number
+  dy: number
+  depth: number
+}): ImageVertex[] {
   const width = 28.2
   const radius = 11.75
   const farX = x + width * dx
@@ -105,23 +111,23 @@ const POSITIVE_PATH = relativePath(FANOUT_CENTER_Y, [
   [227, POSITIVE_PAD_Y],
   [227 + FANOUT_RUN, POSITIVE_FANOUT_Y],
   [POSITIVE_RISE_X, POSITIVE_FANOUT_Y],
-  ...tuningBump(
-    423.5,
-    POSITIVE_FANOUT_Y - (423.5 - POSITIVE_RISE_X),
-    DIAGONAL,
-    -DIAGONAL,
-    47,
-  ),
+  ...tuningBump({
+    x: 423.5,
+    y: POSITIVE_FANOUT_Y - (423.5 - POSITIVE_RISE_X),
+    dx: DIAGONAL,
+    dy: -DIAGONAL,
+    depth: 47,
+  }),
   [POSITIVE_RISE_X + POSITIVE_FANOUT_Y - POSITIVE_TOP_Y, POSITIVE_TOP_Y],
-  ...tuningBump(577, POSITIVE_TOP_Y, 1, 0, 47),
+  ...tuningBump({ x: 577, y: POSITIVE_TOP_Y, dx: 1, dy: 0, depth: 47 }),
   [POSITIVE_FALL_X, POSITIVE_TOP_Y],
-  ...tuningBump(
-    909.5,
-    POSITIVE_TOP_Y + (909.5 - POSITIVE_FALL_X),
-    DIAGONAL,
-    DIAGONAL,
-    47,
-  ),
+  ...tuningBump({
+    x: 909.5,
+    y: POSITIVE_TOP_Y + (909.5 - POSITIVE_FALL_X),
+    dx: DIAGONAL,
+    dy: DIAGONAL,
+    depth: 47,
+  }),
   [POSITIVE_FALL_X + POSITIVE_FANOUT_Y - POSITIVE_TOP_Y, POSITIVE_FANOUT_Y],
   [1055 - FANOUT_RUN, POSITIVE_FANOUT_Y],
   [1055, POSITIVE_PAD_Y],
@@ -134,9 +140,9 @@ const NEGATIVE_PATH = relativePath(FANOUT_CENTER_Y, [
   [227 + FANOUT_RUN, NEGATIVE_FANOUT_Y],
   [NEGATIVE_RISE_X, NEGATIVE_FANOUT_Y],
   [NEGATIVE_RISE_X + NEGATIVE_FANOUT_Y - NEGATIVE_TOP_Y, NEGATIVE_TOP_Y],
-  ...tuningBump(666, NEGATIVE_TOP_Y, 1, 0, -47),
-  ...tuningBump(722.4, NEGATIVE_TOP_Y, 1, 0, -47),
-  ...tuningBump(778.8, NEGATIVE_TOP_Y, 1, 0, -47),
+  ...tuningBump({ x: 666, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -47 }),
+  ...tuningBump({ x: 722.4, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -47 }),
+  ...tuningBump({ x: 778.8, y: NEGATIVE_TOP_Y, dx: 1, dy: 0, depth: -47 }),
   [NEGATIVE_FALL_X, NEGATIVE_TOP_Y],
   [NEGATIVE_FALL_X + NEGATIVE_FANOUT_Y - NEGATIVE_TOP_Y, NEGATIVE_FANOUT_Y],
   [1055 - FANOUT_RUN, NEGATIVE_FANOUT_Y],
