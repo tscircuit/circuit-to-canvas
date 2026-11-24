@@ -29,6 +29,7 @@
     "looks-same": "^10.0.1",
     "react": "^19.1.0",
     "schematic-symbols": "^0.0.202",
+    "tscircuit": "0.0.3285",
     "tsup": "^8.5.1"
   },
   "peerDependencies": {
