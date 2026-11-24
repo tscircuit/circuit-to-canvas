@@ -36,10 +36,7 @@ import type {
   PcbTrace,
   PcbVia,
 } from "circuit-json"
-import {
-  getDifferentialPairPhaseSkewStrokes,
-  type PhaseSkewColors,
-} from "circuit-json-to-differential-pair-phase-skew"
+import type { PhaseSkewColors } from "circuit-json-to-differential-pair-phase-skew"
 import type { Matrix } from "transformation-matrix"
 import { compose, identity, scale, translate } from "transformation-matrix"
 import { drawPcbBoard } from "./elements/pcb-board"
@@ -75,7 +72,7 @@ import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTracesClippedToCopperPours } from "./elements/pcb-trace/draw-pcb-traces-clipped-to-copper-pours"
-import { filterDrawablePhaseSkewStrokes } from "./elements/pcb-trace/filter-drawable-phase-skew-strokes"
+import { getDrawablePhaseSkewStrokes } from "./elements/pcb-trace/get-drawable-phase-skew-strokes"
 import { getViasFromTraces } from "./elements/pcb-trace/get-vias-from-traces"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
@@ -231,11 +228,7 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    const phaseSkewStrokes = options.showDifferentialPairPhaseSkew
-      ? getDifferentialPairPhaseSkewStrokes(elements, {
-          colors: options.phaseSkewColors,
-        })
-      : undefined
+    const inputElements = elements
     this.ctx.boardOwnerMap = createBoardOwnerMap([
       ...(options.clipContextElements ?? []),
       ...elements,
@@ -342,11 +335,10 @@ export class CircuitToCanvasDrawer {
       (el): el is PcbTrace =>
         shouldDrawElement(el, options) && el.type === "pcb_trace",
     )
-    const drawablePhaseSkewStrokes = filterDrawablePhaseSkewStrokes({
-      phaseSkewStrokes,
-      drawableTraces,
-      renderLayers: options.layers,
-    })
+    const phaseSkewStrokes = getDrawablePhaseSkewStrokes(
+      { elements: inputElements, drawableTraces },
+      options,
+    )
 
     // Step 2: Draw board outline/material (inner board)
     if (board) {
@@ -413,7 +405,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
-        phaseSkewStrokes: drawablePhaseSkewStrokes,
+        phaseSkewStrokes,
       })
 
       for (const element of elements) {
@@ -576,7 +568,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
-        phaseSkewStrokes: drawablePhaseSkewStrokes,
+        phaseSkewStrokes,
       })
     }
 
