@@ -230,7 +230,7 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    const phaseSkewStrokes = options.showDifferentialPairPhaseSkew
+    let phaseSkewStrokes = options.showDifferentialPairPhaseSkew
       ? getDifferentialPairPhaseSkewStrokes(elements, {
           colors: options.phaseSkewColors,
         })
@@ -341,6 +341,19 @@ export class CircuitToCanvasDrawer {
       (el): el is PcbTrace =>
         shouldDrawElement(el, options) && el.type === "pcb_trace",
     )
+    if (phaseSkewStrokes?.length) {
+      const drawableTraceIds = new Set(
+        drawableTraces.map(({ pcb_trace_id }) => pcb_trace_id),
+      )
+      phaseSkewStrokes = phaseSkewStrokes.filter(
+        (stroke) =>
+          drawableTraceIds.has(stroke.pcb_trace_id) &&
+          (!options.layers?.length ||
+            options.layers.includes(
+              `${stroke.layer}_copper` as PcbRenderLayer,
+            )),
+      )
+    }
 
     const drawTraces = () =>
       drawPcbTracesClippedToCopperPours({

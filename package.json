@@ -39,7 +39,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "circuit-json-to-differential-pair-phase-skew": "https://github.com/tscircuit/circuit-json-to-differential-pair-phase-skew/releases/download/v0.0.5/circuit-json-to-differential-pair-phase-skew-0.0.5.tgz",
+    "circuit-json-to-differential-pair-phase-skew": "https://github.com/tscircuit/circuit-json-to-differential-pair-phase-skew/releases/download/v0.0.6/circuit-json-to-differential-pair-phase-skew-0.0.6.tgz",
     "transformation-matrix": "^3.1.0"
   }
 }

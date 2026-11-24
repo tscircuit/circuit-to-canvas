@@ -38,7 +38,11 @@ export function drawPcbTracesClippedToCopperPours(params: {
     phaseSkewStrokes = [],
   } = params
 
-  for (const layer of getTraceLayers(traces, phaseSkewStrokes, renderLayers)) {
+  const layers = new Set(getTraceLayers({ traces, renderLayers }))
+  // A routed span between consecutive vias can contain no wire points.
+  for (const { layer } of phaseSkewStrokes) layers.add(layer)
+
+  for (const layer of layers) {
     const layerParams = {
       ctx,
       traces,
@@ -134,20 +138,19 @@ function eraseCopperPoursFromTraceLayer(params: {
   ctx.restore()
 }
 
-function getTraceLayers(
-  traces: PcbTrace[],
-  phaseSkewStrokes: PhaseSkewStroke[],
-  renderLayers?: PcbRenderLayer[],
-): LayerRef[] {
+function getTraceLayers({
+  traces,
+  renderLayers,
+}: {
+  traces: PcbTrace[]
+  renderLayers?: PcbRenderLayer[]
+}): LayerRef[] {
   const layers = new Set<LayerRef>()
   for (const trace of traces) {
     for (const point of trace.route ?? []) {
       if (point.route_type === "wire" && point.layer) layers.add(point.layer)
     }
   }
-  // A routed span between consecutive vias can contain no wire points.
-  for (const { layer } of phaseSkewStrokes) layers.add(layer)
-
   return [...layers].filter(
     (layer) =>
       !renderLayers?.length ||

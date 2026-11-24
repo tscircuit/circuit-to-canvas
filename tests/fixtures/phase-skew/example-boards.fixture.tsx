@@ -138,3 +138,15 @@ export function LayerChangeBoard(): ReactElement {
     </board>
   )
 }
+
+export function ConsecutiveViasBoard(): ReactElement {
+  const path: PcbPath = [
+    { x: 8, y: 0, via: true, toLayer: "bottom" },
+    { x: 16, y: 0, via: true, toLayer: "top" },
+  ]
+  return (
+    <board width={28} height={8} routeRemaining={false}>
+      <Pair name="CONSECUTIVE_VIAS" positivePath={path} negativePath={path} />
+    </board>
+  )
+}

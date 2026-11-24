@@ -6,6 +6,7 @@ import { applyToPoint } from "transformation-matrix"
 import { CircuitToCanvasDrawer, type DrawElementsOptions } from "../../lib"
 import { getStackedPngSvgComparison } from "../fixtures/getStackedPngSvgComparison"
 import {
+  ConsecutiveViasBoard,
   LayerChangeBoard,
   LoadEndMeanderBoard,
   LocalCompensationBoard,
@@ -163,4 +164,20 @@ test("Canvas confines skew to visible copper and keeps via drills above it", () 
     expect(view.pixel(0, 0.6)).toEqual([255, 38, 226, 255])
     expect(view.pixel(0, -0.6)).toEqual([255, 38, 226, 255])
   }
+})
+
+test("Canvas hides phase skew for traces excluded by the layer filter", () => {
+  const circuitJson = renderBoard(<ConsecutiveViasBoard />)
+  const full = renderCanvas(circuitJson, {
+    showDifferentialPairPhaseSkew: true,
+  })
+  expect(full.pixel(0, 0.6)).toEqual([255, 255, 255, 255])
+
+  const bottom: DrawElementsOptions = { layers: ["bottom_copper"] }
+  const off = renderCanvas(circuitJson, bottom)
+  const on = renderCanvas(circuitJson, {
+    ...bottom,
+    showDifferentialPairPhaseSkew: true,
+  })
+  expect(on.png().equals(off.png())).toBe(true)
 })
