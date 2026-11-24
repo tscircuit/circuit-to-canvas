@@ -17,7 +17,7 @@
     "@napi-rs/canvas": "^0.1.84",
     "@resvg/resvg-js": "^2.6.2",
     "@tscircuit/alphabet": "^0.0.23",
-    "@tscircuit/circuit-json-util": "^0.0.116",
+    "@tscircuit/circuit-json-util": "^0.0.134",
     "@tscircuit/footprinter": "0.0.451",
     "@tscircuit/math-utils": "^0.0.36",
     "@tscircuit/props": "0.0.744",
@@ -27,7 +27,7 @@
     "circuit-json": "0.0.561",
     "circuit-json-to-connectivity-map": "^0.0.23",
     "circuit-json-to-gltf": "0.0.164",
-    "circuit-to-svg": "github:tscircuit/circuit-to-svg#ddc1f129ca28e7d3403a5eeec3aedc94818ba08d",
+    "circuit-to-svg": "0.0.464",
     "format-si-unit": "^0.0.12",
     "looks-same": "^10.0.1",
     "react": "^19.1.0",
@@ -35,7 +35,7 @@
     "tscircuit": "0.0.3285",
     "tsup": "^8.5.1"
   },
-  "trustedDependencies": ["circuit-to-svg", "sharp"],
+  "trustedDependencies": ["sharp"],
   "peerDependencies": {
     "@tscircuit/alphabet": "*",
     "@tscircuit/circuit-json-util": "*",
