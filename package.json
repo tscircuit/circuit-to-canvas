@@ -27,6 +27,7 @@
     "format-si-unit": "0.0.12",
     "looks-same": "^10.0.1",
     "schematic-symbols": "^0.0.202",
+    "tscircuit": "0.0.3293",
     "tsup": "^8.5.1"
   },
   "peerDependencies": {
