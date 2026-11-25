@@ -13,16 +13,31 @@ type RenderedCanvas = {
 export function renderCanvas({
   circuitJson,
   options = { showDifferentialPairPhaseSkew: true },
+  center,
 }: {
   circuitJson: CircuitJson
   options?: DrawElementsOptions
+  center?: Point
 }): RenderedCanvas {
   const canvas = createCanvas(840, 336)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
   ctx.fillStyle = "#1a1a1a"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
-  drawer.setCameraBounds({ minX: -15, maxX: 15, minY: -6, maxY: 6 })
+  // At 320 px/mm, the samples can distinguish a short chamfer from its caps.
+  const jointPixelsPerMm = 320
+  const halfWidthMm = canvas.width / (2 * jointPixelsPerMm)
+  const halfHeightMm = canvas.height / (2 * jointPixelsPerMm)
+  drawer.setCameraBounds(
+    center === undefined
+      ? { minX: -15, maxX: 15, minY: -6, maxY: 6 }
+      : {
+          minX: center.x - halfWidthMm,
+          maxX: center.x + halfWidthMm,
+          minY: center.y - halfHeightMm,
+          maxY: center.y + halfHeightMm,
+        },
+  )
   drawer.drawElements(circuitJson, options)
 
   return {

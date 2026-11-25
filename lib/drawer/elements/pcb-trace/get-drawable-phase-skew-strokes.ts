@@ -17,7 +17,7 @@ export type PhaseSkewStroke = PcbDifferentialPairPhaseSkewSegment & {
 export type PhaseSkewStrokesByLayer = Map<LayerRef, PhaseSkewStroke[][]>
 
 const MAX_RGB_CHANNEL = 255
-const JOIN_TOLERANCE_MM = 1e-9
+const JOINT_TOLERANCE_MM = 1e-6
 
 /** Collects phase-skew strokes for visible traces and copper layers. */
 export function getDrawablePhaseSkewStrokes({
@@ -87,6 +87,13 @@ function addTraceStrokes({
       continue
     }
 
+    if (
+      segment.start.x === segment.end.x &&
+      segment.start.y === segment.end.y
+    ) {
+      continue
+    }
+
     const previous = run.at(-1)
     if (
       previous === undefined ||
@@ -94,25 +101,12 @@ function addTraceStrokes({
       Math.hypot(
         previous.end.x - segment.start.x,
         previous.end.y - segment.start.y,
-      ) > JOIN_TOLERANCE_MM
+      ) > JOINT_TOLERANCE_MM
     ) {
       run = []
-    }
-    if (
-      Math.hypot(
-        segment.end.x - segment.start.x,
-        segment.end.y - segment.start.y,
-      ) <= JOIN_TOLERANCE_MM
-    ) {
-      continue
-    }
-    if (!run.length) {
-      let layerRuns = strokesByLayer.get(segment.layer)
-      if (layerRuns === undefined) {
-        layerRuns = []
-        strokesByLayer.set(segment.layer, layerRuns)
-      }
-      layerRuns.push(run)
+      const layerRuns = strokesByLayer.get(segment.layer)
+      if (layerRuns === undefined) strokesByLayer.set(segment.layer, [run])
+      else layerRuns.push(run)
     }
 
     const startColor = getSkewColor({
