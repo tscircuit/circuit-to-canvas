@@ -1,6 +1,6 @@
 import { applyToPoint } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
-import { drawLine, type DrawLineParams } from "../../shapes/line"
+import { drawLine, type DrawLineParams as LineOptions } from "../../shapes/line"
 import type {
   PhaseSkewStroke,
   PhaseSkewStrokesByLayer,
@@ -11,8 +11,8 @@ const OVERLAY_WIDTH_FACTOR = 1.1
 const GRADIENT_START = 0
 const GRADIENT_END = 1
 
-type DrawingContext = Pick<DrawLineParams, "ctx" | "realToCanvasMat">
-type DrawRunParams = DrawingContext & { run: PhaseSkewStroke[] }
+type DrawingContext = Pick<LineOptions, "ctx" | "realToCanvasMat">
+type RunDrawing = DrawingContext & { run: PhaseSkewStroke[] }
 
 /** Draws two-stop gradients over one layer's copper. */
 export function drawPhaseSkewStrokes({
@@ -41,9 +41,9 @@ function drawRunStrokes({
   ctx,
   realToCanvasMat,
   lineCap,
-}: DrawRunParams & Pick<DrawLineParams, "lineCap">): void {
+}: RunDrawing & Pick<LineOptions, "lineCap">): void {
   for (const { start, end, width, startColor, endColor } of run) {
-    let stroke: DrawLineParams["stroke"] = startColor
+    let stroke: LineOptions["stroke"] = startColor
     if (startColor !== endColor) {
       if (ctx.createLinearGradient === undefined) continue
       const startPx = applyToPoint(realToCanvasMat, start)
@@ -64,8 +64,8 @@ function drawRunStrokes({
   }
 }
 
-function drawRunDiscs(params: DrawRunParams): void {
-  const { run, ctx, realToCanvasMat } = params
+function drawRunDiscs(drawing: RunDrawing): void {
+  const { run, ctx, realToCanvasMat } = drawing
   // Canvas applies one cap style to both ends. Put the round ends and
   // joint fills beneath the butt-capped gradients.
   for (const [i, { start, width, startColor }] of run.entries()) {
