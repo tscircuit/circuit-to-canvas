@@ -76,10 +76,11 @@ function addTraceStrokes({
   }
 
   let run: PhaseSkewStroke[] = []
+  const filterLayers = layers !== undefined && layers.length > 0
   for (const segment of trace.segments) {
     if (
       segment.width <= 0 ||
-      (layers?.length &&
+      (filterLayers &&
         !layers.some((layer) => layer === `${segment.layer}_copper`))
     ) {
       run = []
@@ -88,7 +89,7 @@ function addTraceStrokes({
 
     const previous = run.at(-1)
     if (
-      !previous ||
+      previous === undefined ||
       previous.layer !== segment.layer ||
       Math.hypot(
         previous.end.x - segment.start.x,
@@ -106,9 +107,12 @@ function addTraceStrokes({
       continue
     }
     if (!run.length) {
-      const layerRuns = strokesByLayer.get(segment.layer) ?? []
+      let layerRuns = strokesByLayer.get(segment.layer)
+      if (layerRuns === undefined) {
+        layerRuns = []
+        strokesByLayer.set(segment.layer, layerRuns)
+      }
       layerRuns.push(run)
-      strokesByLayer.set(segment.layer, layerRuns)
     }
 
     const startColor = getSkewColor({
