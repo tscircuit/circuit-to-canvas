@@ -1,4 +1,5 @@
 import { applyToPoint, type Matrix } from "transformation-matrix"
+import { drawLine } from "../../shapes/line"
 import type { CanvasContext } from "../../types"
 import type { PhaseSkewStroke } from "./get-drawable-phase-skew-strokes"
 
@@ -20,15 +21,12 @@ export function drawPhaseSkewStrokes({
   if (!strokes?.length) return
 
   ctx.save()
-  ctx.lineCap = "round"
   for (const { start, end, width, startColor, endColor } of strokes) {
-    const startPx = applyToPoint(realToCanvasMat, start)
-    const endPx = applyToPoint(realToCanvasMat, end)
-
-    if (startColor === endColor) {
-      ctx.strokeStyle = startColor
-    } else {
+    let stroke: CanvasContext["strokeStyle"] = startColor
+    if (startColor !== endColor) {
       if (!ctx.createLinearGradient) continue
+      const startPx = applyToPoint(realToCanvasMat, start)
+      const endPx = applyToPoint(realToCanvasMat, end)
       const gradient = ctx.createLinearGradient(
         startPx.x,
         startPx.y,
@@ -37,14 +35,11 @@ export function drawPhaseSkewStrokes({
       )
       gradient.addColorStop(GRADIENT_START, startColor)
       gradient.addColorStop(GRADIENT_END, endColor)
-      ctx.strokeStyle = gradient
+      stroke = gradient
     }
 
-    ctx.lineWidth = width * OVERLAY_WIDTH_FACTOR * Math.abs(realToCanvasMat.a)
-    ctx.beginPath()
-    ctx.moveTo(startPx.x, startPx.y)
-    ctx.lineTo(endPx.x, endPx.y)
-    ctx.stroke()
+    const strokeWidth = width * OVERLAY_WIDTH_FACTOR
+    drawLine({ ctx, start, end, stroke, strokeWidth, realToCanvasMat })
   }
   ctx.restore()
 }

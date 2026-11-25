@@ -7,10 +7,7 @@ import { renderCanvas } from "../fixtures/phase-skew/render-canvas"
 
 test("a matched differential pair is white with phase skew enabled", async () => {
   const circuitJson = renderBoard({ board: <MatchedPairBoard /> })
-  const { canvas, pixelAt } = renderCanvas({
-    circuitJson,
-    options: { showDifferentialPairPhaseSkew: true },
-  })
+  const { canvas, pixelAt } = renderCanvas({ circuitJson })
 
   expect(pixelAt({ x: 0, y: 0.6 })).toEqual([255, 255, 255, 255])
   expect(pixelAt({ x: 0, y: -0.6 })).toEqual([255, 255, 255, 255])

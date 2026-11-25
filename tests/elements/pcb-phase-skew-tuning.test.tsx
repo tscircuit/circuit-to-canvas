@@ -7,11 +7,8 @@ import { renderCanvas } from "../fixtures/phase-skew/render-canvas"
 
 test("the opt-in overlay gradients leading and lagging traces in opposite colors", async () => {
   const circuitJson = renderBoard({ board: <LoadEndMeanderBoard /> })
-  const off = renderCanvas({ circuitJson })
-  const on = renderCanvas({
-    circuitJson,
-    options: { showDifferentialPairPhaseSkew: true },
-  })
+  const off = renderCanvas({ circuitJson, options: {} })
+  const on = renderCanvas({ circuitJson })
 
   expect(off.pixelAt({ x: 0, y: 0.6 })).toEqual([200, 52, 52, 255])
   expect(on.pixelAt({ x: 0, y: 0.6 })).toEqual([0, 0, 255, 255])

@@ -7,10 +7,7 @@ import { renderCanvas } from "../fixtures/phase-skew/render-canvas"
 
 test("the overlay follows copper layer visibility and leaves via drills visible", async () => {
   const circuitJson = renderBoard({ board: <LayerChangeBoard /> })
-  const all = renderCanvas({
-    circuitJson,
-    options: { showDifferentialPairPhaseSkew: true },
-  })
+  const all = renderCanvas({ circuitJson })
   const top = renderCanvas({
     circuitJson,
     options: { showDifferentialPairPhaseSkew: true, layers: ["top_copper"] },

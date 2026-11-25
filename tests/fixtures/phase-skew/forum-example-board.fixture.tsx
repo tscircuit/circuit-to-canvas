@@ -1,5 +1,5 @@
 import type { CircuitJson, Point } from "circuit-json"
-import type { ReactElement } from "react"
+import { Fragment, type ReactElement } from "react"
 import { applyToPoint, compose, scale, translate } from "transformation-matrix"
 import { renderBoard } from "./example-boards.fixture"
 
@@ -16,7 +16,6 @@ const LOAD_X = 1087.5
 const POSITIVE_PAD_Y = 306.45
 const NEGATIVE_PAD_Y = POSITIVE_PAD_Y + 1.65 * PIXELS_PER_MM
 const UPPER_STRAIGHT_PAD_Y = POSITIVE_PAD_Y + 5 * PIXELS_PER_MM
-const LOWER_STRAIGHT_PAD_Y = NEGATIVE_PAD_Y + 5 * PIXELS_PER_MM
 
 const DIAGONAL = Math.SQRT1_2
 const TRACE_WIDTH_MM = 0.2
@@ -178,24 +177,22 @@ function Termination({
       schY={at.y}
       footprint={
         <footprint>
-          <smtpad
-            shape="rect"
-            width={0.95}
-            height={0.8}
-            cornerRadius={0.2}
-            pcbX={0}
-            pcbY={0.825}
-            portHints={[`pin${topPin}`]}
-          />
-          <smtpad
-            shape="rect"
-            width={0.95}
-            height={0.8}
-            cornerRadius={0.2}
-            pcbX={0}
-            pcbY={-0.825}
-            portHints={[`pin${3 - topPin}`]}
-          />
+          {[
+            { pin: topPin, pcbY: 0.825 },
+            { pin: 3 - topPin, pcbY: -0.825 },
+          ].map(({ pin, pcbY }) => (
+            <Fragment key={pin}>
+              <smtpad
+                shape="rect"
+                width={0.95}
+                height={0.8}
+                cornerRadius={0.2}
+                pcbX={0}
+                pcbY={pcbY}
+                portHints={[`pin${pin}`]}
+              />
+            </Fragment>
+          ))}
         </footprint>
       }
     />
@@ -217,48 +214,32 @@ function ForumExampleBoard(): ReactElement {
       pcbStyle={{ viaPadDiameter: 0.6, viaHoleDiameter: 0.3 }}
       routeRemaining={false}
     >
-      <Termination name="R1" x={SOURCE_X} topY={POSITIVE_PAD_Y} topPin={1} />
-      <Termination name="R2" x={LOAD_X} topY={POSITIVE_PAD_Y} topPin={1} />
-      <Termination
-        name="R3"
-        x={SOURCE_X}
-        topY={UPPER_STRAIGHT_PAD_Y}
-        topPin={2}
-      />
-      <Termination
-        name="R4"
-        x={LOAD_X}
-        topY={UPPER_STRAIGHT_PAD_Y}
-        topPin={2}
-      />
-      <trace
-        name="TRACE_P"
-        from=".R1 > .pin1"
-        to=".R2 > .pin1"
-        thickness={TRACE_WIDTH_MM}
-        pcbPath={POSITIVE_PATH}
-      />
-      <trace
-        name="TRACE_N"
-        from=".R1 > .pin2"
-        to=".R2 > .pin2"
-        thickness={TRACE_WIDTH_MM}
-        pcbPath={NEGATIVE_PATH}
-      />
-      <trace
-        name="TRACE3"
-        from=".R3 > .pin2"
-        to=".R4 > .pin2"
-        thickness={TRACE_WIDTH_MM}
-        pcbPath={[]}
-      />
-      <trace
-        name="TRACE2"
-        from=".R3 > .pin1"
-        to=".R4 > .pin1"
-        thickness={TRACE_WIDTH_MM}
-        pcbPath={[...VIA_PATH]}
-      />
+      {(
+        [
+          { name: "R1", x: SOURCE_X, topY: POSITIVE_PAD_Y, topPin: 1 },
+          { name: "R2", x: LOAD_X, topY: POSITIVE_PAD_Y, topPin: 1 },
+          { name: "R3", x: SOURCE_X, topY: UPPER_STRAIGHT_PAD_Y, topPin: 2 },
+          { name: "R4", x: LOAD_X, topY: UPPER_STRAIGHT_PAD_Y, topPin: 2 },
+        ] as const
+      ).map((termination) => (
+        <Termination key={termination.name} {...termination} />
+      ))}
+      {[
+        { name: "TRACE_P", upper: true, pin: 1, pcbPath: POSITIVE_PATH },
+        { name: "TRACE_N", upper: true, pin: 2, pcbPath: NEGATIVE_PATH },
+        { name: "TRACE3", upper: false, pin: 2, pcbPath: [] },
+        { name: "TRACE2", upper: false, pin: 1, pcbPath: [...VIA_PATH] },
+      ].map(({ name, upper, pin, pcbPath }) => (
+        <Fragment key={name}>
+          <trace
+            name={name}
+            from={`.R${upper ? 1 : 3} > .pin${pin}`}
+            to={`.R${upper ? 2 : 4} > .pin${pin}`}
+            thickness={TRACE_WIDTH_MM}
+            pcbPath={pcbPath}
+          />
+        </Fragment>
+      ))}
       <differentialpair
         name="TRACE"
         positiveConnection="TRACE_P"

@@ -9,10 +9,10 @@ type RenderedCanvas = {
   pixelAt: (point: Point) => number[]
 }
 
-/** Draws a differential-pair fixture with the standard snapshot viewport. */
+/** Draws a differential-pair fixture with phase skew enabled by default. */
 export function renderCanvas({
   circuitJson,
-  options,
+  options = { showDifferentialPairPhaseSkew: true },
 }: {
   circuitJson: CircuitJson
   options?: DrawElementsOptions
