@@ -42,6 +42,7 @@ export interface CanvasContext {
   globalCompositeOperation?: string
   fillStyle: string | CanvasGradient | CanvasPattern
   strokeStyle: string | CanvasGradient | CanvasPattern
+  createLinearGradient?: CanvasRenderingContext2D["createLinearGradient"]
   globalAlpha: number
   lineWidth: number
   lineCap: "butt" | "round" | "square"

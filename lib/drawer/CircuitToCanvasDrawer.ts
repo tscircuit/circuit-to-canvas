@@ -71,6 +71,7 @@ import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTracesClippedToCopperPours } from "./elements/pcb-trace/draw-pcb-traces-clipped-to-copper-pours"
+import { getDrawablePhaseSkewStrokes } from "./elements/pcb-trace/get-drawable-phase-skew-strokes"
 import { getViasFromTraces } from "./elements/pcb-trace/get-vias-from-traces"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
@@ -113,6 +114,8 @@ export interface DrawElementsOptions {
   showPcbNotes?: boolean
   /** Whether to render pcb_debug_object overlays. Defaults to false. */
   showDebugObjects?: boolean
+  /** Color routed differential pairs by local phase skew. Defaults to false. */
+  showDifferentialPairPhaseSkew?: boolean
   /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
   clearDrillHoles?: boolean
 }
@@ -329,6 +332,12 @@ export class CircuitToCanvasDrawer {
         shouldDrawElement(el, options) && el.type === "pcb_trace",
     )
 
+    const phaseSkewStrokes = getDrawablePhaseSkewStrokes({
+      elements,
+      drawableTraces,
+      options,
+    })
+
     // Step 2: Draw board outline/material (inner board)
     if (board) {
       drawPcbBoard({
@@ -394,6 +403,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
+        phaseSkewStrokes,
       })
 
       for (const element of elements) {
@@ -556,6 +566,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
+        phaseSkewStrokes,
       })
     }
 
