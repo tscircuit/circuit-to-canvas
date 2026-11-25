@@ -1,45 +1,275 @@
+import type { Point } from "circuit-json"
 import { applyToPoint, type Matrix } from "transformation-matrix"
-import { drawLine } from "../../shapes/line"
+import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
+import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import type { CanvasContext } from "../../types"
 import type { PhaseSkewStroke } from "./get-drawable-phase-skew-strokes"
 
-/** Overlay strokes are drawn 10% wider than the copper, as KiCad does (diff_phase_skew_tool.cpp), so the colour fully covers the trace edges. */
+/** The overlay is wider than the copper so its color covers the trace edges. */
 const OVERLAY_WIDTH_FACTOR = 1.1
-const GRADIENT_START = 0
-const GRADIENT_END = 1
+const MAX_MITER_RATIO = 2
+const ANTIALIAS_PADDING_PX = 1
 
-/** Draws round-capped, two-stop gradients over one layer's copper. */
+type CanvasStroke = {
+  start: Point
+  end: Point
+  normal: Point
+  length: number
+  radius: number
+  startColor: string
+  endColor: string
+}
+
+/** Draws the joined phase-skew runs over one layer's copper. */
 export function drawPhaseSkewStrokes({
   ctx,
   strokes,
   realToCanvasMat,
 }: {
   ctx: CanvasContext
-  strokes: PhaseSkewStroke[] | undefined
+  strokes: PhaseSkewStroke[][] | undefined
   realToCanvasMat: Matrix
 }): void {
   if (!strokes?.length) return
 
+  const pixelsPerMm = Math.hypot(realToCanvasMat.a, realToCanvasMat.b)
   ctx.save()
-  for (const { start, end, width, startColor, endColor } of strokes) {
-    let stroke: CanvasContext["strokeStyle"] = startColor
-    if (startColor !== endColor) {
-      if (!ctx.createLinearGradient) continue
-      const startPx = applyToPoint(realToCanvasMat, start)
-      const endPx = applyToPoint(realToCanvasMat, end)
-      const gradient = ctx.createLinearGradient(
-        startPx.x,
-        startPx.y,
-        endPx.x,
-        endPx.y,
-      )
-      gradient.addColorStop(GRADIENT_START, startColor)
-      gradient.addColorStop(GRADIENT_END, endColor)
-      stroke = gradient
+  for (const run of strokes) {
+    const canvasStrokes: CanvasStroke[] = []
+    for (const stroke of run) {
+      // Use one position for both sides of each joint.
+      const start =
+        canvasStrokes.at(-1)?.end ?? applyToPoint(realToCanvasMat, stroke.start)
+      const end = applyToPoint(realToCanvasMat, stroke.end)
+      const dx = end.x - start.x
+      const dy = end.y - start.y
+      const length = Math.hypot(dx, dy)
+      if (length === 0) continue
+      canvasStrokes.push({
+        start,
+        end,
+        normal: { x: -dy / length, y: dx / length },
+        length,
+        radius: (stroke.width * OVERLAY_WIDTH_FACTOR * pixelsPerMm) / 2,
+        startColor: stroke.startColor,
+        endColor: stroke.endColor,
+      })
     }
 
-    const strokeWidth = width * OVERLAY_WIDTH_FACTOR
-    drawLine({ ctx, start, end, stroke, strokeWidth, realToCanvasMat })
+    if (!canvasStrokes.length) continue
+    if (!drawRunOnLayer({ ctx, canvasStrokes })) {
+      fillRun({ ctx, canvasStrokes })
+    }
   }
   ctx.restore()
+}
+
+/** Adds shared-edge pixel coverage before compositing over the copper. */
+function drawRunOnLayer({
+  ctx,
+  canvasStrokes,
+}: {
+  ctx: CanvasContext
+  canvasStrokes: CanvasStroke[]
+}): boolean {
+  let left = ctx.canvas.width
+  let top = ctx.canvas.height
+  let right = 0
+  let bottom = 0
+  for (const { start, end, radius } of canvasStrokes) {
+    const padding = radius * MAX_MITER_RATIO + ANTIALIAS_PADDING_PX
+    left = Math.min(left, start.x - padding, end.x - padding)
+    top = Math.min(top, start.y - padding, end.y - padding)
+    right = Math.max(right, start.x + padding, end.x + padding)
+    bottom = Math.max(bottom, start.y + padding, end.y + padding)
+  }
+  left = Math.max(0, Math.floor(left))
+  top = Math.max(0, Math.floor(top))
+  right = Math.min(ctx.canvas.width, Math.ceil(right))
+  bottom = Math.min(ctx.canvas.height, Math.ceil(bottom))
+  if (right <= left || bottom <= top) return true
+
+  const layerCtx = createDrawingLayerContext(ctx, right - left, bottom - top)
+  if (!layerCtx) return false
+
+  layerCtx.translate(-left, -top)
+  // Source-over on the separate polygons would darken their shared edges.
+  layerCtx.globalCompositeOperation = "lighter"
+  fillRun({ ctx: layerCtx, canvasStrokes })
+
+  ctx.save()
+  ctx.translate(left, top)
+  const merged = mergeDrawingLayer(ctx, layerCtx)
+  ctx.restore()
+  return merged
+}
+
+function fillRun({
+  ctx,
+  canvasStrokes,
+}: {
+  ctx: CanvasContext
+  canvasStrokes: CanvasStroke[]
+}): void {
+  const first = canvasStrokes[0]!
+  const last = canvasStrokes.at(-1)!
+  fillCap({ ctx, stroke: first, atStart: true })
+
+  let startCut = first.normal
+  for (let i = 0; i < canvasStrokes.length; i++) {
+    const stroke = canvasStrokes[i]!
+    const next = canvasStrokes[i + 1]
+    const endCut = next ? getMiter({ stroke, next }) : stroke.normal
+
+    const [startLeft, startRight] = getCrossSection({
+      point: stroke.start,
+      cut: startCut,
+      radius: stroke.radius,
+    })
+    const [endLeft, endRight] = getCrossSection({
+      point: stroke.end,
+      cut: endCut,
+      radius: stroke.radius,
+    })
+
+    if (stroke.startColor === stroke.endColor) {
+      ctx.fillStyle = stroke.startColor
+      fillPolygon({ ctx, points: [startLeft, startRight, endRight, endLeft] })
+    } else if (ctx.createLinearGradient) {
+      // A linear gradient can match one angled cut. Split the quad so both
+      // cuts have a uniform color and the two gradients agree on the diagonal.
+      fillGradientTriangle({
+        ctx,
+        edgeStart: startLeft,
+        edgeEnd: startRight,
+        tip: endRight,
+        edgeColor: stroke.startColor,
+        tipColor: stroke.endColor,
+      })
+      fillGradientTriangle({
+        ctx,
+        edgeStart: endRight,
+        edgeEnd: endLeft,
+        tip: startLeft,
+        edgeColor: stroke.endColor,
+        tipColor: stroke.startColor,
+      })
+    }
+
+    startCut = endCut
+  }
+
+  fillCap({ ctx, stroke: last, atStart: false })
+}
+
+function getMiter({
+  stroke,
+  next,
+}: {
+  stroke: CanvasStroke
+  next: CanvasStroke
+}): Point {
+  const x = stroke.normal.x + next.normal.x
+  const y = stroke.normal.y + next.normal.y
+  const length = Math.hypot(x, y)
+  if (length < Number.EPSILON) return stroke.normal
+
+  // Limit the miter on sharp bends and short segments. The two neighboring
+  // cuts can each use at most half of a segment's length.
+  const projection = Math.abs(x * stroke.normal.y - y * stroke.normal.x)
+  const radius = Math.max(stroke.radius, next.radius)
+  const scale = Math.min(
+    2 / (length * length),
+    MAX_MITER_RATIO / length,
+    Math.min(stroke.length, next.length) / (2 * radius * projection),
+  )
+  return { x: x * scale, y: y * scale }
+}
+
+function getCrossSection({
+  point,
+  cut,
+  radius,
+}: {
+  point: Point
+  cut: Point
+  radius: number
+}): [Point, Point] {
+  const dx = cut.x * radius
+  const dy = cut.y * radius
+  return [
+    { x: point.x + dx, y: point.y + dy },
+    { x: point.x - dx, y: point.y - dy },
+  ]
+}
+
+function fillCap({
+  ctx,
+  stroke,
+  atStart,
+}: {
+  ctx: CanvasContext
+  stroke: CanvasStroke
+  atStart: boolean
+}): void {
+  if (stroke.startColor !== stroke.endColor && !ctx.createLinearGradient) return
+  const { x, y } = atStart ? stroke.start : stroke.end
+  const angle =
+    Math.atan2(stroke.normal.y, stroke.normal.x) + (atStart ? 0 : Math.PI)
+  ctx.fillStyle = atStart ? stroke.startColor : stroke.endColor
+  ctx.beginPath()
+  ctx.arc(x, y, stroke.radius, angle, angle + Math.PI)
+  ctx.closePath()
+  ctx.fill()
+}
+
+function fillGradientTriangle({
+  ctx,
+  edgeStart,
+  edgeEnd,
+  tip,
+  edgeColor,
+  tipColor,
+}: {
+  ctx: CanvasContext
+  edgeStart: Point
+  edgeEnd: Point
+  tip: Point
+  edgeColor: string
+  tipColor: string
+}): void {
+  const normalX = edgeStart.y - edgeEnd.y
+  const normalY = edgeEnd.x - edgeStart.x
+  const projection =
+    ((tip.x - edgeStart.x) * normalX + (tip.y - edgeStart.y) * normalY) /
+    (normalX * normalX + normalY * normalY)
+  if (projection === 0) return
+
+  const gradient = ctx.createLinearGradient?.(
+    edgeStart.x,
+    edgeStart.y,
+    edgeStart.x + normalX * projection,
+    edgeStart.y + normalY * projection,
+  )
+  if (!gradient) return
+
+  gradient.addColorStop(0, edgeColor)
+  gradient.addColorStop(1, tipColor)
+  ctx.fillStyle = gradient
+  fillPolygon({ ctx, points: [edgeStart, edgeEnd, tip] })
+}
+
+function fillPolygon({
+  ctx,
+  points,
+}: {
+  ctx: CanvasContext
+  points: Point[]
+}): void {
+  const [first, ...rest] = points
+  ctx.beginPath()
+  ctx.moveTo(first!.x, first!.y)
+  for (const { x, y } of rest) ctx.lineTo(x, y)
+  ctx.closePath()
+  ctx.fill()
 }
