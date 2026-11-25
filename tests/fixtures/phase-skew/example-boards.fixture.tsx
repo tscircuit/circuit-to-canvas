@@ -1,7 +1,8 @@
-import type { PcbPath } from "@tscircuit/props"
 import type { CircuitJson } from "circuit-json"
-import { Fragment, type ReactElement } from "react"
+import { type ComponentProps, Fragment, type ReactElement } from "react"
 import { Circuit } from "@tscircuit/core"
+
+type PcbPath = NonNullable<ComponentProps<"trace">["pcbPath"]>
 
 function Pair({
   name,

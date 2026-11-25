@@ -1,4 +1,5 @@
 import type {
+  AnyCircuitElement,
   LayerRef,
   PcbCopperPour,
   PcbPlatedHole,
@@ -7,12 +8,13 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
+import type { DrawElementsOptions } from "../../CircuitToCanvasDrawer"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import { appendPcbCopperPourPath } from "../pcb-copper-pour"
 import { drawPhaseSkewStrokes } from "./draw-phase-skew-strokes"
-import type { PhaseSkewStrokesByLayer } from "./get-drawable-phase-skew-strokes"
+import { getDrawablePhaseSkewStrokes } from "./get-drawable-phase-skew-strokes"
 import { drawPcbTrace } from "./pcb-trace"
 
 export function drawPcbTracesClippedToCopperPours(params: {
@@ -24,7 +26,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
   vias: PcbVia[]
   platedHoles: PcbPlatedHole[]
   renderLayers?: PcbRenderLayer[]
-  phaseSkewStrokes?: PhaseSkewStrokesByLayer
+  phaseSkew?: { elements: AnyCircuitElement[]; options: DrawElementsOptions }
 }): void {
   const {
     ctx,
@@ -35,9 +37,12 @@ export function drawPcbTracesClippedToCopperPours(params: {
     vias,
     platedHoles,
     renderLayers,
-    phaseSkewStrokes,
+    phaseSkew,
   } = params
 
+  const phaseSkewStrokes =
+    phaseSkew &&
+    getDrawablePhaseSkewStrokes({ ...phaseSkew, drawableTraces: traces })
   const layers = getTraceLayers(traces, renderLayers)
   // A segment between consecutive vias may have no matching wire point.
   for (const layer of phaseSkewStrokes?.keys() ?? []) {
