@@ -2,6 +2,7 @@ import { applyToPoint, type Matrix } from "transformation-matrix"
 import type { CanvasContext } from "../../types"
 import type { PhaseSkewStroke } from "./get-drawable-phase-skew-strokes"
 
+/** Overlay strokes are drawn 10% wider than the copper, as KiCad does (diff_phase_skew_tool.cpp), so the colour fully covers the trace edges. */
 const OVERLAY_WIDTH_FACTOR = 1.1
 const GRADIENT_START = 0
 const GRADIENT_END = 1
