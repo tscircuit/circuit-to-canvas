@@ -7,7 +7,7 @@ export interface DrawLineParams {
   start: { x: number; y: number }
   end: { x: number; y: number }
   strokeWidth: number
-  stroke: string
+  stroke: CanvasContext["strokeStyle"]
   realToCanvasMat: Matrix
   lineCap?: "butt" | "round" | "square"
 }

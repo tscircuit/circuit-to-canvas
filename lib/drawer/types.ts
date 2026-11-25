@@ -42,6 +42,8 @@ export interface CanvasContext {
   globalCompositeOperation?: string
   fillStyle: string | CanvasGradient | CanvasPattern
   strokeStyle: string | CanvasGradient | CanvasPattern
+  /** Required for phase-skew strokes whose endpoint colors differ. */
+  createLinearGradient?: CanvasRenderingContext2D["createLinearGradient"]
   globalAlpha: number
   lineWidth: number
   lineCap: "butt" | "round" | "square"

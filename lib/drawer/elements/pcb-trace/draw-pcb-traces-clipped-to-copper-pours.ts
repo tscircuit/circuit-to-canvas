@@ -1,4 +1,5 @@
 import type {
+  AnyCircuitElement,
   LayerRef,
   PcbCopperPour,
   PcbPlatedHole,
@@ -7,10 +8,13 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
+import type { DrawElementsOptions } from "../../CircuitToCanvasDrawer"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import { appendPcbCopperPourPath } from "../pcb-copper-pour"
+import { drawPhaseSkewStrokes } from "./draw-phase-skew-strokes"
+import { getDrawablePhaseSkewStrokes } from "./get-drawable-phase-skew-strokes"
 import { drawPcbTrace } from "./pcb-trace"
 
 export function drawPcbTracesClippedToCopperPours(params: {
@@ -22,6 +26,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
   vias: PcbVia[]
   platedHoles: PcbPlatedHole[]
   renderLayers?: PcbRenderLayer[]
+  phaseSkew?: { elements: AnyCircuitElement[]; options: DrawElementsOptions }
 }): void {
   const {
     ctx,
@@ -32,9 +37,20 @@ export function drawPcbTracesClippedToCopperPours(params: {
     vias,
     platedHoles,
     renderLayers,
+    phaseSkew,
   } = params
 
-  for (const layer of getTraceLayers(traces, renderLayers)) {
+  const phaseSkewStrokes =
+    phaseSkew &&
+    getDrawablePhaseSkewStrokes({ ...phaseSkew, drawableTraces: traces })
+  const layers = getTraceLayers(traces, renderLayers)
+  // A segment between consecutive vias may have no matching wire point.
+  for (const layer of phaseSkewStrokes?.keys() ?? []) {
+    if (!layers.includes(layer)) layers.push(layer)
+  }
+
+  for (const layer of layers) {
+    const skewStrokes = phaseSkewStrokes?.get(layer)
     const layerCopperPours = copperPours.filter((pour) => pour.layer === layer)
 
     if (layerCopperPours.length === 0) {
@@ -47,6 +63,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
         vias,
         platedHoles,
       })
+      drawPhaseSkewStrokes({ ctx, strokes: skewStrokes, realToCanvasMat })
       continue
     }
 
@@ -71,7 +88,10 @@ export function drawPcbTracesClippedToCopperPours(params: {
         copperPours: layerCopperPours,
         realToCanvasMat,
       })
-      if (mergeDrawingLayer(ctx, traceLayerCtx)) continue
+      if (mergeDrawingLayer(ctx, traceLayerCtx)) {
+        drawPhaseSkewStrokes({ ctx, strokes: skewStrokes, realToCanvasMat })
+        continue
+      }
     }
 
     // A custom canvas implementation may not support drawing layers. Keep a
@@ -92,6 +112,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
       platedHoles,
     })
     ctx.restore()
+    drawPhaseSkewStrokes({ ctx, strokes: skewStrokes, realToCanvasMat })
   }
 }
 

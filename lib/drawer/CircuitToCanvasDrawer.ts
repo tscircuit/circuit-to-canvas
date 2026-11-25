@@ -113,6 +113,8 @@ export interface DrawElementsOptions {
   showPcbNotes?: boolean
   /** Whether to render pcb_debug_object overlays. Defaults to false. */
   showDebugObjects?: boolean
+  /** Color routed differential pairs by local phase skew. Defaults to false. */
+  showDifferentialPairPhaseSkew?: boolean
   /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
   clearDrillHoles?: boolean
 }
@@ -394,6 +396,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
+        phaseSkew: { elements, options },
       })
 
       for (const element of elements) {
@@ -556,6 +559,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
+        phaseSkew: { elements, options },
       })
     }
 
