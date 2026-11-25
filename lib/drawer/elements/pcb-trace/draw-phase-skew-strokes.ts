@@ -1,6 +1,6 @@
 import { applyToPoint } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
-import { drawLine, type DrawLineParams as LineOptions } from "../../shapes/line"
+import { drawLine } from "../../shapes/line"
 import type {
   PhaseSkewStroke,
   PhaseSkewStrokesByLayer,
@@ -11,6 +11,7 @@ const OVERLAY_WIDTH_FACTOR = 1.1
 const GRADIENT_START = 0
 const GRADIENT_END = 1
 
+type LineOptions = Parameters<typeof drawLine>[0]
 type DrawingContext = Pick<LineOptions, "ctx" | "realToCanvasMat">
 type RunDrawing = DrawingContext & { run: PhaseSkewStroke[] }
 
