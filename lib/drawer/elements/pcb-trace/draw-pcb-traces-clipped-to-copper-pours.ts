@@ -50,7 +50,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
   }
 
   for (const layer of layers) {
-    const skewStrokes = phaseSkewStrokes?.get(layer)
+    const skewStrokes = phaseSkewStrokes?.get(layer) ?? []
     const layerCopperPours = copperPours.filter((pour) => pour.layer === layer)
 
     if (layerCopperPours.length === 0) {

@@ -27,10 +27,10 @@ export function drawPhaseSkewStrokes({
   realToCanvasMat,
 }: {
   ctx: CanvasContext
-  strokes: PhaseSkewStroke[][] | undefined
+  strokes: PhaseSkewStroke[][]
   realToCanvasMat: Matrix
 }): void {
-  if (!strokes?.length) return
+  if (!strokes.length) return
 
   const pixelsPerMm = Math.hypot(realToCanvasMat.a, realToCanvasMat.b)
   ctx.save()
