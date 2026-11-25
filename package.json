@@ -18,7 +18,6 @@
     "@resvg/resvg-js": "^2.6.2",
     "@tscircuit/alphabet": "^0.0.23",
     "@tscircuit/circuit-json-util": "^0.0.116",
-    "@tscircuit/core": "0.0.2478",
     "@tscircuit/math-utils": "^0.0.36",
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
