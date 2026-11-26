@@ -33,13 +33,16 @@ export function getDrawablePhaseSkewStrokes({
 }): PhaseSkewStrokesByLayer | undefined {
   if (!options.showDifferentialPairPhaseSkew) return
 
+  let fullScaleMm = DEFAULT_PHASE_SKEW_FULL_SCALE_MM
   const requestedScaleMm = options.differentialPairPhaseSkewFullScaleMm
-  const fullScaleMm =
-    requestedScaleMm !== undefined &&
-    Number.isFinite(requestedScaleMm) &&
-    requestedScaleMm > 0
-      ? requestedScaleMm
-      : DEFAULT_PHASE_SKEW_FULL_SCALE_MM
+  if (requestedScaleMm !== undefined) {
+    if (!Number.isFinite(requestedScaleMm) || requestedScaleMm <= 0) {
+      throw new Error(
+        `differentialPairPhaseSkewFullScaleMm must be a positive number, got ${requestedScaleMm}`,
+      )
+    }
+    fullScaleMm = requestedScaleMm
+  }
   const strokesByLayer: PhaseSkewStrokesByLayer = new Map()
 
   const drawableTraceIds = new Set(
