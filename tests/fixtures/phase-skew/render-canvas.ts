@@ -14,12 +14,21 @@ export function renderCanvas({
   circuitJson,
   options = { showDifferentialPairPhaseSkew: true },
   center,
+  view,
 }: {
   circuitJson: CircuitJson
   options?: DrawElementsOptions
   center?: Point
+  view?: {
+    width: number
+    height: number
+    bounds: Parameters<CircuitToCanvasDrawer["setCameraBounds"]>[0]
+  }
 }): RenderedCanvas {
-  const canvas = createCanvas(840, 336)
+  const canvas =
+    view === undefined
+      ? createCanvas(840, 336)
+      : createCanvas(view.width, view.height)
   const ctx = canvas.getContext("2d")
   const drawer = new CircuitToCanvasDrawer(ctx)
   ctx.fillStyle = "#1a1a1a"
@@ -28,7 +37,7 @@ export function renderCanvas({
   const jointPixelsPerMm = 320
   const halfWidthMm = canvas.width / (2 * jointPixelsPerMm)
   const halfHeightMm = canvas.height / (2 * jointPixelsPerMm)
-  drawer.setCameraBounds(
+  const defaultBounds =
     center === undefined
       ? { minX: -15, maxX: 15, minY: -6, maxY: 6 }
       : {
@@ -36,8 +45,8 @@ export function renderCanvas({
           maxX: center.x + halfWidthMm,
           minY: center.y - halfHeightMm,
           maxY: center.y + halfHeightMm,
-        },
-  )
+        }
+  drawer.setCameraBounds(view === undefined ? defaultBounds : view.bounds)
   drawer.drawElements(circuitJson, options)
 
   return {
