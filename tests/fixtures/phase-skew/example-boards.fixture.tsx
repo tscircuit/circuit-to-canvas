@@ -107,6 +107,33 @@ export function MatchedPairBoard(): ReactElement {
   )
 }
 
+export function EndToEndSkewBoard(): ReactElement {
+  const via: PcbPath = [{ x: 12, y: 0, via: true, toLayer: "bottom" }]
+  return (
+    <board
+      width={28}
+      height={10}
+      fabricatorPreset="jlcpcb_economy"
+      routeRemaining={false}
+    >
+      <Pair
+        name="MATCHED"
+        y={3}
+        positivePath={detour({ x: 4, height: 0.5 })}
+        negativePath={detour({ x: 16, height: -0.5 })}
+      />
+      <Pair name="P_LONGER" positivePath={detour({ x: 0, height: 1 })} />
+      <Pair
+        name="N_LONGER"
+        y={-3}
+        loadLayer="bottom"
+        positivePath={via}
+        negativePath={[...via, ...detour({ x: 16, height: -0.5 })]}
+      />
+    </board>
+  )
+}
+
 /** A pair with a tuning bump and two later compensating detours. */
 export function LoadEndMeanderBoard(): ReactElement {
   return (

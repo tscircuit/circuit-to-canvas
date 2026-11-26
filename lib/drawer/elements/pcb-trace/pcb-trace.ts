@@ -17,6 +17,7 @@ export interface DrawPcbTraceParams {
   trace: PcbTrace
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
+  traceColor?: string
   vias?: PcbVia[]
   platedHoles?: PcbPlatedHole[]
   layer?: LayerRef
@@ -24,7 +25,14 @@ export interface DrawPcbTraceParams {
 
 // Draws a PCB trace route as lines or a filled polygon when widths vary.
 export function drawPcbTrace(params: DrawPcbTraceParams): void {
-  const { ctx, trace, realToCanvasMat, colorMap, layer: layerFilter } = params
+  const {
+    ctx,
+    trace,
+    realToCanvasMat,
+    colorMap,
+    traceColor,
+    layer: layerFilter,
+  } = params
 
   if (!trace.route || !Array.isArray(trace.route) || trace.route.length === 0) {
     return
@@ -36,7 +44,10 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
     drawPolygon({
       ctx,
       points: getWireTaperPolygon(point),
-      fill: layerToColor(point.layer, colorMap),
+      fill:
+        traceColor === undefined
+          ? layerToColor(point.layer, colorMap)
+          : traceColor,
       realToCanvasMat,
     })
   }
@@ -47,7 +58,8 @@ export function drawPcbTrace(params: DrawPcbTraceParams): void {
     const layer = segment[0]?.layer
     if (!layer) continue
     if (layerFilter && layer !== layerFilter) continue
-    const color = layerToColor(layer, colorMap)
+    const color =
+      traceColor === undefined ? layerToColor(layer, colorMap) : traceColor
 
     if (trace.route_thickness_mode === "interpolated") {
       drawPolygon({

@@ -13,8 +13,12 @@ import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import { appendPcbCopperPourPath } from "../pcb-copper-pour"
+import { addTraceLayerChangeEndpoints } from "./add-trace-layer-change-endpoints"
 import { drawPhaseSkewStrokes } from "./draw-phase-skew-strokes"
-import { getDrawablePhaseSkewStrokes } from "./get-drawable-phase-skew-strokes"
+import {
+  getDrawablePhaseSkewStrokes,
+  getEndToEndSkewTraceColors,
+} from "./get-drawable-phase-skew-strokes"
 import { drawPcbTrace } from "./pcb-trace"
 
 export function drawPcbTracesClippedToCopperPours(params: {
@@ -30,7 +34,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
 }): void {
   const {
     ctx,
-    traces,
+    traces: originalTraces,
     copperPours,
     realToCanvasMat,
     colorMap,
@@ -40,9 +44,27 @@ export function drawPcbTracesClippedToCopperPours(params: {
     phaseSkew,
   } = params
 
+  const endToEndSkewColors =
+    phaseSkew !== undefined &&
+    phaseSkew.options.showDifferentialPairEndToEndSkew
+      ? getEndToEndSkewTraceColors(phaseSkew.elements)
+      : undefined
+  const traces =
+    endToEndSkewColors === undefined
+      ? originalTraces
+      : originalTraces.map((trace) =>
+          endToEndSkewColors.has(trace.pcb_trace_id) &&
+          Array.isArray(trace.route)
+            ? { ...trace, route: addTraceLayerChangeEndpoints(trace.route) }
+            : trace,
+        )
   const phaseSkewStrokes =
     phaseSkew &&
-    getDrawablePhaseSkewStrokes({ ...phaseSkew, drawableTraces: traces })
+    getDrawablePhaseSkewStrokes({
+      ...phaseSkew,
+      drawableTraces: traces,
+      endToEndSkewColors,
+    })
   const layers = getTraceLayers(traces, renderLayers)
   // A segment between consecutive vias may have no matching wire point.
   for (const layer of phaseSkewStrokes?.keys() ?? []) {
@@ -61,6 +83,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
         layer,
         realToCanvasMat,
         colorMap,
+        endToEndSkewColors,
         vias,
         platedHoles,
       })
@@ -81,6 +104,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
         layer,
         realToCanvasMat,
         colorMap,
+        endToEndSkewColors,
         vias,
         platedHoles,
       })
@@ -109,6 +133,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
       layer,
       realToCanvasMat,
       colorMap,
+      endToEndSkewColors,
       vias,
       platedHoles,
     })
@@ -123,11 +148,20 @@ function drawTracesOnLayer(params: {
   layer: LayerRef
   realToCanvasMat: Matrix
   colorMap: PcbColorMap
+  endToEndSkewColors?: ReturnType<typeof getEndToEndSkewTraceColors>
   vias: PcbVia[]
   platedHoles: PcbPlatedHole[]
 }): void {
-  const { ctx, traces, layer, realToCanvasMat, colorMap, vias, platedHoles } =
-    params
+  const {
+    ctx,
+    traces,
+    layer,
+    realToCanvasMat,
+    colorMap,
+    endToEndSkewColors,
+    vias,
+    platedHoles,
+  } = params
 
   for (const trace of traces) {
     drawPcbTrace({
@@ -135,6 +169,10 @@ function drawTracesOnLayer(params: {
       trace,
       realToCanvasMat,
       colorMap,
+      traceColor:
+        endToEndSkewColors === undefined
+          ? undefined
+          : endToEndSkewColors.get(trace.pcb_trace_id),
       vias,
       platedHoles,
       layer,

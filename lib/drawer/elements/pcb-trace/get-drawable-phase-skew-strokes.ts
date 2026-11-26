@@ -19,15 +19,42 @@ export type PhaseSkewStrokesByLayer = Map<LayerRef, PhaseSkewStroke[][]>
 const MAX_RGB_CHANNEL = 255
 const JOINT_TOLERANCE_MM = 1e-6
 
+/** Uses one scale for both signs so equal magnitudes have equal saturation. */
+export function getEndToEndSkewTraceColors(elements: AnyCircuitElement[]) {
+  const differencesByTrace = new Map<PcbTrace["pcb_trace_id"], number>()
+  let peak = 0
+
+  for (const element of elements) {
+    if (element.type !== "pcb_differential_pair_phase_skew") continue
+    if (!("end_to_end_length_difference_mm" in element)) continue
+    const differenceMm = element.end_to_end_length_difference_mm
+    if (typeof differenceMm !== "number" || !Number.isFinite(differenceMm))
+      continue
+
+    peak = Math.max(peak, Math.abs(differenceMm))
+    differencesByTrace.set(element.positive_trace.pcb_trace_id, differenceMm)
+    differencesByTrace.set(element.negative_trace.pcb_trace_id, differenceMm)
+  }
+
+  return new Map(
+    Array.from(differencesByTrace, ([traceId, differenceMm]) => [
+      traceId,
+      getSkewColor({ differenceMm, positivePeak: peak, negativePeak: -peak }),
+    ]),
+  )
+}
+
 /** Collects phase-skew strokes for visible traces and copper layers. */
 export function getDrawablePhaseSkewStrokes({
   elements,
   drawableTraces,
   options,
+  endToEndSkewColors,
 }: {
   elements: AnyCircuitElement[]
   drawableTraces: PcbTrace[]
   options: DrawElementsOptions
+  endToEndSkewColors?: ReturnType<typeof getEndToEndSkewTraceColors>
 }): PhaseSkewStrokesByLayer | undefined {
   if (!options.showDifferentialPairPhaseSkew) return
 
@@ -41,6 +68,11 @@ export function getDrawablePhaseSkewStrokes({
     if (element.type !== "pcb_differential_pair_phase_skew") continue
     for (const trace of [element.positive_trace, element.negative_trace]) {
       if (!drawableTraceIds.has(trace.pcb_trace_id)) continue
+      if (
+        endToEndSkewColors !== undefined &&
+        endToEndSkewColors.has(trace.pcb_trace_id)
+      )
+        continue
       addTraceStrokes({ trace, strokesByLayer, layers: options.layers })
     }
   }
