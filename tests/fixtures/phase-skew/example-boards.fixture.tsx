@@ -3,12 +3,14 @@ import { type ComponentProps, Fragment, type ReactElement } from "react"
 import { Circuit } from "@tscircuit/core"
 
 type PcbPath = NonNullable<ComponentProps<"trace">["pcbPath"]>
+type PcbRoute = ComponentProps<"pcbtrace">["route"]
 
 function Pair({
   name,
   y = 0,
   positivePath = [],
   negativePath = [],
+  positiveRoute,
   loadLayer = "top",
   padDiameter = 0.65,
 }: {
@@ -16,13 +18,20 @@ function Pair({
   y?: number
   positivePath?: PcbPath
   negativePath?: PcbPath
+  positiveRoute?: PcbRoute
   loadLayer?: "top" | "bottom"
   padDiameter?: number
 }): ReactElement {
   const legs = [
-    { name: `${name}_P`, y: y + 0.6, path: positivePath },
+    {
+      name: `${name}_P`,
+      y: y + 0.6,
+      path: positiveRoute === undefined ? positivePath : undefined,
+    },
     { name: `${name}_N`, y: y - 0.6, path: negativePath },
   ]
+  // Core links the primitive to the first source trace via this field.
+  const positiveSourceTrace = { source_trace_id: "source_trace_0" }
   return (
     <>
       {legs.map(({ name, y, path }) => (
@@ -53,6 +62,9 @@ function Pair({
           />
         </Fragment>
       ))}
+      {positiveRoute !== undefined && (
+        <pcbtrace {...positiveSourceTrace} route={positiveRoute} />
+      )}
       <differentialpair
         name={name}
         positiveConnection={`${name}_P`}
@@ -112,13 +124,20 @@ export function LoadEndMeanderBoard(): ReactElement {
 }
 
 /** A pair with top and bottom routes joined by vias. */
-export function LayerChangeBoard(): ReactElement {
+export function LayerChangeBoard({
+  smallVias = false,
+}: {
+  smallVias?: boolean
+}): ReactElement {
   const via: PcbPath = [{ x: 12, y: 0, via: true, toLayer: "bottom" }]
   return (
     <board
       width={28}
       height={9}
       fabricatorPreset="jlcpcb_economy"
+      pcbStyle={
+        smallVias ? { viaPadDiameter: 0.16, viaHoleDiameter: 0.08 } : undefined
+      }
       routeRemaining={false}
     >
       <Pair
@@ -127,6 +146,36 @@ export function LayerChangeBoard(): ReactElement {
         positivePath={[...detour({ x: 3, height: 1.1 }), ...via]}
         negativePath={[...via, ...detour({ x: 17, height: -1.1 })]}
       />
+    </board>
+  )
+}
+
+/** A test pair with an explicit positive path relative to its source pad. */
+export function BendBoard({
+  positivePath,
+}: {
+  positivePath: PcbPath
+}): ReactElement {
+  return (
+    <board width={28} height={9} routeRemaining={false}>
+      <Pair name="BEND" positivePath={positivePath} />
+    </board>
+  )
+}
+
+export function WidthChangeBoard(): ReactElement {
+  const wideWidthMm = 0.48
+  const narrowWidthMm = 0.16
+  const positiveRoute: PcbRoute = [
+    { x: -12, y: 0.6, width: wideWidthMm },
+    { x: -0.8, y: 0.6, width: wideWidthMm },
+    { x: -0.4, y: 0.95, width: wideWidthMm },
+    { x: 0, y: 0.6, width: narrowWidthMm },
+    { x: 12, y: 0.6, width: narrowWidthMm },
+  ].map((point) => ({ ...point, route_type: "wire", layer: "top" }))
+  return (
+    <board width={28} height={9} routeRemaining={false}>
+      <Pair name="NECK_DOWN" positiveRoute={positiveRoute} />
     </board>
   )
 }
