@@ -34,7 +34,8 @@ test("renders the bends and zero crossing of the phase skew overlay", async () =
         [664, 366],
         [663, 378],
       ],
-      incomingGreen: 211,
+      incomingGreen: 0,
+      maxExpectedChannelDelta: 2,
     },
     {
       trace: skew.negative_trace,
@@ -44,10 +45,18 @@ test("renders the bends and zero crossing of the phase skew overlay", async () =
         [774, 445],
         [766, 454],
       ],
-      incomingGreen: 246,
+      incomingGreen: 109,
+      // The fixed scale makes the fade steeper at the zero crossing.
+      maxExpectedChannelDelta: 32,
     },
   ] as const
-  for (const { trace, index, points, incomingGreen } of joints) {
+  for (const {
+    trace,
+    index,
+    points,
+    incomingGreen,
+    maxExpectedChannelDelta,
+  } of joints) {
     const incoming = trace.segments[index]
     const outgoing = trace.segments[index + 1]
     if (incoming === undefined || outgoing === undefined)
@@ -68,9 +77,11 @@ test("renders the bends and zero crossing of the phase skew overlay", async () =
     const maxChannelDelta = Math.max(
       ...Array.from(before, (channel, i) => Math.abs(channel - after[i]!)),
     )
-    expect(maxChannelDelta).toBeLessThanOrEqual(2)
+    expect(maxChannelDelta).toBeLessThanOrEqual(maxExpectedChannelDelta)
     expect(Math.abs(upstream[1]! - incomingGreen)).toBeLessThanOrEqual(2)
   }
+
+  expect(ctx.getImageData(772, 446, 1, 1).data[1]).toBeGreaterThanOrEqual(253)
 
   const crops = [
     { left: 302, top: 622 }, // Entry bends

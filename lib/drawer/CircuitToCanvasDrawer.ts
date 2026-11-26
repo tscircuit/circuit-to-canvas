@@ -115,6 +115,8 @@ export interface DrawElementsOptions {
   showDebugObjects?: boolean
   /** Color routed differential pairs by local phase skew. Defaults to false. */
   showDifferentialPairPhaseSkew?: boolean
+  /** Skew magnitude in mm that reaches full color. Must be finite and positive. Defaults to 0.1 mm. */
+  differentialPairPhaseSkewFullScaleMm?: number
   /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
   clearDrillHoles?: boolean
 }

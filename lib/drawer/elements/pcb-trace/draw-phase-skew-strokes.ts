@@ -15,7 +15,7 @@ type LineOptions = Parameters<typeof drawLine>[0]
 type DrawingContext = Pick<LineOptions, "ctx" | "realToCanvasMat">
 type RunDrawing = DrawingContext & { run: PhaseSkewStroke[] }
 
-/** Draws two-stop gradients over one layer's copper. */
+/** Draws phase-skew gradients over one layer's copper. */
 export function drawPhaseSkewStrokes({
   ctx,
   strokes,
@@ -43,7 +43,14 @@ function drawRunStrokes({
   realToCanvasMat,
   lineCap,
 }: RunDrawing & Pick<LineOptions, "lineCap">): void {
-  for (const { start, end, width, startColor, endColor } of run) {
+  for (const {
+    start,
+    end,
+    width,
+    startColor,
+    endColor,
+    intermediateStops,
+  } of run) {
     let stroke: LineOptions["stroke"] = startColor
     if (startColor !== endColor) {
       if (ctx.createLinearGradient === undefined) continue
@@ -56,6 +63,9 @@ function drawRunStrokes({
         endPx.y,
       )
       gradient.addColorStop(GRADIENT_START, startColor)
+      for (const { offset, color } of intermediateStops) {
+        gradient.addColorStop(offset, color)
+      }
       gradient.addColorStop(GRADIENT_END, endColor)
       stroke = gradient
     }

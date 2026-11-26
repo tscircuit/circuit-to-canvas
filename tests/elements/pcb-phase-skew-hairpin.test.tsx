@@ -21,7 +21,14 @@ test("a 170-degree bend covers the copper and preserves the neighboring fade", (
     ),
   })
   const center = { x: 0, y: 0.7 }
-  const overlay = renderCanvas({ circuitJson, center })
+  const overlay = renderCanvas({
+    circuitJson,
+    center,
+    options: {
+      showDifferentialPairPhaseSkew: true,
+      differentialPairPhaseSkewFullScaleMm: 0.7,
+    },
+  })
   const copper = renderCanvas({ circuitJson, center, options: {} })
 
   const outerCorner = { x: 0.09, y: 0.64 }

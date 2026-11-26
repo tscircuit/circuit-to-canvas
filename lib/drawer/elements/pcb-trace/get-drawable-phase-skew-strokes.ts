@@ -11,11 +11,13 @@ import type { DrawElementsOptions } from "../../CircuitToCanvasDrawer"
 export type PhaseSkewStroke = PcbDifferentialPairPhaseSkewSegment & {
   startColor: string
   endColor: string
+  intermediateStops: { offset: number; color: string }[]
 }
 
 /** Consecutive runs of strokes, grouped by copper layer. */
 export type PhaseSkewStrokesByLayer = Map<LayerRef, PhaseSkewStroke[][]>
 
+const DEFAULT_PHASE_SKEW_FULL_SCALE_MM = 0.1
 const MAX_RGB_CHANNEL = 255
 const JOINT_TOLERANCE_MM = 1e-6
 
@@ -31,6 +33,13 @@ export function getDrawablePhaseSkewStrokes({
 }): PhaseSkewStrokesByLayer | undefined {
   if (!options.showDifferentialPairPhaseSkew) return
 
+  const requestedScaleMm = options.differentialPairPhaseSkewFullScaleMm
+  const fullScaleMm =
+    requestedScaleMm !== undefined &&
+    Number.isFinite(requestedScaleMm) &&
+    requestedScaleMm > 0
+      ? requestedScaleMm
+      : DEFAULT_PHASE_SKEW_FULL_SCALE_MM
   const strokesByLayer: PhaseSkewStrokesByLayer = new Map()
 
   const drawableTraceIds = new Set(
@@ -41,40 +50,30 @@ export function getDrawablePhaseSkewStrokes({
     if (element.type !== "pcb_differential_pair_phase_skew") continue
     for (const trace of [element.positive_trace, element.negative_trace]) {
       if (!drawableTraceIds.has(trace.pcb_trace_id)) continue
-      addTraceStrokes({ trace, strokesByLayer, layers: options.layers })
+      addTraceStrokes({
+        trace,
+        strokesByLayer,
+        layers: options.layers,
+        fullScaleMm,
+      })
     }
   }
 
   return strokesByLayer
 }
 
-/** Scales each sign to its peak over the full trace and adds visible strokes. */
 function addTraceStrokes({
   trace,
   strokesByLayer,
   layers,
+  fullScaleMm,
 }: {
   trace: PcbDifferentialPairPhaseSkewTrace
   strokesByLayer: PhaseSkewStrokesByLayer
   layers: DrawElementsOptions["layers"]
+  fullScaleMm: number
 }): void {
-  let positivePeak = 0
-  let negativePeak = 0
-
-  for (const segment of trace.segments) {
-    const { start_length_difference_mm, end_length_difference_mm } = segment
-    positivePeak = Math.max(
-      positivePeak,
-      start_length_difference_mm,
-      end_length_difference_mm,
-    )
-    negativePeak = Math.min(
-      negativePeak,
-      start_length_difference_mm,
-      end_length_difference_mm,
-    )
-  }
-
+  const thresholds = [-fullScaleMm, 0, fullScaleMm]
   let run: PhaseSkewStroke[] = []
   const filterLayers = layers !== undefined && layers.length > 0
   for (const segment of trace.segments) {
@@ -109,34 +108,31 @@ function addTraceStrokes({
       else layerRuns.push(run)
     }
 
-    const startColor = getSkewColor({
-      differenceMm: segment.start_length_difference_mm,
-      positivePeak,
-      negativePeak,
-    })
-    const endColor = getSkewColor({
-      differenceMm: segment.end_length_difference_mm,
-      positivePeak,
-      negativePeak,
-    })
-    run.push({ ...segment, startColor, endColor })
+    const startMm = segment.start_length_difference_mm
+    const endMm = segment.end_length_difference_mm
+    const startColor = getSkewColor(startMm, fullScaleMm)
+    const endColor = getSkewColor(endMm, fullScaleMm)
+    const intermediateStops: PhaseSkewStroke["intermediateStops"] = []
+    if (startColor !== endColor) {
+      // Saturation and zero change the slope of the color gradient.
+      for (const thresholdMm of thresholds) {
+        const offset = (thresholdMm - startMm) / (endMm - startMm)
+        if (offset > 0 && offset < 1) {
+          intermediateStops.push({
+            offset,
+            color: getSkewColor(thresholdMm, fullScaleMm),
+          })
+        }
+      }
+    }
+    run.push({ ...segment, startColor, endColor, intermediateStops })
   }
 }
 
 /** Blends white toward blue for a lead or red for a lag. */
-function getSkewColor({
-  differenceMm,
-  positivePeak,
-  negativePeak,
-}: {
-  differenceMm: number
-  positivePeak: number
-  negativePeak: number
-}): string {
-  if (differenceMm === 0) return "rgb(255, 255, 255)"
-
-  const peak = differenceMm > 0 ? positivePeak : negativePeak
-  const fadedChannel = Math.round(MAX_RGB_CHANNEL * (1 - differenceMm / peak))
+function getSkewColor(differenceMm: number, fullScaleMm: number): string {
+  const strength = Math.min(1, Math.abs(differenceMm) / fullScaleMm)
+  const fadedChannel = Math.round(MAX_RGB_CHANNEL * (1 - strength))
 
   if (differenceMm > 0) {
     return `rgb(${fadedChannel}, ${fadedChannel}, ${MAX_RGB_CHANNEL})`

@@ -8,7 +8,14 @@ import { renderCanvas } from "../fixtures/phase-skew/render-canvas"
 test("the joint covers the wide copper where a trace narrows", () => {
   const circuitJson = renderBoard({ board: <WidthChangeBoard /> })
   const center = { x: 0, y: 0.6 }
-  const overlay = renderCanvas({ circuitJson, center })
+  const overlay = renderCanvas({
+    circuitJson,
+    center,
+    options: {
+      showDifferentialPairPhaseSkew: true,
+      differentialPairPhaseSkewFullScaleMm: 0.263,
+    },
+  })
   const copper = renderCanvas({ circuitJson, center, options: {} })
 
   const wideEdge = { x: 0.1, y: 0.43 }
