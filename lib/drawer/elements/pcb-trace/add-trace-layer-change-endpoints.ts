@@ -24,9 +24,13 @@ export function addTraceLayerChangeEndpoints(route: Route): Route {
     const previous = extended.at(-1)
     const next = route[index + 1]
     if (point.route_type === "through_pad") {
-      if (!isWireAt(previous, point.start, point.start_layer)) {
-        extended.push(wireEndpoint(point.start, point.start_layer, point.width))
-      }
+      const start = wireEndpoint({
+        position: point.start,
+        layer: point.start_layer,
+        width: point.width,
+      })
+      if (previous === undefined || !isWireAt(previous, start))
+        extended.push(start)
       width = point.width
     }
 
@@ -43,15 +47,23 @@ export function addTraceLayerChangeEndpoints(route: Route): Route {
     const incomingLayer = reversed ? toLayer : fromLayer
     const outgoingLayer = reversed ? fromLayer : toLayer
 
-    if (!isWireAt(extended.at(-1), end, incomingLayer)) {
-      extended.push(wireEndpoint(end, incomingLayer, width))
-    }
+    const incoming = wireEndpoint({
+      position: end,
+      layer: incomingLayer,
+      width,
+    })
+    const previousWire = extended.at(-1)
+    if (previousWire === undefined || !isWireAt(previousWire, incoming))
+      extended.push(incoming)
     extended.push(point)
-    if (!isWireAt(next, end, outgoingLayer)) {
-      const nextWidth =
-        next !== undefined && next.route_type !== "via" ? next.width : width
-      extended.push(wireEndpoint(end, outgoingLayer, nextWidth))
-    }
+    const nextWidth =
+      next !== undefined && next.route_type !== "via" ? next.width : width
+    const outgoing = wireEndpoint({
+      position: end,
+      layer: outgoingLayer,
+      width: nextWidth,
+    })
+    if (next === undefined || !isWireAt(next, outgoing)) extended.push(outgoing)
   }
   return extended
 }
@@ -68,23 +80,25 @@ function hasRoutePointLayer(point: Route[number], layer: LayerRef): boolean {
 }
 
 function isWireAt(
-  point: Route[number] | undefined,
-  position: Point,
-  layer: LayerRef,
+  point: Route[number],
+  endpoint: PcbTraceRoutePointWire,
 ): boolean {
   return (
-    point !== undefined &&
     point.route_type === "wire" &&
-    point.layer === layer &&
-    point.x === position.x &&
-    point.y === position.y
+    point.layer === endpoint.layer &&
+    point.x === endpoint.x &&
+    point.y === endpoint.y
   )
 }
 
-function wireEndpoint(
-  { x, y }: Point,
-  layer: LayerRef,
-  width: number,
-): PcbTraceRoutePointWire {
+function wireEndpoint({
+  position: { x, y },
+  layer,
+  width,
+}: {
+  position: Point
+  layer: LayerRef
+  width: number
+}): PcbTraceRoutePointWire {
   return { route_type: "wire", x, y, layer, width }
 }
