@@ -71,6 +71,7 @@ import { drawPcbSmtPad } from "./elements/pcb-smtpad"
 import { drawPcbSolderPaste } from "./elements/pcb-solder-paste"
 import { drawPcbSoldermask } from "./elements/pcb-soldermask"
 import { drawPcbTracesClippedToCopperPours } from "./elements/pcb-trace/draw-pcb-traces-clipped-to-copper-pours"
+import { drawPcbDifferentialPairPhaseSkew } from "./elements/pcb-trace/draw-phase-skew-strokes"
 import { getViasFromTraces } from "./elements/pcb-trace/get-vias-from-traces"
 import { drawPcbVia } from "./elements/pcb-via"
 import { shouldDrawElement } from "./pcb-render-layer-filter"
@@ -402,7 +403,6 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
-        phaseSkew: { elements, options },
       })
 
       for (const element of elements) {
@@ -448,6 +448,8 @@ export class CircuitToCanvasDrawer {
           })
         }
       }
+
+      this.drawPhaseSkewOverCopper({ elements, options })
     }
 
     // Step 4: Draw soldermask layer (only if showSoldermask is true)
@@ -565,7 +567,6 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
-        phaseSkew: { elements, options },
       })
     }
 
@@ -623,6 +624,9 @@ export class CircuitToCanvasDrawer {
         })
       }
     }
+
+    if (!renderTopLayerOverlay)
+      this.drawPhaseSkewOverCopper({ elements, options })
 
     // Draw bottom soldermask after copper so board material stays underneath mask.
     if (renderBottomSoldermask) {
@@ -790,7 +794,11 @@ export class CircuitToCanvasDrawer {
     }
 
     if (options.clearDrillHoles) {
-      this.clearDrillHoles(elements, layer)
+      this.drawDrillHoles({
+        elements,
+        layers: [`${layer}_copper` as PcbRenderLayer],
+        clear: true,
+      })
     }
 
     if (options.showDebugObjects) {
@@ -815,10 +823,36 @@ export class CircuitToCanvasDrawer {
     }
   }
 
-  private clearDrillHoles(
-    elements: AnyCircuitElement[],
-    layer: LayerRef,
-  ): void {
+  /** Draws phase skew over all copper, keeping drills visible as circuit-json-webgpu does. */
+  private drawPhaseSkewOverCopper({
+    elements,
+    options,
+  }: {
+    elements: AnyCircuitElement[]
+    options: DrawElementsOptions
+  }): void {
+    if (!options.showDifferentialPairPhaseSkew) return
+    drawPcbDifferentialPairPhaseSkew({
+      ctx: this.ctx,
+      elements,
+      realToCanvasMat: this.realToCanvasMat,
+      layers: options.layers,
+      colors: options.phaseSkewColors,
+      clipContextElements: options.clipContextElements,
+    })
+    this.drawDrillHoles({ elements, layers: options.layers })
+  }
+
+  /** Paints drills over everything drawn so far, or clears them with `clear`. */
+  private drawDrillHoles({
+    elements,
+    layers,
+    clear = false,
+  }: {
+    elements: AnyCircuitElement[]
+    layers?: PcbRenderLayer[]
+    clear?: boolean
+  }): void {
     const apertures = elements.filter(
       (element) =>
         element.type === "pcb_hole" ||
@@ -845,17 +879,14 @@ export class CircuitToCanvasDrawer {
           inner7: transparent,
           inner8: transparent,
         },
-        drill: "#000",
+        drill: clear ? "#000" : this.colorMap.drill,
       },
     })
 
     this.ctx.save()
-    this.ctx.globalCompositeOperation = "destination-out"
+    if (clear) this.ctx.globalCompositeOperation = "destination-out"
     const boardOwnerMap = this.ctx.boardOwnerMap
-    apertureDrawer.drawElements(apertures, {
-      layers: [`${layer}_copper` as PcbRenderLayer],
-      showPcbNotes: false,
-    })
+    apertureDrawer.drawElements(apertures, { layers, showPcbNotes: false })
     this.ctx.boardOwnerMap = boardOwnerMap
     this.ctx.restore()
   }

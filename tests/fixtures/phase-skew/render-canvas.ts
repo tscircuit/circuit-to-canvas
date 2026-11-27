@@ -1,11 +1,12 @@
 import { createCanvas, type Canvas } from "@napi-rs/canvas"
 import type { CircuitJson, Point } from "circuit-json"
-import { applyToPoint } from "transformation-matrix"
+import { applyToPoint, type Matrix } from "transformation-matrix"
 import { CircuitToCanvasDrawer, type DrawElementsOptions } from "../../../lib"
 
 /** Renders a PNG-ready canvas and samples pixels in PCB coordinates. */
 type RenderedCanvas = {
   canvas: Canvas
+  realToCanvasMat: Matrix
   pixelAt: (point: Point) => number[]
 }
 
@@ -42,6 +43,7 @@ export function renderCanvas({
 
   return {
     canvas,
+    realToCanvasMat: drawer.realToCanvasMat,
     pixelAt(point) {
       const { x, y } = applyToPoint(drawer.realToCanvasMat, point)
       return Array.from(

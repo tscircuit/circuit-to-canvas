@@ -1,9 +1,9 @@
 import { applyToPoint } from "transformation-matrix"
 import { drawCircle } from "../../shapes/circle"
 import { drawLine } from "../../shapes/line"
-import type {
-  PhaseSkewStroke,
-  PhaseSkewStrokesByLayer,
+import {
+  getPhaseSkewStrokes,
+  type PhaseSkewStroke,
 } from "./get-phase-skew-strokes"
 
 /** Overlay strokes are drawn 10% wider than the copper, as KiCad does (diff_phase_skew_tool.cpp), so the colour fully covers the trace edges. */
@@ -15,15 +15,19 @@ type LineOptions = Parameters<typeof drawLine>[0]
 type DrawingContext = Pick<LineOptions, "ctx" | "realToCanvasMat">
 type RunDrawing = DrawingContext & { run: PhaseSkewStroke[] }
 
-/** Draws two-stop gradients over one layer's copper. */
-export function drawPhaseSkewStrokes({
-  ctx,
-  strokes,
-  realToCanvasMat,
-}: DrawingContext & {
-  strokes: ReturnType<PhaseSkewStrokesByLayer["get"]>
-}): void {
-  if (strokes === undefined || strokes.length === 0) return
+export type DrawPcbDifferentialPairPhaseSkewParams = DrawingContext &
+  Parameters<typeof getPhaseSkewStrokes>[0]
+
+/**
+ * Draws the phase skew of the traces in `elements` as two-stop gradients.
+ * Call it after all copper so pads, pours and vias do not cover it.
+ */
+export function drawPcbDifferentialPairPhaseSkew(
+  params: DrawPcbDifferentialPairPhaseSkewParams,
+): void {
+  const { ctx, realToCanvasMat } = params
+  const strokes = [...getPhaseSkewStrokes(params).values()].flat()
+  if (strokes.length === 0) return
 
   ctx.save()
   for (const run of strokes) {

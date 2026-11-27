@@ -3,7 +3,6 @@ import type {
   LayerRef,
   PcbDifferentialPairPhaseSkewSegment,
   PcbDifferentialPairPhaseSkewTrace,
-  PcbTrace,
 } from "circuit-json"
 import type { DrawElementsOptions } from "../../CircuitToCanvasDrawer"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
@@ -33,26 +32,26 @@ const DEFAULT_COLORS = {
 } satisfies Record<string, Rgba>
 type PhaseSkewPalette = Record<keyof typeof DEFAULT_COLORS, Rgba>
 
-/** Collects phase-skew strokes for visible traces and copper layers. */
+/** Collects phase-skew strokes for the traces in `elements` on visible copper layers. */
 export function getPhaseSkewStrokes({
   elements,
   colors,
   ctx,
-  drawableTraces,
   layers,
   clipContextElements,
 }: {
   elements: AnyCircuitElement[]
   colors?: DrawElementsOptions["phaseSkewColors"]
   ctx: CanvasContext
-  drawableTraces: PcbTrace[]
   layers?: DrawElementsOptions["layers"]
   clipContextElements?: AnyCircuitElement[]
 }): PhaseSkewStrokesByLayer {
   const strokesByLayer: PhaseSkewStrokesByLayer = new Map()
 
   const drawableTraceIds = new Set(
-    drawableTraces.map(({ pcb_trace_id }) => pcb_trace_id),
+    elements.flatMap((element) =>
+      element.type === "pcb_trace" ? [element.pcb_trace_id] : [],
+    ),
   )
   const fullScaleMmBySourceBusId = getPhaseSkewFullScaleMmBySourceBusId({
     elements: clipContextElements
