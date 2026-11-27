@@ -10,7 +10,11 @@ test("the overlay follows copper layer visibility and leaves via drills visible"
   const all = renderCanvas({ circuitJson })
   const top = renderCanvas({
     circuitJson,
-    options: { showDifferentialPairPhaseSkew: true, layers: ["top_copper"] },
+    options: {
+      showDifferentialPairPhaseSkew: true,
+      phaseSkewFullScaleMm: 2,
+      layers: ["top_copper"],
+    },
   })
 
   expect(top.pixelAt({ x: -2, y: 0.6 })).toEqual([139, 139, 255, 255])

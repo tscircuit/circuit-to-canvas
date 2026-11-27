@@ -8,13 +8,13 @@ import type {
   PcbVia,
 } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { DrawElementsOptions } from "../../CircuitToCanvasDrawer"
+import type { PhaseSkewColors } from "../../CircuitToCanvasDrawer"
 import type { CanvasContext, PcbColorMap } from "../../types"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import { appendPcbCopperPourPath } from "../pcb-copper-pour"
 import { drawPhaseSkewStrokes } from "./draw-phase-skew-strokes"
-import { getDrawablePhaseSkewStrokes } from "./get-drawable-phase-skew-strokes"
+import { getPhaseSkewStrokes } from "./get-phase-skew-strokes"
 import { drawPcbTrace } from "./pcb-trace"
 
 export function drawPcbTracesClippedToCopperPours(params: {
@@ -26,7 +26,12 @@ export function drawPcbTracesClippedToCopperPours(params: {
   vias: PcbVia[]
   platedHoles: PcbPlatedHole[]
   renderLayers?: PcbRenderLayer[]
-  phaseSkew?: { elements: AnyCircuitElement[]; options: DrawElementsOptions }
+  phaseSkew?: {
+    elements: AnyCircuitElement[]
+    fullScaleMm: number
+    fullScaleMmBySourceBusId?: Record<string, number>
+    colors?: PhaseSkewColors
+  }
 }): void {
   const {
     ctx,
@@ -42,7 +47,12 @@ export function drawPcbTracesClippedToCopperPours(params: {
 
   const phaseSkewStrokes =
     phaseSkew &&
-    getDrawablePhaseSkewStrokes({ ...phaseSkew, ctx, drawableTraces: traces })
+    getPhaseSkewStrokes({
+      ...phaseSkew,
+      ctx,
+      drawableTraces: traces,
+      layers: renderLayers,
+    })
   const layers = getTraceLayers(traces, renderLayers)
   // A segment between consecutive vias may have no matching wire point.
   for (const layer of phaseSkewStrokes?.keys() ?? []) {
@@ -50,8 +60,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
   }
 
   for (const layer of layers) {
-    const skewStrokes =
-      phaseSkewStrokes === undefined ? undefined : phaseSkewStrokes.get(layer)
+    const skewStrokes = phaseSkewStrokes?.get(layer)
     const layerCopperPours = copperPours.filter((pour) => pour.layer === layer)
 
     if (layerCopperPours.length === 0) {

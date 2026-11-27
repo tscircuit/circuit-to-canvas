@@ -126,7 +126,13 @@ export function LoadEndMeanderBoard(): ReactElement {
   )
 }
 
-/** The first leg of the detour gains 2 mm of skew over a 4 mm segment. */
+// The first leg of the detour gains 2 mm of skew over a 4 mm segment.
+const SKEW_RAMP_PATH: PcbPath = [
+  { x: 8, y: 0 },
+  { x: 10, y: -Math.sqrt(12) },
+  { x: 12, y: 0 },
+]
+
 export function SkewRampBoard({
   maxLengthSkew,
 }: {
@@ -137,12 +143,17 @@ export function SkewRampBoard({
       <Pair
         name="RAMP"
         maxLengthSkew={maxLengthSkew}
-        negativePath={[
-          { x: 8, y: 0 },
-          { x: 10, y: -Math.sqrt(12) },
-          { x: 12, y: 0 },
-        ]}
+        negativePath={SKEW_RAMP_PATH}
       />
+    </board>
+  )
+}
+
+export function TwoSkewRampPairsBoard(): ReactElement {
+  return (
+    <board width={28} height={12} routeRemaining={false}>
+      <Pair name="MAPPED" y={2.5} negativePath={SKEW_RAMP_PATH} />
+      <Pair name="FALLBACK" y={-1.5} negativePath={SKEW_RAMP_PATH} />
     </board>
   )
 }

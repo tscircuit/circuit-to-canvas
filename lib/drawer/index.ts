@@ -1,6 +1,9 @@
 export { CircuitToCanvasDrawer } from "./CircuitToCanvasDrawer"
-export type { DrawElementsOptions } from "./CircuitToCanvasDrawer"
-export { DEFAULT_PHASE_SKEW_SCALE_MM } from "./elements/pcb-trace/get-drawable-phase-skew-strokes"
+export type {
+  DrawElementsOptions,
+  PhaseSkewColors,
+  PhaseSkewRenderOptions,
+} from "./CircuitToCanvasDrawer"
 export * from "./types"
 export * from "./shapes"
 export * from "./elements"

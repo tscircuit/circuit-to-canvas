@@ -12,7 +12,10 @@ type RenderedCanvas = {
 /** Draws a differential-pair fixture with phase skew enabled by default. */
 export function renderCanvas({
   circuitJson,
-  options = { showDifferentialPairPhaseSkew: true },
+  options = {
+    showDifferentialPairPhaseSkew: true,
+    phaseSkewFullScaleMm: 2,
+  },
   center,
 }: {
   circuitJson: CircuitJson
