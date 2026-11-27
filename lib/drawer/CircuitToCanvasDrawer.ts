@@ -8,6 +8,8 @@ import type {
   PcbCopperText,
   PcbCourtyardCircle,
   PcbCourtyardOutline,
+  PcbCourtyardPill,
+  PcbCourtyardPolygon,
   PcbCourtyardRect,
   PcbCutout,
   PcbDebugObject,
@@ -43,6 +45,8 @@ import { drawPcbCopperPour } from "./elements/pcb-copper-pour"
 import { drawPcbCopperText } from "./elements/pcb-copper-text"
 import { drawPcbCourtyardCircle } from "./elements/pcb-courtyard-circle"
 import { drawPcbCourtyardOutline } from "./elements/pcb-courtyard-outline"
+import { drawPcbCourtyardPill } from "./elements/pcb-courtyard-pill"
+import { drawPcbCourtyardPolygon } from "./elements/pcb-courtyard-polygon"
 import { drawPcbCourtyardRect } from "./elements/pcb-courtyard-rect"
 import { drawPcbCutout } from "./elements/pcb-cutout"
 import { drawPcbDebugObject } from "./elements/pcb-debug-object"
@@ -783,6 +787,24 @@ export class CircuitToCanvasDrawer {
         drawPcbCourtyardOutline({
           ctx: this.ctx,
           outline: element as PcbCourtyardOutline,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_courtyard_polygon") {
+        drawPcbCourtyardPolygon({
+          ctx: this.ctx,
+          polygon: element as PcbCourtyardPolygon,
+          realToCanvasMat: this.realToCanvasMat,
+          colorMap: this.colorMap,
+        })
+      }
+
+      if (element.type === "pcb_courtyard_pill") {
+        drawPcbCourtyardPill({
+          ctx: this.ctx,
+          pill: element as PcbCourtyardPill,
           realToCanvasMat: this.realToCanvasMat,
           colorMap: this.colorMap,
         })
