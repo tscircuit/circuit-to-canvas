@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { getPhaseSkewFullScaleMmBySourceBusId } from "../../lib/drawer/elements/pcb-trace/get-phase-skew-strokes"
 import {
   SkewRampBoard,
   renderBoard,
@@ -52,4 +53,21 @@ test("a zero skew limit makes any nonzero skew fully saturated", () => {
   expect(pixelAt({ x: -4.1, y: 0.6 })).toEqual([255, 255, 255, 255])
   expect(pixelAt(pointOnRamp(0.02))).toEqual([0, 0, 255, 255])
   expect(pixelAt({ x: -3.9, y: 0.6 })).toEqual([255, 0, 0, 255])
+})
+
+test("the full-scale lookup includes only buses with a skew limit", () => {
+  const elements = renderBoard({ board: <SkewRampBoard maxLengthSkew={0} /> })
+  const sourceBus = elements.find((element) => element.type === "source_bus")!
+  const unlimitedBus = renderBoard({ board: <SkewRampBoard /> }).find(
+    (element) => element.type === "source_bus",
+  )!
+
+  expect(
+    getPhaseSkewFullScaleMmBySourceBusId({
+      elements: [
+        ...elements,
+        { ...unlimitedBus, source_bus_id: "source_bus_without_limit" },
+      ],
+    }),
+  ).toEqual({ [sourceBus.source_bus_id]: 0 })
 })

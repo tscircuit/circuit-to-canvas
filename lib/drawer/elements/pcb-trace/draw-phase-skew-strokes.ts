@@ -4,7 +4,7 @@ import { drawLine } from "../../shapes/line"
 import type {
   PhaseSkewStroke,
   PhaseSkewStrokesByLayer,
-} from "./get-drawable-phase-skew-strokes"
+} from "./get-phase-skew-strokes"
 
 /** Overlay strokes are drawn 10% wider than the copper, as KiCad does (diff_phase_skew_tool.cpp), so the colour fully covers the trace edges. */
 const OVERLAY_WIDTH_FACTOR = 1.1
@@ -66,8 +66,7 @@ function drawRunStrokes({
   }
 }
 
-function drawRunDiscs(drawing: RunDrawing): void {
-  const { run, ctx, realToCanvasMat } = drawing
+function drawRunDiscs({ run, ctx, realToCanvasMat }: RunDrawing): void {
   // Canvas applies one cap style to both ends. Put the round ends and
   // joint fills beneath the butt-capped gradients.
   for (const [i, { start, width, startColor }] of run.entries()) {
