@@ -1,7 +1,7 @@
 import type { PcbSilkscreenRect } from "circuit-json"
 import type { Matrix } from "transformation-matrix"
-import type { PcbColorMap, CanvasContext } from "../types"
 import { drawRect } from "../shapes/rect"
+import type { CanvasContext, PcbColorMap } from "../types"
 
 export interface DrawPcbSilkscreenRectParams {
   ctx: CanvasContext
@@ -22,6 +22,9 @@ export function drawPcbSilkscreenRect(
   const { ctx, rect, realToCanvasMat, colorMap } = params
 
   const color = layerToSilkscreenColor(rect.layer, colorMap)
+  const isFilled = rect.is_filled ?? false
+  const hasStroke = rect.has_stroke ?? true
+  const isStrokeDashed = rect.is_stroke_dashed ?? false
 
   drawRect({
     ctx,
@@ -29,9 +32,11 @@ export function drawPcbSilkscreenRect(
     width: rect.width,
     height: rect.height,
     borderRadius: rect.corner_radius,
-    fill: rect.is_filled ? color : "transparent",
-    stroke: color,
-    strokeWidth: rect.stroke_width,
+    fill: isFilled ? color : undefined,
+    stroke: hasStroke ? color : undefined,
+    strokeWidth: hasStroke ? rect.stroke_width : undefined,
+    ccwRotationDegrees: rect.ccw_rotation ?? 0,
+    isStrokeDashed,
     realToCanvasMat,
   })
 }
