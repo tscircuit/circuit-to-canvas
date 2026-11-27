@@ -23,6 +23,7 @@
     "@types/bun": "latest",
     "bun-match-svg": "^0.0.14",
     "circuit-json": "0.0.562",
+    "circuit-json-to-gltf": "0.0.169",
     "circuit-json-to-connectivity-map": "^0.0.23",
     "circuit-to-svg": "0.0.450",
     "format-si-unit": "0.0.12",
