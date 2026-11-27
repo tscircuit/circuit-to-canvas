@@ -4,7 +4,7 @@ import { drawLine } from "../../shapes/line"
 import type {
   PhaseSkewStroke,
   PhaseSkewStrokesByLayer,
-} from "./get-drawable-phase-skew-strokes"
+} from "./get-phase-skew-strokes"
 
 /** Overlay strokes are drawn 10% wider than the copper, as KiCad does (diff_phase_skew_tool.cpp), so the colour fully covers the trace edges. */
 const OVERLAY_WIDTH_FACTOR = 1.1
@@ -28,7 +28,8 @@ export function drawPhaseSkewStrokes({
   ctx.save()
   for (const run of strokes) {
     const lineCap =
-      run.length === 1 || ctx.createLinearGradient === undefined
+      (run.length === 1 && run[0]?.solidColor === undefined) ||
+      ctx.createLinearGradient === undefined
         ? "round"
         : "butt"
     if (lineCap === "butt") drawRunDiscs({ run, ctx, realToCanvasMat })
@@ -43,9 +44,9 @@ function drawRunStrokes({
   realToCanvasMat,
   lineCap,
 }: RunDrawing & Pick<LineOptions, "lineCap">): void {
-  for (const { start, end, width, startColor, endColor } of run) {
-    let stroke: LineOptions["stroke"] = startColor
-    if (startColor !== endColor) {
+  for (const { start, end, width, startColor, endColor, solidColor } of run) {
+    let stroke: LineOptions["stroke"] = solidColor ?? startColor
+    if (solidColor === undefined && startColor !== endColor) {
       if (ctx.createLinearGradient === undefined) continue
       const startPx = applyToPoint(realToCanvasMat, start)
       const endPx = applyToPoint(realToCanvasMat, end)
@@ -65,8 +66,7 @@ function drawRunStrokes({
   }
 }
 
-function drawRunDiscs(drawing: RunDrawing): void {
-  const { run, ctx, realToCanvasMat } = drawing
+function drawRunDiscs({ run, ctx, realToCanvasMat }: RunDrawing): void {
   // Canvas applies one cap style to both ends. Put the round ends and
   // joint fills beneath the butt-capped gradients.
   for (const [i, { start, width, startColor }] of run.entries()) {

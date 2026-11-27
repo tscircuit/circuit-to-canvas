@@ -26,6 +26,6 @@ test("a 170-degree bend covers the copper and preserves the neighboring fade", (
 
   const outerCorner = { x: 0.09, y: 0.64 }
   expect(copper.pixelAt(outerCorner)).toEqual([200, 52, 52, 255])
-  expect(overlay.pixelAt(outerCorner)).toEqual([243, 243, 255, 255])
-  expect(overlay.pixelAt({ x: -0.1, y: 0.85 })[1]).toBeWithin(137, 147)
+  expect(overlay.pixelAt(outerCorner)).toEqual([251, 251, 255, 255])
+  expect(overlay.pixelAt({ x: -0.1, y: 0.85 })[1]).toBeWithin(211, 218)
 })

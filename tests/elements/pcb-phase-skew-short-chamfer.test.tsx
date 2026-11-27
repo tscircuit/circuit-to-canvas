@@ -25,7 +25,7 @@ test("a 0.099 mm chamfer retains its fade inside a 0.24 mm trace", () => {
 
   const outerCorner = { x: 0.17, y: 0.67 }
   expect(copper.pixelAt(outerCorner)).toEqual([200, 52, 52, 255])
-  expect(overlay.pixelAt(outerCorner)).toEqual([246, 246, 255, 255])
+  expect(overlay.pixelAt(outerCorner)).toEqual([251, 251, 255, 255])
   expect(overlay.pixelAt({ x: -0.04, y: 0.62 })).toEqual([255, 255, 255, 255])
-  expect(overlay.pixelAt({ x: 0.04, y: 0.64 })[1]).toBeWithin(249, 252)
+  expect(overlay.pixelAt({ x: 0.04, y: 0.64 })[1]).toBeWithin(252, 255)
 })

@@ -13,8 +13,8 @@ test("the overlay follows copper layer visibility and leaves via drills visible"
     options: { showDifferentialPairPhaseSkew: true, layers: ["top_copper"] },
   })
 
-  expect(top.pixelAt({ x: -2, y: 0.6 })).toEqual([0, 0, 255, 255])
-  expect(all.pixelAt({ x: 2, y: 0.6 })).toEqual([0, 0, 255, 255])
+  expect(top.pixelAt({ x: -2, y: 0.6 })).toEqual([139, 139, 255, 255])
+  expect(all.pixelAt({ x: 2, y: 0.6 })).toEqual([139, 139, 255, 255])
   expect(top.pixelAt({ x: 2, y: 0.6 })).toEqual([26, 26, 26, 255])
   expect(top.pixelAt({ x: 0, y: 0.6 })).toEqual([255, 38, 226, 255])
 

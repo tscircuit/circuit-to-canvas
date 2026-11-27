@@ -14,7 +14,7 @@ import { createDrawingLayerContext } from "../../layers/create-drawing-layer-con
 import { mergeDrawingLayer } from "../../layers/merge-drawing-layer"
 import { appendPcbCopperPourPath } from "../pcb-copper-pour"
 import { drawPhaseSkewStrokes } from "./draw-phase-skew-strokes"
-import { getDrawablePhaseSkewStrokes } from "./get-drawable-phase-skew-strokes"
+import { getPhaseSkewStrokes } from "./get-phase-skew-strokes"
 import { drawPcbTrace } from "./pcb-trace"
 
 export function drawPcbTracesClippedToCopperPours(params: {
@@ -40,9 +40,16 @@ export function drawPcbTracesClippedToCopperPours(params: {
     phaseSkew,
   } = params
 
-  const phaseSkewStrokes =
-    phaseSkew &&
-    getDrawablePhaseSkewStrokes({ ...phaseSkew, drawableTraces: traces })
+  const phaseSkewStrokes = phaseSkew?.options.showDifferentialPairPhaseSkew
+    ? getPhaseSkewStrokes({
+        elements: phaseSkew.elements,
+        colors: phaseSkew.options.phaseSkewColors,
+        ctx,
+        drawableTraces: traces,
+        layers: phaseSkew.options.layers,
+        clipContextElements: phaseSkew.options.clipContextElements,
+      })
+    : undefined
   const layers = getTraceLayers(traces, renderLayers)
   // A segment between consecutive vias may have no matching wire point.
   for (const layer of phaseSkewStrokes?.keys() ?? []) {
