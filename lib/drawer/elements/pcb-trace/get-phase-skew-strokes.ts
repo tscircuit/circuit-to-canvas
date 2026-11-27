@@ -1,9 +1,8 @@
+import type { PcbPhaseSkewIndex } from "@tscircuit/circuit-json-util"
 import type {
-  AnyCircuitElement,
   LayerRef,
   PcbDifferentialPairPhaseSkewSegment,
   PcbDifferentialPairPhaseSkewTrace,
-  PcbTrace,
 } from "circuit-json"
 import type { DrawElementsOptions } from "../../CircuitToCanvasDrawer"
 import { createDrawingLayerContext } from "../../layers/create-drawing-layer-context"
@@ -14,6 +13,7 @@ export type PhaseSkewStroke = Pick<
   PcbDifferentialPairPhaseSkewSegment,
   "start" | "end" | "width" | "layer"
 > & {
+  pcbTraceId: string
   startColor: string
   endColor: string
   /** A zero skew limit makes the trace interior solid even at a zero-colored cap. */
@@ -35,68 +35,31 @@ type PhaseSkewPalette = Record<keyof typeof DEFAULT_COLORS, Rgba>
 
 /** Collects phase-skew strokes for visible traces and copper layers. */
 export function getPhaseSkewStrokes({
-  elements,
-  colors,
+  index,
   ctx,
-  drawableTraces,
+  colors,
   layers,
-  clipContextElements,
+  drawableTraceIds,
 }: {
-  elements: AnyCircuitElement[]
-  colors?: DrawElementsOptions["phaseSkewColors"]
+  index: PcbPhaseSkewIndex
   ctx: CanvasContext
-  drawableTraces: PcbTrace[]
+  colors?: DrawElementsOptions["phaseSkewColors"]
   layers?: DrawElementsOptions["layers"]
-  clipContextElements?: AnyCircuitElement[]
+  drawableTraceIds?: ReadonlySet<string>
 }): PhaseSkewStrokesByLayer {
   const strokesByLayer: PhaseSkewStrokesByLayer = new Map()
-
-  const drawableTraceIds = new Set(
-    drawableTraces.map(({ pcb_trace_id }) => pcb_trace_id),
-  )
-  const fullScaleMmBySourceBusId = getPhaseSkewFullScaleMmBySourceBusId({
-    elements: clipContextElements
-      ? [...clipContextElements, ...elements]
-      : elements,
-  })
   const palette = getPalette({ ctx, colors })
-
-  for (const element of elements) {
-    if (element.type !== "pcb_differential_pair_phase_skew") continue
-    const fullScaleMm =
-      fullScaleMmBySourceBusId[element.source_bus_id] ??
-      DEFAULT_PHASE_SKEW_FULL_SCALE_MM
-    for (const trace of [element.positive_trace, element.negative_trace]) {
-      if (!drawableTraceIds.has(trace.pcb_trace_id)) continue
-      addTraceStrokes({
-        trace,
-        strokesByLayer,
-        layers,
-        fullScaleMm,
-        palette,
-      })
-    }
+  for (const { trace, maxLengthSkew } of index.values()) {
+    if (drawableTraceIds && !drawableTraceIds.has(trace.pcb_trace_id)) continue
+    addTraceStrokes({
+      trace,
+      strokesByLayer,
+      layers,
+      palette,
+      fullScaleMm: maxLengthSkew ?? DEFAULT_PHASE_SKEW_FULL_SCALE_MM,
+    })
   }
-
   return strokesByLayer
-}
-
-export function getPhaseSkewFullScaleMmBySourceBusId({
-  elements,
-}: {
-  elements: AnyCircuitElement[]
-}): Record<string, number> {
-  const fullScaleMmBySourceBusId: Record<string, number> = Object.create(null)
-  for (const element of elements) {
-    if (element.type !== "source_bus") continue
-    const { source_bus_id, max_length_skew } = element
-    if (max_length_skew === undefined) {
-      delete fullScaleMmBySourceBusId[source_bus_id]
-    } else {
-      fullScaleMmBySourceBusId[source_bus_id] = max_length_skew
-    }
-  }
-  return fullScaleMmBySourceBusId
 }
 
 function addTraceStrokes({
@@ -162,6 +125,7 @@ function addTraceStrokes({
         colors: palette,
       })
       const stroke: PhaseSkewStroke = {
+        pcbTraceId: trace.pcb_trace_id,
         start,
         end,
         width,

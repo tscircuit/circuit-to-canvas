@@ -1,3 +1,4 @@
+import { createPcbPhaseSkewIndex } from "@tscircuit/circuit-json-util"
 import type {
   AnyCircuitElement,
   LayerRef,
@@ -42,12 +43,15 @@ export function drawPcbTracesClippedToCopperPours(params: {
 
   const phaseSkewStrokes = phaseSkew?.options.showDifferentialPairPhaseSkew
     ? getPhaseSkewStrokes({
-        elements: phaseSkew.elements,
+        index: createPcbPhaseSkewIndex(
+          phaseSkew.options.clipContextElements
+            ? [...phaseSkew.options.clipContextElements, ...phaseSkew.elements]
+            : phaseSkew.elements,
+        ),
         colors: phaseSkew.options.phaseSkewColors,
         ctx,
-        drawableTraces: traces,
+        drawableTraceIds: new Set(traces.map((trace) => trace.pcb_trace_id)),
         layers: phaseSkew.options.layers,
-        clipContextElements: phaseSkew.options.clipContextElements,
       })
     : undefined
   const layers = getTraceLayers(traces, renderLayers)

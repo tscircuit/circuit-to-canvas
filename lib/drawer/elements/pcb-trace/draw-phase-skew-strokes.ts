@@ -19,14 +19,17 @@ type RunDrawing = DrawingContext & { run: PhaseSkewStroke[] }
 export function drawPhaseSkewStrokes({
   ctx,
   strokes,
+  highlightedTraceIds,
   realToCanvasMat,
 }: DrawingContext & {
   strokes: ReturnType<PhaseSkewStrokesByLayer["get"]>
+  highlightedTraceIds?: ReadonlySet<string>
 }): void {
   if (strokes === undefined || strokes.length === 0) return
 
   ctx.save()
   for (const run of strokes) {
+    if (run[0] && highlightedTraceIds?.has(run[0].pcbTraceId)) continue
     const lineCap =
       (run.length === 1 && run[0]?.solidColor === undefined) ||
       ctx.createLinearGradient === undefined
