@@ -34,7 +34,7 @@ test("renders the bends and zero crossing of the phase skew overlay", async () =
         [664, 366],
         [663, 378],
       ],
-      incomingGreen: 211,
+      incomingGreen: 220,
     },
     {
       trace: skew.negative_trace,
@@ -44,7 +44,7 @@ test("renders the bends and zero crossing of the phase skew overlay", async () =
         [774, 445],
         [766, 454],
       ],
-      incomingGreen: 246,
+      incomingGreen: 248,
     },
   ] as const
   for (const { trace, index, points, incomingGreen } of joints) {

@@ -42,7 +42,7 @@ export function drawPcbTracesClippedToCopperPours(params: {
 
   const phaseSkewStrokes =
     phaseSkew &&
-    getDrawablePhaseSkewStrokes({ ...phaseSkew, drawableTraces: traces })
+    getDrawablePhaseSkewStrokes({ ...phaseSkew, ctx, drawableTraces: traces })
   const layers = getTraceLayers(traces, renderLayers)
   // A segment between consecutive vias may have no matching wire point.
   for (const layer of phaseSkewStrokes?.keys() ?? []) {

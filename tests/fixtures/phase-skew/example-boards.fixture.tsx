@@ -13,6 +13,7 @@ function Pair({
   positiveRoute,
   loadLayer = "top",
   padDiameter = 0.65,
+  maxLengthSkew,
 }: {
   name: string
   y?: number
@@ -21,6 +22,7 @@ function Pair({
   positiveRoute?: PcbRoute
   loadLayer?: "top" | "bottom"
   padDiameter?: number
+  maxLengthSkew?: number
 }): ReactElement {
   const legs = [
     {
@@ -70,6 +72,7 @@ function Pair({
         positiveConnection={`${name}_P`}
         negativeConnection={`${name}_N`}
         pcbTraceGap="0.96mm"
+        maxLengthSkew={maxLengthSkew}
       />
     </>
   )
@@ -117,6 +120,27 @@ export function LoadEndMeanderBoard(): ReactElement {
         negativePath={[
           ...detour({ x: 16, height: -1.1 }),
           ...detour({ x: 20, height: -1.1 }),
+        ]}
+      />
+    </board>
+  )
+}
+
+/** The first leg of the detour gains 2 mm of skew over a 4 mm segment. */
+export function SkewRampBoard({
+  maxLengthSkew,
+}: {
+  maxLengthSkew?: number
+}): ReactElement {
+  return (
+    <board width={28} height={9} routeRemaining={false}>
+      <Pair
+        name="RAMP"
+        maxLengthSkew={maxLengthSkew}
+        negativePath={[
+          { x: 8, y: 0 },
+          { x: 10, y: -Math.sqrt(12) },
+          { x: 12, y: 0 },
         ]}
       />
     </board>

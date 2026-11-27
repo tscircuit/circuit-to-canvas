@@ -113,8 +113,14 @@ export interface DrawElementsOptions {
   showPcbNotes?: boolean
   /** Whether to render pcb_debug_object overlays. Defaults to false. */
   showDebugObjects?: boolean
-  /** Color routed differential pairs by local phase skew. Defaults to false. */
+  /**
+   * Color routed differential pairs by local phase skew. Defaults to false.
+   * Color intensity increases linearly to the pair's max_length_skew (2 mm if unset).
+   * With a zero limit, all nonzero skew is fully saturated.
+   */
   showDifferentialPairPhaseSkew?: boolean
+  /** CSS colors for positive, negative, and zero skew. Defaults to blue, red, and white. */
+  phaseSkewColors?: { positive?: string; negative?: string; zero?: string }
   /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
   clearDrillHoles?: boolean
 }

@@ -13,6 +13,6 @@ test("the joint covers the wide copper where a trace narrows", () => {
 
   const wideEdge = { x: 0.1, y: 0.43 }
   expect(copper.pixelAt(wideEdge)).toEqual([200, 52, 52, 255])
-  expect(overlay.pixelAt(wideEdge)).toEqual([0, 0, 255, 255])
-  expect(overlay.pixelAt({ x: -0.06, y: 0.66 })[1]).toBeWithin(18, 24)
+  expect(overlay.pixelAt(wideEdge)).toEqual([221, 221, 255, 255])
+  expect(overlay.pixelAt({ x: -0.06, y: 0.66 })[1]).toBeWithin(221, 228)
 })

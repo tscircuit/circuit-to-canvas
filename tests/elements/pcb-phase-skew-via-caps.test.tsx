@@ -18,7 +18,7 @@ test("round overlay caps extend beyond the via on each copper layer", () => {
       options: { showDifferentialPairPhaseSkew: true, layers: [layer] },
     })
     expect(pixelAt({ x: direction * 0.115, y: center.y })).toEqual([
-      0, 0, 255, 255,
+      139, 139, 255, 255,
     ])
     expect(pixelAt({ x: direction * 0.14, y: center.y })).toEqual([
       26, 26, 26, 255,

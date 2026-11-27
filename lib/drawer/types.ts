@@ -52,6 +52,14 @@ export interface CanvasContext {
   canvas: { width: number; height: number }
   fillText(text: string, x: number, y: number): void
   fillRect(x: number, y: number, width: number, height: number): void
+  getImageData?: (
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => {
+    data: Uint8ClampedArray
+  }
   measureText?: (text: string) => {
     width: number
     actualBoundingBoxAscent?: number
