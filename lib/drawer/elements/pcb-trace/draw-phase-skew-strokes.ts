@@ -15,15 +15,9 @@ type LineOptions = Parameters<typeof drawLine>[0]
 type DrawingContext = Pick<LineOptions, "ctx" | "realToCanvasMat">
 type RunDrawing = DrawingContext & { run: PhaseSkewStroke[] }
 
-export type DrawPcbDifferentialPairPhaseSkewParams = DrawingContext &
-  Parameters<typeof getPhaseSkewStrokes>[0]
-
-/**
- * Draws the phase skew of the traces in `elements` as two-stop gradients.
- * Call it after all copper so pads, pours and vias do not cover it.
- */
+/** Draws the phase skew of the traces in `elements`; call it after all copper. */
 export function drawPcbDifferentialPairPhaseSkew(
-  params: DrawPcbDifferentialPairPhaseSkewParams,
+  params: DrawingContext & Parameters<typeof getPhaseSkewStrokes>[0],
 ): void {
   const { ctx, realToCanvasMat } = params
   const strokes = [...getPhaseSkewStrokes(params).values()].flat()

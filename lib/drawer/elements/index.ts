@@ -22,10 +22,7 @@ export {
 
 export { drawPcbTrace, type DrawPcbTraceParams } from "./pcb-trace/pcb-trace"
 
-export {
-  drawPcbDifferentialPairPhaseSkew,
-  type DrawPcbDifferentialPairPhaseSkewParams,
-} from "./pcb-trace/draw-phase-skew-strokes"
+export { drawPcbDifferentialPairPhaseSkew } from "./pcb-trace/draw-phase-skew-strokes"
 
 export { drawPcbBoard, type DrawPcbBoardParams } from "./pcb-board"
 
