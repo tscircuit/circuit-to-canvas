@@ -18,10 +18,7 @@ test("renders the bends and zero crossing of the phase skew overlay", async () =
     translate(1838, 1030),
     scale(PIXELS_PER_MM, -PIXELS_PER_MM),
   )
-  drawer.drawElements(board, {
-    showDifferentialPairPhaseSkew: true,
-    phaseSkewFullScaleMm: 2,
-  })
+  drawer.drawElements(board, { showDifferentialPairPhaseSkew: true })
 
   const skew = board.find(
     (element) => element.type === "pcb_differential_pair_phase_skew",

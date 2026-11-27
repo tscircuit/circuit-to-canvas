@@ -82,31 +82,7 @@ import {
   type PcbColorMap,
 } from "./types"
 
-/** CSS colors for positive, negative, and zero skew. Defaults to blue, red, and white. */
-export type PhaseSkewColors = {
-  positive?: string
-  negative?: string
-  zero?: string
-}
-
-export type PhaseSkewRenderOptions =
-  | {
-      showDifferentialPairPhaseSkew?: false
-      phaseSkewFullScaleMm?: number
-      phaseSkewFullScaleMmBySourceBusId?: Record<string, number>
-      phaseSkewColors?: PhaseSkewColors
-    }
-  | {
-      /** Color routed differential pairs by local phase skew. */
-      showDifferentialPairPhaseSkew: true
-      /** Absolute skew in mm for full color on pairs without a per-pair scale. At zero, any nonzero skew is fully saturated. */
-      phaseSkewFullScaleMm: number
-      /** Per-pair full scale in mm, keyed by the phase-skew element's source_bus_id. */
-      phaseSkewFullScaleMmBySourceBusId?: Record<string, number>
-      phaseSkewColors?: PhaseSkewColors
-    }
-
-export type DrawElementsOptions = PhaseSkewRenderOptions & {
+export interface DrawElementsOptions {
   layers?: PcbRenderLayer[]
   /** Copper pour opacity from 0 to 1. Defaults to 0.5. */
   copperPourOpacity?: number
@@ -137,6 +113,14 @@ export type DrawElementsOptions = PhaseSkewRenderOptions & {
   showPcbNotes?: boolean
   /** Whether to render pcb_debug_object overlays. Defaults to false. */
   showDebugObjects?: boolean
+  /**
+   * Color routed differential pairs by local phase skew. Defaults to false.
+   * Color intensity increases linearly to the pair's max_length_skew (2 mm if unset).
+   * With a zero limit, all nonzero skew is fully saturated.
+   */
+  showDifferentialPairPhaseSkew?: boolean
+  /** CSS colors for positive, negative, and zero skew. Defaults to blue, red, and white. */
+  phaseSkewColors?: { positive?: string; negative?: string; zero?: string }
   /** Clear drill holes and cutouts from the canvas instead of painting them with the drill color. Defaults to false. */
   clearDrillHoles?: boolean
 }
@@ -246,30 +230,6 @@ export class CircuitToCanvasDrawer {
     elements: AnyCircuitElement[],
     options: DrawElementsOptions = {},
   ): void {
-    const phaseSkew = options.showDifferentialPairPhaseSkew
-      ? {
-          elements,
-          fullScaleMm: options.phaseSkewFullScaleMm,
-          fullScaleMmBySourceBusId: options.phaseSkewFullScaleMmBySourceBusId,
-          colors: options.phaseSkewColors,
-        }
-      : undefined
-    if (phaseSkew) {
-      const { fullScaleMm, fullScaleMmBySourceBusId } = phaseSkew
-      if (!Number.isFinite(fullScaleMm) || fullScaleMm < 0) {
-        throw new Error("phaseSkewFullScaleMm must be a finite number >= 0")
-      }
-      if (
-        Object.values(fullScaleMmBySourceBusId ?? {}).some(
-          (scale) => !Number.isFinite(scale) || scale < 0,
-        )
-      ) {
-        throw new Error(
-          "phaseSkewFullScaleMmBySourceBusId values must be finite numbers >= 0",
-        )
-      }
-    }
-
     this.ctx.boardOwnerMap = createBoardOwnerMap([
       ...(options.clipContextElements ?? []),
       ...elements,
@@ -442,7 +402,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
-        phaseSkew,
+        phaseSkew: { elements, options },
       })
 
       for (const element of elements) {
@@ -605,7 +565,7 @@ export class CircuitToCanvasDrawer {
         vias: drawableVias,
         platedHoles: drawablePlatedHoles,
         renderLayers: options.layers,
-        phaseSkew,
+        phaseSkew: { elements, options },
       })
     }
 

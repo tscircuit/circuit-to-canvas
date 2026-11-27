@@ -38,7 +38,6 @@ test("phaseSkewColors overrides all three colors on a tuning bump", async () => 
     circuitJson,
     options: {
       showDifferentialPairPhaseSkew: true,
-      phaseSkewFullScaleMm: 2,
       phaseSkewColors: {
         positive: "rgb(56, 189, 248)",
         negative: "#f59e0b",
@@ -47,7 +46,7 @@ test("phaseSkewColors overrides all three colors on a tuning bump", async () => 
     },
   })
 
-  // The plateau is at about 91% intensity on the 2 mm scale.
+  // The plateau is at about 91% intensity with the 2 mm fallback.
   expect(pixelAt({ x: 0, y: 0.6 })).toEqual([60, 182, 235, 255])
   expect(pixelAt({ x: 0, y: -0.6 })).toEqual([233, 153, 19, 255])
   expect(pixelAt({ x: 11.5, y: 0.6 })).toEqual([105, 105, 105, 255])

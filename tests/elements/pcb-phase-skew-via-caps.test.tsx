@@ -15,11 +15,7 @@ test("round overlay caps extend beyond the via on each copper layer", () => {
     const { pixelAt } = renderCanvas({
       circuitJson,
       center,
-      options: {
-        showDifferentialPairPhaseSkew: true,
-        phaseSkewFullScaleMm: 2,
-        layers: [layer],
-      },
+      options: { showDifferentialPairPhaseSkew: true, layers: [layer] },
     })
     expect(pixelAt({ x: direction * 0.115, y: center.y })).toEqual([
       139, 139, 255, 255,

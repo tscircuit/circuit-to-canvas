@@ -4,7 +4,7 @@ import { drawLine } from "../../shapes/line"
 import type {
   PhaseSkewStroke,
   PhaseSkewStrokesByLayer,
-} from "./get-phase-skew-strokes"
+} from "./get-drawable-phase-skew-strokes"
 
 /** Overlay strokes are drawn 10% wider than the copper, as KiCad does (diff_phase_skew_tool.cpp), so the colour fully covers the trace edges. */
 const OVERLAY_WIDTH_FACTOR = 1.1
