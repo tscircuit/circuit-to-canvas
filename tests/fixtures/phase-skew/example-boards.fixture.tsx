@@ -13,6 +13,7 @@ function Pair({
   positiveRoute,
   loadLayer = "top",
   padDiameter = 0.65,
+  holeDiameter,
   maxLengthSkew,
 }: {
   name: string
@@ -22,6 +23,7 @@ function Pair({
   positiveRoute?: PcbRoute
   loadLayer?: "top" | "bottom"
   padDiameter?: number
+  holeDiameter?: number
   maxLengthSkew?: number
 }): ReactElement {
   const legs = [
@@ -40,16 +42,18 @@ function Pair({
         <Fragment key={name}>
           <testpoint
             name={`${name}_SRC`}
-            footprintVariant="pad"
+            footprintVariant={holeDiameter ? "through_hole" : "pad"}
             padDiameter={padDiameter}
+            holeDiameter={holeDiameter}
             doNotPlace
             pcbX={-12}
             pcbY={y}
           />
           <testpoint
             name={`${name}_LOAD`}
-            footprintVariant="pad"
+            footprintVariant={holeDiameter ? "through_hole" : "pad"}
             padDiameter={padDiameter}
+            holeDiameter={holeDiameter}
             doNotPlace
             pcbX={12}
             pcbY={y}
@@ -167,6 +171,28 @@ export function LayerChangeBoard({
       <Pair
         name="LAYER_CHANGE"
         loadLayer="bottom"
+        positivePath={[...detour({ x: 3, height: 1.1 }), ...via]}
+        negativePath={[...via, ...detour({ x: 17, height: -1.1 })]}
+      />
+    </board>
+  )
+}
+
+/** A layer-changing pair between plated holes, joined by vias wider than the traces. */
+export function PlatedHoleLayerChangeBoard(): ReactElement {
+  const via: PcbPath = [{ x: 12, y: 0, via: true, toLayer: "bottom" }]
+  return (
+    <board
+      width={28}
+      height={9}
+      fabricatorPreset="jlcpcb_economy"
+      pcbStyle={{ viaPadDiameter: 1, viaHoleDiameter: 0.4 }}
+      routeRemaining={false}
+    >
+      <Pair
+        name="PLATED"
+        padDiameter={1}
+        holeDiameter={0.5}
         positivePath={[...detour({ x: 3, height: 1.1 }), ...via]}
         negativePath={[...via, ...detour({ x: 17, height: -1.1 })]}
       />
