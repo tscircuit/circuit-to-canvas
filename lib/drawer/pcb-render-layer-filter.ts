@@ -18,10 +18,16 @@ export function shouldDrawElement(
     return true
   }
 
-  // Older circuit-json-util versions do not classify silkscreen graphics.
+  // Older circuit-json-util versions do not classify silkscreen graphics or courtyard pills.
   if (element.type === "pcb_silkscreen_graphic") {
     return options.layers.some(
       (layer) => layer === `${element.layer}_silkscreen`,
+    )
+  }
+
+  if (element.type === "pcb_courtyard_pill") {
+    return options.layers.some(
+      (layer) => layer === `${element.layer}_courtyard`,
     )
   }
 

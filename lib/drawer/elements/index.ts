@@ -128,3 +128,13 @@ export {
   drawPcbCourtyardCircle,
   type DrawPcbCourtyardCircleParams,
 } from "./pcb-courtyard-circle"
+
+export {
+  drawPcbCourtyardPill,
+  type DrawPcbCourtyardPillParams,
+} from "./pcb-courtyard-pill"
+
+export {
+  drawPcbCourtyardPolygon,
+  type DrawPcbCourtyardPolygonParams,
+} from "./pcb-courtyard-polygon"
